@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, LayerGroup, ScaleControl } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
 import L from 'leaflet';
+import axios from 'axios';
 import { Container, MapSection, FilterSection, Label, Checkbox, Select, LocationOverlay, LocationName, DirectionsLink, ViewLargerMapLink, Divider, FilterItem, FilterGroup, FilterTitle, GlobalStyles, Legend, LegendItem, barangayInfoBoxStyle, infoLabelStyle, infoValueStyle, infoRowStyle, recommendationBoxStyle, fruitChipStyle } from './MapViewStyles';
+import { getBarangaysArray, getBarangaysObject } from './loadBarangays';
+import { Slider, List, ListItem, ListItemText, CircularProgress, InputAdornment, TextField, IconButton, Tooltip, MenuItem, Select as MuiSelect } from '@mui/material';
+import SortIcon from '@mui/icons-material/Sort';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+
+const OPENWEATHERMAP_API_KEY = "c0a32e00d3c50ae032ea9efd623bcce4";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -60,160 +67,6 @@ const fruitElevationRanges = {
     'Watermelon': { min: 0, max: 500, optimal: 200 }
 };
 
-// Define barangays in Cabanatuan with circle coordinates and additional data
-const barangayData = {
-    'Aduas': {
-        center: [15.492, 120.962],
-        radius: 500,
-        soilType: 'Loamy Soil',
-        fruits: 'Mangoes',
-        elevation: 320,
-        temperature: 27,
-        pathways: 'Good',
-        notes: 'Well-drained soil suitable for mango cultivation'
-    },
-    'Bantug': {
-        center: [15.475, 120.958],
-        radius: 450,
-        soilType: 'Sandy Soil',
-        fruits: 'Kalamansi',
-        elevation: 250,
-        temperature: 26,
-        pathways: 'Fair',
-        notes: 'Sandy soil with adequate drainage'
-    },
-    'Caridad': {
-        center: [15.483, 120.975],
-        radius: 480,
-        soilType: 'Clay Soil',
-        fruits: 'Watermelon',
-        elevation: 180,
-        temperature: 29,
-        pathways: 'Poor',
-        notes: 'Heavy clay soil that retains moisture well'
-    },
-    'Dalampang': {
-        center: [15.498, 120.952],
-        radius: 520,
-        soilType: 'Silty Soil',
-        fruits: 'Mangoes',
-        elevation: 410,
-        temperature: 25,
-        pathways: 'Good',
-        notes: 'Silty soil with good nutrient content'
-    },
-    'Hermogenes C. Concepcion Sr.': {
-        center: [15.466, 120.975],
-        radius: 470,
-        soilType: 'Peaty Soil',
-        fruits: 'Kalamansi',
-        elevation: 290,
-        temperature: 28,
-        pathways: 'Fair',
-        notes: 'Rich in organic matter, good for citrus trees'
-    },
-    'Imelda': {
-        center: [15.488, 120.948],
-        radius: 460,
-        soilType: 'Chalky Soil',
-        fruits: 'Watermelon',
-        elevation: 150,
-        temperature: 30,
-        pathways: 'Good',
-        notes: 'Alkaline soil with good drainage'
-    },
-    'Kapitan Pepe': {
-        center: [15.480, 120.980],
-        radius: 500,
-        soilType: 'Loamy Soil',
-        fruits: 'Mangoes',
-        elevation: 380,
-        temperature: 26,
-        pathways: 'Good',
-        notes: 'Balanced soil composition ideal for fruit trees'
-    },
-    'MS Garcia': {
-        center: [15.474, 120.988],
-        radius: 430,
-        soilType: 'Sandy Soil',
-        fruits: 'Kalamansi',
-        elevation: 220,
-        temperature: 27,
-        pathways: 'Fair',
-        notes: 'Light soil with good water infiltration'
-    },
-    'Palagay': {
-        center: [15.456, 120.968],
-        radius: 490,
-        soilType: 'Clay Soil',
-        fruits: 'Watermelon',
-        elevation: 170,
-        temperature: 31,
-        pathways: 'Poor',
-        notes: 'Rich in minerals but prone to waterlogging during rainy season'
-    },
-    'Sangitan': {
-        center: [15.493, 120.982],
-        radius: 510,
-        soilType: 'Silty Soil',
-        fruits: 'Mangoes',
-        elevation: 450,
-        temperature: 24,
-        pathways: 'Good',
-        notes: 'Good moisture retention properties'
-    },
-    'San Isidro': {
-        center: [15.478, 120.940],
-        radius: 440,
-        soilType: 'Peaty Soil',
-        fruits: 'Kalamansi',
-        elevation: 330,
-        temperature: 25,
-        pathways: 'Fair',
-        notes: 'Rich in organic material, good for citrus'
-    },
-    'San Jose': {
-        center: [15.487, 120.955],
-        radius: 470,
-        soilType: 'Chalky Soil',
-        fruits: 'Watermelon',
-        elevation: 140,
-        temperature: 32,
-        pathways: 'Fair',
-        notes: 'Calcium-rich soil good for pH-loving crops'
-    },
-    'San Roque': {
-        center: [15.472, 120.950],
-        radius: 480,
-        soilType: 'Loamy Soil',
-        fruits: 'Mangoes',
-        elevation: 360,
-        temperature: 26,
-        pathways: 'Good',
-        notes: 'Balanced soil with good air and water flow'
-    },
-    'Santo Cristo': {
-        center: [15.460, 120.940],
-        radius: 460,
-        soilType: 'Sandy Soil',
-        fruits: 'Kalamansi',
-        elevation: 280,
-        temperature: 27,
-        pathways: 'Fair',
-        notes: 'Well-drained soil suitable for citrus trees'
-    },
-    'Santo Domingo': {
-        center: [15.490, 120.930],
-        radius: 490,
-        soilType: 'Clay Soil',
-        fruits: 'Watermelon',
-        elevation: 160,
-        temperature: 30,
-        pathways: 'Poor',
-        notes: 'Retains water well during dry season'
-    }
-};
-
 // Pathways classification system (for UI display)
 const pathwayStatusInfo = {
     'Good': {
@@ -236,6 +89,13 @@ const DirectionIcon = () => (
     </svg>
 );
 
+// Helper to fetch weather for a barangay
+async function fetchBarangayWeather(lat, lon) {
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`;
+    const response = await axios.get(url);
+    return response.data.main.temp;
+}
+
 const MapView = () => {
     const [selectedLocation, setSelectedLocation] = useState({
         lat: CabanatuanLatLng.lat,
@@ -256,6 +116,84 @@ const MapView = () => {
     const [highlightedAreas, setHighlightedAreas] = useState([]);
     const [barangayInfo, setBarangayInfo] = useState(null);
     const [mapType, setMapType] = useState('standard'); // 'standard', 'terrain', 'satellite'
+    const [barangays, setBarangays] = useState([]);
+    const [barangayData, setBarangayData] = useState({});
+    const [barangayWeather, setBarangayWeather] = useState({});
+    const [weatherLoading, setWeatherLoading] = useState(false);
+    const [weatherError, setWeatherError] = useState(null);
+
+    // Add state for custom temperature range
+    const [tempRange, setTempRange] = useState([20, 35]);
+    // Add state for filtered barangays
+    const [filteredBarangays, setFilteredBarangays] = useState([]);
+
+    // Sidebar enhancements
+    const [sortField, setSortField] = useState('temperature');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedSidebarBarangay, setSelectedSidebarBarangay] = useState(null);
+
+    useEffect(() => {
+        setBarangays(getBarangaysArray());
+        setBarangayData(getBarangaysObject());
+    }, []);
+
+    useEffect(() => {
+        async function fetchAllWeather() {
+            setWeatherLoading(true);
+            setWeatherError(null);
+            try {
+                const arr = getBarangaysArray();
+                const weatherObj = {};
+                await Promise.all(arr.map(async (b) => {
+                    try {
+                        const temp = await fetchBarangayWeather(b.center[0], b.center[1]);
+                        weatherObj[b.name] = temp;
+                    } catch (err) {
+                        weatherObj[b.name] = null;
+                    }
+                }));
+                setBarangayWeather(weatherObj);
+            } catch (error) {
+                setWeatherError("Failed to fetch weather data");
+            } finally {
+                setWeatherLoading(false);
+            }
+        }
+        fetchAllWeather();
+    }, []);
+
+    useEffect(() => {
+        if (!filters.temperature) {
+            setFilteredBarangays([]);
+            return;
+        }
+        let matches = barangays.filter(b => {
+            const temp = barangayWeather[b.name] ?? b.temperature;
+            const nameMatch = b.name.toLowerCase().includes(searchTerm.toLowerCase());
+            return temp >= tempRange[0] && temp <= tempRange[1] && nameMatch;
+        });
+        // Sort matches
+        matches = matches.sort((a, b) => {
+            let aVal, bVal;
+            if (sortField === 'temperature') {
+                aVal = barangayWeather[a.name] ?? a.temperature;
+                bVal = barangayWeather[b.name] ?? b.temperature;
+            } else if (sortField === 'elevation') {
+                aVal = a.elevation;
+                bVal = b.elevation;
+            } else if (sortField === 'fruit') {
+                aVal = a.fruits;
+                bVal = b.fruits;
+            } else {
+                aVal = a.name;
+                bVal = b.name;
+            }
+            if (typeof aVal === 'string') return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+        setFilteredBarangays(matches);
+    }, [filters.temperature, tempRange, barangayWeather, barangays, sortField, sortOrder, searchTerm]);
 
     const handleFilterChange = (filter) => {
         setFilters({ ...filters, [filter]: !filters[filter] });
@@ -322,13 +260,16 @@ const MapView = () => {
             overall: ''
         };
 
+        // Use live weather if available
+        const currentTemp = barangayWeather[barangayName] ?? barangay.temperature;
+        
         // Check soil suitability
         const suitableFruits = soilFruitSuitability[barangay.soilType] || [];
         
         // Filter fruits by temperature and elevation suitability
         const optimalFruits = suitableFruits.filter(fruit => {
-            const tempSuitable = barangay.temperature >= fruitTemperatureRanges[fruit].min && 
-                                barangay.temperature <= fruitTemperatureRanges[fruit].max;
+            const tempSuitable = currentTemp >= fruitTemperatureRanges[fruit].min && 
+                                currentTemp <= fruitTemperatureRanges[fruit].max;
             
             const elevSuitable = barangay.elevation >= fruitElevationRanges[fruit].min && 
                                 barangay.elevation <= fruitElevationRanges[fruit].max;
@@ -364,8 +305,8 @@ const MapView = () => {
         }.`);
         
         // Add temperature note
-        recommendations.notes.push(`Average temperature (${barangay.temperature}°C) is ${
-            barangay.temperature < 25 ? 'relatively cool' : barangay.temperature > 29 ? 'warm' : 'moderate'
+        recommendations.notes.push(`Average temperature (${currentTemp}°C) is ${
+            currentTemp < 25 ? 'relatively cool' : currentTemp > 29 ? 'warm' : 'moderate'
         } for this region.`);
         
         // Generate overall recommendation
@@ -393,7 +334,8 @@ const MapView = () => {
 
         // Otherwise, find and highlight all barangays that match the selected filter
         const matchingBarangays = [];
-        for (const [name, data] of Object.entries(barangayData)) {
+        barangays.forEach((name) => {
+            const data = barangayData[name];
             let matches = false;
             let color = '#3388ff'; // Default color
             
@@ -417,10 +359,23 @@ const MapView = () => {
                             legendItem === 'Medium (201-400m)' ? '#673AB7' : '#E91E63';
                 }
             } else if (legendType === 'temperature') {
+                if (filters.temperature) {
+                    const matchingBarangays = barangays.filter(name => {
+                        const temp = barangayWeather[name] ?? barangayData[name].temperature;
+                        return temp >= tempRange[0] && temp <= tempRange[1];
+                    });
+                    setHighlightedAreas(matchingBarangays.map(name => ({
+                        name,
+                        color: '#4CAF50',
+                        opacity: 0.6
+                    })));
+                    return;
+                }
                 // Handling temperature ranges
-                const tempRange = legendItem === 'Cool (< 26°C)' ? data.temperature < 26 :
-                                legendItem === 'Moderate (26-28°C)' ? data.temperature >= 26 && data.temperature <= 28 :
-                                data.temperature > 28;
+                const temp = barangayWeather[name] ?? data.temperature;
+                const tempRange = legendItem === 'Cool (< 26°C)' ? temp < 26 :
+                                legendItem === 'Moderate (26-28°C)' ? temp >= 26 && temp <= 28 :
+                                temp > 28;
                 if (tempRange) {
                     matches = true;
                     color = legendItem === 'Cool (< 26°C)' ? '#2196F3' :
@@ -435,19 +390,20 @@ const MapView = () => {
                     opacity: 0.6
                 });
             }
-        }
+        });
         setHighlightedAreas(matchingBarangays);
     };
 
     // Show all barangays when that option is selected
     useEffect(() => {
         if (filters.showAllBarangays) {
-            const allBarangays = Object.keys(barangayData).map(name => ({
-                name,
-                color: '#3388ff', // Default blue color for all barangays
+            const allBarangays = barangays.map(barangay => ({
+                name: barangay.name,
+                color: soilTypeColors[barangay.soilType],
                 opacity: 0.4
             }));
             setHighlightedAreas(allBarangays);
+            return;
         } else if (!filters.selectedBarangay && 
                   !filters.soilType && 
                   !filters.fruits && 
@@ -470,7 +426,8 @@ const MapView = () => {
                 
                 // Check if clicked within any barangay circle
                 let foundBarangay = false;
-                for (const [name, data] of Object.entries(barangayData)) {
+                barangays.forEach((name) => {
+                    const data = barangayData[name];
                     const distance = calculateDistance(
                         e.latlng.lat, e.latlng.lng,
                         data.center[0], data.center[1]
@@ -481,9 +438,8 @@ const MapView = () => {
                         setFilters(prev => ({ ...prev, selectedBarangay: name }));
                         handleBarangaySelect({ target: { value: name } });
                         foundBarangay = true;
-                        break;
                     }
-                }
+                });
                 
                 // Clear selection if clicked outside all barangays
                 if (!foundBarangay && filters.selectedBarangay) {
@@ -550,29 +506,62 @@ const MapView = () => {
 
                         {/* Render highlighted area circles */}
                         <LayerGroup>
-                            {highlightedAreas.map((area, index) => (
-                                <Circle 
-                                    key={`${area.name}-${index}`}
-                                    center={barangayData[area.name].center}
-                                    radius={barangayData[area.name].radius}
-                                    pathOptions={{ 
-                                        color: area.color, 
-                                        fillOpacity: area.opacity || 0.5, 
-                                        weight: 2 
-                                    }}
-                                >
-                                    <Popup>
-                                        <div style={{ color: '#333' }}>
-                                            <strong>{area.name}</strong><br />
-                                            <strong>Soil Type:</strong> {barangayData[area.name].soilType}<br />
-                                            <strong>Main Fruit:</strong> {barangayData[area.name].fruits}<br />
-                                            <strong>Elevation:</strong> {barangayData[area.name].elevation}m<br />
-                                            <strong>Avg. Temp:</strong> {barangayData[area.name].temperature}°C<br />
-                                            <strong>Pathways:</strong> {barangayData[area.name].pathways}
-                                        </div>
-                                    </Popup>
-                                </Circle>
-                            ))}
+                            {/* Show All Barangays Functionality */}
+                            {filters.showAllBarangays && barangays.map((barangay, index) => {
+                                if (!barangay || !barangay.center || !barangay.radius) return null;
+                                return (
+                                    <Circle
+                                        key={`all-${barangay.name}-${index}`}
+                                        center={barangay.center}
+                                        radius={barangay.radius}
+                                        pathOptions={{
+                                            color: soilTypeColors[barangay.soilType],
+                                            fillOpacity: 0.2,
+                                            weight: 2
+                                        }}
+                                    >
+                                        <Popup>
+                                            <div style={{ color: '#333' }}>
+                                                <strong>{barangay.name}</strong><br />
+                                                <strong>Soil Type:</strong> {barangay.soilType}<br />
+                                                <strong>Main Fruit:</strong> {barangay.fruits}<br />
+                                                <strong>Elevation:</strong> {barangay.elevation}m<br />
+                                                <strong>Avg. Temp:</strong> {barangay.temperature}°C<br />
+                                                <strong>Pathways:</strong> {barangay.pathways}
+                                            </div>
+                                        </Popup>
+                                    </Circle>
+                                );
+                            })}
+
+                            {/* Highlighted/Selected Barangays */}
+                            {highlightedAreas.map((area, index) => {
+                                const barangay = barangayData[area.name];
+                                if (!barangay || !barangay.center || !barangay.radius) return null;
+                                return (
+                                    <Circle 
+                                        key={`${area.name}-${index}`}
+                                        center={barangay.center}
+                                        radius={barangay.radius}
+                                        pathOptions={{ 
+                                            color: area.color, 
+                                            fillOpacity: area.opacity || 0.5, 
+                                            weight: 2 
+                                        }}
+                                    >
+                                        <Popup>
+                                            <div style={{ color: '#333' }}>
+                                                <strong>{area.name}</strong><br />
+                                                <strong>Soil Type:</strong> {barangay.soilType}<br />
+                                                <strong>Main Fruit:</strong> {barangay.fruits}<br />
+                                                <strong>Elevation:</strong> {barangay.elevation}m<br />
+                                                <strong>Avg. Temp:</strong> {barangay.temperature}°C<br />
+                                                <strong>Pathways:</strong> {barangay.pathways}
+                                            </div>
+                                        </Popup>
+                                    </Circle>
+                                );
+                            })}
                         </LayerGroup>
                         
                         <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
@@ -745,6 +734,107 @@ const MapView = () => {
                         </Legend>
                     )}
 
+                    {filters.temperature && (
+                        <div style={{ margin: '20px 0', background: '#263238', padding: 16, borderRadius: 8, minWidth: 340 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                <span style={{ color: '#ecf0f1', fontWeight: 'bold' }}>Custom Temperature Range (°C):</span>
+                                <Tooltip title="Filter barangays by current (live) temperature.">
+                                    <InfoOutlinedIcon sx={{ color: '#90caf9', fontSize: 20 }} />
+                                </Tooltip>
+                            </div>
+                            <Slider
+                                value={tempRange}
+                                onChange={(e, newVal) => setTempRange(newVal)}
+                                valueLabelDisplay="auto"
+                                min={20}
+                                max={38}
+                                step={1}
+                                sx={{ color: '#4CAF50', width: 200, marginLeft: 2 }}
+                            />
+                            <span style={{ color: '#ecf0f1', marginLeft: 12 }}>
+                                {tempRange[0]}°C - {tempRange[1]}°C
+                            </span>
+                            <div style={{ marginTop: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <TextField
+                                    size="small"
+                                    variant="outlined"
+                                    placeholder="Search barangay..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    sx={{ background: '#37474F', borderRadius: 1, input: { color: '#fff' }, width: 160 }}
+                                    InputProps={{
+                                        style: { color: '#fff' },
+                                    }}
+                                />
+                                <MuiSelect
+                                    size="small"
+                                    value={sortField}
+                                    onChange={e => setSortField(e.target.value)}
+                                    sx={{ background: '#37474F', color: '#fff', height: 40 }}
+                                >
+                                    <MenuItem value="temperature">Temperature</MenuItem>
+                                    <MenuItem value="elevation">Elevation</MenuItem>
+                                    <MenuItem value="fruit">Fruit</MenuItem>
+                                    <MenuItem value="name">Name</MenuItem>
+                                </MuiSelect>
+                                <IconButton onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} sx={{ color: '#fff' }}>
+                                    <SortIcon style={{ transform: sortOrder === 'desc' ? 'scaleY(-1)' : undefined }} />
+                                </IconButton>
+                            </div>
+                            {weatherLoading ? (
+                                <CircularProgress size={24} sx={{ color: '#4CAF50', marginTop: 2 }} />
+                            ) : (
+                                <List sx={{ background: '#37474F', borderRadius: 2, maxHeight: 220, overflow: 'auto', marginTop: 1 }}>
+                                    {filteredBarangays.length === 0 ? (
+                                        <ListItem>
+                                            <ListItemText primary="No barangays in this range." sx={{ color: '#fff' }} />
+                                        </ListItem>
+                                    ) : (
+                                        filteredBarangays.map(b => (
+                                            <ListItem
+                                                key={b.name}
+                                                sx={{ borderBottom: '1px solid #263238', cursor: 'pointer', '&:hover': { background: '#455A64' } }}
+                                                onClick={() => setSelectedSidebarBarangay(b)}
+                                                selected={selectedSidebarBarangay && selectedSidebarBarangay.name === b.name}
+                                            >
+                                                <ListItemText
+                                                    primary={<span style={{ color: '#fff', fontWeight: 'bold' }}>{b.name}</span>}
+                                                    secondary={<span style={{ color: '#b0bec5' }}>
+                                                        Temp: {(barangayWeather[b.name] ?? b.temperature).toFixed(1)}°C | Elev: {b.elevation}m | Fruit: {b.fruits}
+                                                    </span>}
+                                                />
+                                            </ListItem>
+                                        ))
+                                    )}
+                                </List>
+                            )}
+                            {/* Detailed info card for selected barangay */}
+                            {selectedSidebarBarangay && (
+                                <div style={{ marginTop: 16, background: '#37474F', borderRadius: 8, padding: 16, color: '#fff' }}>
+                                    <div style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 4 }}>{selectedSidebarBarangay.name}</div>
+                                    <div>Temperature: {(barangayWeather[selectedSidebarBarangay.name] ?? selectedSidebarBarangay.temperature).toFixed(1)}°C</div>
+                                    <div>Elevation: {selectedSidebarBarangay.elevation} m</div>
+                                    <div>Soil Type: {selectedSidebarBarangay.soilType}</div>
+                                    <div>Main Fruit: {selectedSidebarBarangay.fruits}</div>
+                                    <div>Pathways: {selectedSidebarBarangay.pathways}</div>
+                                    <div style={{ marginTop: 8, fontStyle: 'italic', color: '#b0bec5' }}>{selectedSidebarBarangay.notes}</div>
+                                    <div style={{ marginTop: 8 }}>
+                                        <Tooltip title="Show on map">
+                                            <IconButton size="small" sx={{ color: '#4CAF50' }} onClick={() => setFilters(prev => ({ ...prev, selectedBarangay: selectedSidebarBarangay.name }))}>
+                                                <InfoOutlinedIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Close">
+                                            <IconButton size="small" sx={{ color: '#e57373' }} onClick={() => setSelectedSidebarBarangay(null)}>
+                                                ×
+                                            </IconButton>
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <Divider />
                     
                     <FilterGroup>
@@ -764,8 +854,10 @@ const MapView = () => {
                             onChange={handleBarangaySelect}
                         >
                             <option value="">Select a barangay</option>
-                            {Object.keys(barangayData).map((barangay) => (
-                                <option key={barangay} value={barangay}>{barangay}</option>
+                            {barangays.map(barangay => (
+                                <option key={barangay.name} value={barangay.name}>
+                                    {barangay.name}
+                                </option>
                             ))}
                         </Select>
                     </FilterGroup>
@@ -817,8 +909,13 @@ const MapView = () => {
                             <div style={infoRowStyle}>
                                 <span style={infoLabelStyle}>Average Temperature:</span>
                                 <span style={infoValueStyle}>
-                                    {barangayInfo.temperature}°C
+                                    {weatherLoading ? 'Loading...' : (barangayWeather[barangayInfo.name] ?? barangayInfo.temperature) + '°C'}
                                 </span>
+                                {weatherError && (
+                                    <span style={{ color: 'red' }}>
+                                        Error: {weatherError}
+                                    </span>
+                                )}
                             </div>
                             
                             <div style={infoRowStyle}>

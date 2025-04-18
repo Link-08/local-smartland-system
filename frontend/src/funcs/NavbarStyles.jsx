@@ -53,7 +53,7 @@ export const NavLinks = styled.div`
         background: #223d3c;
         width: 100%;
         padding: 1rem;
-        transform: ${({ menuOpen }) => (menuOpen ? "translateX(0)" : "translateX(100%)")};
+        transform: ${({ $menuOpen }) => ($menuOpen ? "translateX(0)" : "translateX(100%)")};
         transition: transform 0.3s ease-in-out;
     }
 `;
@@ -124,4 +124,3 @@ export const DropdownItem = styled.p`
         background: #f0f0f0;
     }
 `;
-

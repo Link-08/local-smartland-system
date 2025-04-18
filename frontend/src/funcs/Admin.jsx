@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   GlobalStyle, AdminContainer, AdminHeader, AdminTitle, AdminStats,
   StatCard, StatNumber, StatLabel, TabContainer, Tab, SearchInput,
@@ -18,109 +19,40 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [accountLogs, setAccountLogs] = useState([]);
 
-  // Fetch users data (simulated)
+  // Fetch users data from backend
   useEffect(() => {
-    // In a real application, this would be an API call
-    const fetchUsers = () => {
-      // Sample data
-      const pending = [
-        {
-          id: 1,
-          name: "Juan Santos",
-          email: "juan.santos@example.com",
-          location: "Brgy. San Vicente, Cabanatuan",
-          landArea: "2.5 hectares",
-          registrationDate: "2025-04-10",
-          idType: "Driver's License",
-          idNumber: "N01-12-345678",
-          profileImage: "/api/placeholder/40/40",
-          idImage: "/api/placeholder/400/250",
-          selfieImage: "/api/placeholder/400/250",
-          status: "pending"
-        },
-        {
-          id: 2,
-          name: "Maria Cruz",
-          email: "mariacruz@example.com",
-          location: "Brgy. Aduas, Cabanatuan",
-          landArea: "1.8 hectares",
-          registrationDate: "2025-04-12",
-          idType: "Voter's ID",
-          idNumber: "7601-123A-12345678",
-          profileImage: "/api/placeholder/40/40",
-          idImage: "/api/placeholder/400/250",
-          selfieImage: "/api/placeholder/400/250",
-          status: "pending"
-        },
-        {
-          id: 3,
-          name: "Pedro Reyes",
-          email: "preyes@example.com",
-          location: "Brgy. Valdefuente, Cabanatuan",
-          landArea: "3.2 hectares",
-          registrationDate: "2025-04-13",
-          idType: "Passport",
-          idNumber: "P1234567A",
-          profileImage: "/api/placeholder/40/40",
-          idImage: "/api/placeholder/400/250",
-          selfieImage: "/api/placeholder/400/250",
-          status: "pending"
-        }
-      ];
-
-      const approved = [
-        {
-          id: 4,
-          name: "Ana Mendoza",
-          email: "ana.mendoza@example.com",
-          location: "Brgy. Kapitan Pepe, Cabanatuan",
-          landArea: "1.5 hectares",
-          registrationDate: "2025-04-08",
-          approvalDate: "2025-04-09",
-          idType: "Postal ID",
-          idNumber: "1234-5678-9012",
-          profileImage: "/api/placeholder/40/40",
-          status: "approved"
-        },
-        {
-          id: 5,
-          name: "Carlo Gomez",
-          email: "cgomez@example.com",
-          location: "Brgy. Santa Arcadia, Cabanatuan",
-          landArea: "4.0 hectares",
-          registrationDate: "2025-04-05",
-          approvalDate: "2025-04-07",
-          idType: "SSS ID",
-          idNumber: "33-1234567-8",
-          profileImage: "/api/placeholder/40/40",
-          status: "approved"
-        }
-      ];
-
-      const rejected = [
-        {
-          id: 6,
-          name: "Roberto Lim",
-          email: "rlim@example.com",
-          location: "Brgy. Mabini Extension, Cabanatuan",
-          landArea: "0.7 hectares",
-          registrationDate: "2025-04-11",
-          rejectionDate: "2025-04-13",
-          rejectionReason: "ID document unclear",
-          idType: "PhilHealth ID",
-          idNumber: "12-345678901-2",
-          profileImage: "/api/placeholder/40/40",
-          status: "rejected"
-        }
-      ];
-
-      setPendingUsers(pending);
-      setApprovedUsers(approved);
-      setRejectedUsers(rejected);
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Adjust as needed
+        const res = await axios.get('/admin/users', {
+          headers: { Authorization: token ? `Bearer ${token}` : '' }
+        });
+        setPendingUsers(res.data.pending || []);
+        setApprovedUsers(res.data.approved || []);
+        setRejectedUsers(res.data.rejected || []);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      }
     };
-
     fetchUsers();
+  }, []);
+
+  // Fetch logs for admin section (example)
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/admin/logs', {
+          headers: { Authorization: token ? `Bearer ${token}` : '' }
+        });
+        setAccountLogs(res.data || []);
+      } catch (error) {
+        console.error('Failed to fetch logs:', error);
+      }
+    };
+    fetchLogs();
   }, []);
 
   // Filter users based on search term
@@ -147,44 +79,31 @@ const Admin = () => {
     }
   };
 
-  // Handle user approval
-  const handleApprove = (userId) => {
-    // In a real application, this would be an API call
-    const userToApprove = pendingUsers.find(user => user.id === userId);
-    if (userToApprove) {
-      const updatedUser = {
-        ...userToApprove,
-        status: "approved",
-        approvalDate: new Date().toISOString().split('T')[0]
-      };
-      
-      setPendingUsers(pendingUsers.filter(user => user.id !== userId));
-      setApprovedUsers([...approvedUsers, updatedUser]);
-      
-      if (showModal && selectedUser?.id === userId) {
-        setShowModal(false);
-      }
+  // Approve user
+  const handleApprove = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`/admin/users/${userId}/approve`, {}, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+      });
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      // Optionally, refetch users or move to approved
+    } catch (error) {
+      console.error('Failed to approve user:', error);
     }
   };
 
-  // Handle user rejection
-  const handleReject = (userId, reason = "Application did not meet requirements") => {
-    // In a real application, this would be an API call
-    const userToReject = pendingUsers.find(user => user.id === userId);
-    if (userToReject) {
-      const updatedUser = {
-        ...userToReject,
-        status: "rejected",
-        rejectionDate: new Date().toISOString().split('T')[0],
-        rejectionReason: reason
-      };
-      
-      setPendingUsers(pendingUsers.filter(user => user.id !== userId));
-      setRejectedUsers([...rejectedUsers, updatedUser]);
-      
-      if (showModal && selectedUser?.id === userId) {
-        setShowModal(false);
-      }
+  // Reject user
+  const handleReject = async (userId, reason = "Application did not meet requirements") => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`/admin/users/${userId}/reject`, { reason }, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+      });
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      // Optionally, refetch users or move to rejected
+    } catch (error) {
+      console.error('Failed to reject user:', error);
     }
   };
 
@@ -416,11 +335,7 @@ const Admin = () => {
 
       {/* User Detail Modal */}
       {showModal && selectedUser && (
-        <ModalOverlay>
-          <ModalContent>
-            {/* Modal content would go here */}
-          </ModalContent>
-        </ModalOverlay>
+        renderUserModal()
       )}
     </AppWrapper>
   );

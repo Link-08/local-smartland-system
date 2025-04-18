@@ -20,9 +20,9 @@ const Navbar = ({ navigateTo }) => {
                     <Smartland>SMARTLAND</Smartland>
                     <System>SYSTEM</System>
                 </Logo>
-                <NavLinks menuOpen={menuOpen}>
-                    {menuItems.map((item, index) => (
-                        <NavItem key={index} onClick={() => navigateTo(item.toLowerCase())}>
+                <NavLinks $menuOpen={menuOpen}>
+                    {menuItems.map((item) => (
+                        <NavItem key={item} onClick={() => navigateTo(item.toLowerCase())}>
                             {item}
                         </NavItem>
                     ))}
