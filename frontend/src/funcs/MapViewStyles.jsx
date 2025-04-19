@@ -1,5 +1,6 @@
 import styled, { createGlobalStyle } from 'styled-components';
 
+// Global styles
 export const GlobalStyles = createGlobalStyle`
   body {
     margin: 0;
@@ -11,36 +12,53 @@ export const GlobalStyles = createGlobalStyle`
   }
 `;
 
+// Layout containers
 export const Container = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
   height: 100vh;
+  margin-top: 80px; // For navbar
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 export const MapSection = styled.div`
-  width: 70vw; // Map takes up 70% of the viewport width
-  height: calc(100vh - 80px); // Subtract navbar height
+  width: 70vw;
+  height: calc(100vh - 80px);
   position: relative;
+  
+  @media (max-width: 768px) {
+    width: 100vw;
+    height: 60vh;
+  }
 `;
 
 export const FilterSection = styled.div`
-  height: calc(100vh - 80px); // Subtract navbar height
-  padding: 20px;
+  width: 30vw;
+  height: calc(100vh - 80px);
   background-color: #34495E;
   color: #ecf0f1;
-  overflow-y: auto;
+  
+  @media (max-width: 768px) {
+    width: 100vw;
+    height: 40vh;
+  }
 `;
 
+export const FilterScrollContainer = styled.div`
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+`;
+
+// Form elements
 export const Label = styled.label`
   font-size: 16px;
   margin-left: 5px;
   color: #ecf0f1;
-`;
-
-export const Checkbox = styled.input`
-  width: 20px;
-  height: 20px;
 `;
 
 export const Select = styled.select`
@@ -54,6 +72,35 @@ export const Select = styled.select`
   font-size: 16px;
 `;
 
+export const FilterGroup = styled.div`
+  margin-bottom: 20px;
+`;
+
+export const FilterTitle = styled.h4`
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #ecf0f1;
+`;
+
+export const FilterItem = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+`;
+
+export const FilterGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+`;
+
+export const Divider = styled.hr`
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid #7f8c8d;
+`;
+
+// Map overlay elements
 export const LocationOverlay = styled.div`
   position: absolute;
   bottom: 20px;
@@ -85,33 +132,17 @@ export const ViewLargerMapLink = styled.a`
   margin-top: 5px;
 `;
 
-export const Divider = styled.hr`
-  margin: 20px 0;
-  border: 0;
-  border-top: 1px solid #7f8c8d;
-`;
-
-export const FilterGroup = styled.div`
-  margin-bottom: 20px;
-`;
-
-export const FilterTitle = styled.h4`
-  font-size: 18px;
-  margin-bottom: 10px;
-  color: #ecf0f1;
-`;
-
-export const FilterItem = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-`;
-
+// Legend components
 export const Legend = styled.div`
   margin-top: 20px;
   padding: 10px;
   background-color: #34495E;
   border-radius: 5px;
+`;
+
+export const LegendContainer = styled.div`
+  max-height: 200px;
+  overflow-y: auto;
 `;
 
 export const LegendItem = styled.div`
@@ -126,23 +157,118 @@ export const LegendItem = styled.div`
   }
 `;
 
-export const MapContainerStyled = styled.div`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background-color: #34495E;
+// Temperature range components
+export const TemperatureRangeCard = styled.div`
+  margin: 20px 0;
+  background: #263238;
+  padding: 16px;
+  border-radius: 8px;
 `;
 
-export const MapContainerLegend = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 10px;
-  border-radius: 5px;
+export const FilterTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #ecf0f1;
+  font-weight: bold;
+`;
+
+export const RangeDisplay = styled.span`
+  color: #ecf0f1;
+  margin-left: 4px;
+`;
+
+export const SearchSortRow = styled.div`
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+
+// Barangay list components
+export const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+`;
+
+export const ScrollableList = styled.div`
+  background: #37474F;
+  border-radius: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 12px;
+`;
+
+export const EmptyListItem = styled.div`
+  padding: 12px;
+  color: #fff;
+  text-align: center;
+`;
+
+export const BarangayListItem = styled.div`
+  padding: 10px 12px;
+  border-bottom: 1px solid #263238;
+  cursor: pointer;
+  background-color: ${props => props.selected ? '#455A64' : 'transparent'};
+  
+  &:hover {
+    background-color: '#455A64';
+  }
+`;
+
+export const BarangayName = styled.div`
+  color: #fff;
+  font-weight: bold;
+`;
+
+export const BarangayDetails = styled.div`
+  color: #b0bec5;
+  font-size: 0.85rem;
+  margin-top: 4px;
+`;
+
+// Selected barangay card components
+export const SelectedBarangayCard = styled.div`
+  margin-top: 16px;
+  background: #37474F;
+  border-radius: 8px;
+  padding: 16px;
   color: #fff;
 `;
 
+export const BarangayCardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 12px;
+`;
+
+export const ActionButtons = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+export const BarangayInfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+`;
+
+export const BarangayInfoItem = styled.div`
+  color: #ecf0f1;
+`;
+
+export const BarangayNotes = styled.div`
+  margin-top: 12px;
+  font-style: italic;
+  color: #b0bec5;
+`;
+
+// Style objects
 export const barangayInfoBoxStyle = {
   padding: '15px',
   backgroundColor: '#2C3E50',
