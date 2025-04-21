@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
+const elevationRoutes = require("./routes/elevation");
 const pool = require("./config/db");
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
+app.use("/api/elevations", elevationRoutes);
 
 app.get("/", async (req, res) => {
     try {
