@@ -68,7 +68,6 @@
   { "name": "Rizdelis", "center": [15.4885, 120.9604], "radius": 126, "soilType": "Loamy Soil", "fruits": "Mangoes", "elevation": 380, "pathways": "Good", "notes": "" },
   { "name": "Samon", "center": [15.4972, 120.9399], "radius": 652, "soilType": "Sandy Soil", "fruits": "Kalamansi", "elevation": 210, "pathways": "Fair", "notes": "" },
   { "name": "San Isidro", "center": [15.4923, 121.0009], "radius": 1273, "soilType": "Clay Soil", "fruits": "Watermelon", "elevation": 170, "pathways": "Poor", "notes": "" },
-  { "name": "San Isidro", "center": [15.4923, 121.0009], "radius": 1273, "soilType": "Silty Soil", "fruits": "Mangoes", "elevation": 450, "pathways": "Good", "notes": "" },
   { "name": "San Josef Norte", "center": [15.4821, 120.9497], "radius": 445, "soilType": "Peaty Soil", "fruits": "Kalamansi", "elevation": 330, "pathways": "Fair", "notes": "" },
   { "name": "San Josef Sur", "center": [15.4740, 120.9460], "radius": 499, "soilType": "Chalky Soil", "fruits": "Watermelon", "elevation": 140, "pathways": "Fair", "notes": "" },
   { "name": "San Juan Población", "center": [15.4723, 120.9573], "radius": 498, "soilType": "Loamy Soil", "fruits": "Mangoes", "elevation": 310, "pathways": "Good", "notes": "" },
