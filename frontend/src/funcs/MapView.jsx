@@ -426,7 +426,7 @@ const MapView = () => {
 			selectedBarangay: ''
 		});
 		setHighlightedAreas([]);
-		setTempRange([20, 38]);
+		setTempRange([20, 35]);
 		setSearchTerm('');
 	};
 
@@ -471,29 +471,35 @@ const MapView = () => {
                             legendItem === 'Medium (201-400m)' ? '#673AB7' : '#E91E63';
                 }
             } else if (legendType === 'temperature') {
-                if (filters.temperature) {
-                    const matchingBarangays = barangays.filter(name => {
-                        const temp = barangayWeather[name] ?? barangayData[name].temperature;
-                        return temp >= tempRange[0] && temp <= tempRange[1];
-                    });
-                    setHighlightedAreas(matchingBarangays.map(name => ({
-                        name,
-                        color: '#4CAF50',
-                        opacity: 0.6
-                    })));
-                    return;
-                }
-                // Handling temperature ranges
-                const temp = barangayWeather[name] ?? data.temperature;
-                const tempRange = legendItem === 'Cool (< 26°C)' ? temp < 26 :
-                                legendItem === 'Moderate (26-28°C)' ? temp >= 26 && temp <= 28 :
-                                temp > 28;
-                if (tempRange) {
-                    matches = true;
-                    color = legendItem === 'Cool (< 26°C)' ? '#2196F3' :
-                           legendItem === 'Moderate (26-28°C)' ? '#4CAF50' : '#FF5722';
-                }
-            }
+				if (filters.temperature) {
+					// Define tempRange here, before using it in the filter
+					const tempRange = filters.temperature; // Assuming this is an array like [min, max]
+					
+					const matchingBarangays = barangays.filter(barangay => {
+						const temp = barangayWeather[barangay.name] ?? barangayData[barangay.name]?.temperature;
+						return temp >= tempRange[0] && temp <= tempRange[1];
+					});
+					
+					setHighlightedAreas(matchingBarangays.map(barangay => ({
+						name: barangay.name,
+						color: '#4CAF50',
+						opacity: 0.6
+					})));
+					return;
+				}
+				
+				// Handling temperature ranges
+				const temp = barangayWeather[name] ?? data.temperature;
+				const tempRangeMatch = legendItem === 'Cool (< 26°C)' ? temp < 26 :
+									  legendItem === 'Moderate (26-28°C)' ? temp >= 26 && temp <= 28 :
+									  temp > 28;
+									  
+				if (tempRangeMatch) {
+					matches = true;
+					color = legendItem === 'Cool (< 26°C)' ? '#2196F3' :
+						   legendItem === 'Moderate (26-28°C)' ? '#4CAF50' : '#FF5722';
+				}
+			}
             
             if (matches) {
                 matchingBarangays.push({
