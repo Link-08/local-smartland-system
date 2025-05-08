@@ -258,36 +258,56 @@ const MapView = () => {
     }, []);
 
     useEffect(() => {
-        if (!filters.temperature) {
-            setFilteredBarangays([]);
-            return;
-        }
-        let matches = barangays.filter(b => {
-            const temp = barangayWeather[b.name] ?? b.temperature;
-            const nameMatch = b.name.toLowerCase().includes(searchTerm.toLowerCase());
-            return temp >= tempRange[0] && temp <= tempRange[1] && nameMatch;
-        });
-        // Sort matches
-        matches = matches.sort((a, b) => {
-            let aVal, bVal;
-            if (sortField === 'temperature') {
-                aVal = barangayWeather[a.name] ?? a.temperature;
-                bVal = barangayWeather[b.name] ?? b.temperature;
-            } else if (sortField === 'elevation') {
-                aVal = a.elevation;
-                bVal = b.elevation;
-            } else if (sortField === 'fruit') {
-                aVal = a.fruits;
-                bVal = b.fruits;
-            } else {
-                aVal = a.name;
-                bVal = b.name;
-            }
-            if (typeof aVal === 'string') return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-        });
-        setFilteredBarangays(matches);
-    }, [filters.temperature, tempRange, barangayWeather, barangays, sortField, sortOrder, searchTerm]);
+		if (!filters.temperature) {
+			setFilteredBarangays([]);
+			return;
+		}
+		
+		// If temperature filter is active, find barangays within the selected temp range
+		let matches = barangays.filter(b => {
+			const temp = barangayWeather[b.name] ?? b.temperature;
+			const nameMatch = b.name.toLowerCase().includes(searchTerm.toLowerCase());
+			return temp >= tempRange[0] && temp <= tempRange[1] && nameMatch;
+		});
+		
+		// Sort matches
+		matches = matches.sort((a, b) => {
+			let aVal, bVal;
+			if (sortField === 'temperature') {
+				aVal = barangayWeather[a.name] ?? a.temperature;
+				bVal = barangayWeather[b.name] ?? b.temperature;
+			} else if (sortField === 'elevation') {
+				aVal = a.elevation;
+				bVal = b.elevation;
+			} else if (sortField === 'fruit') {
+				aVal = a.fruits;
+				bVal = b.fruits;
+			} else {
+				aVal = a.name;
+				bVal = b.name;
+			}
+			if (typeof aVal === 'string') return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+			return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+		});
+		
+		setFilteredBarangays(matches);
+		
+		// Automatically highlight barangays that match the temperature filter on the map
+		if (filters.temperature) {
+			const tempHighlightedAreas = matches.map(barangay => ({
+				name: barangay.name,
+				color: getTempColor(barangayWeather[barangay.name] ?? barangay.temperature),
+				opacity: 0.6
+			}));
+			setHighlightedAreas(tempHighlightedAreas);
+		}
+	}, [filters.temperature, tempRange, barangayWeather, barangays, sortField, sortOrder, searchTerm]);
+
+	const getTempColor = (temp) => {
+		if (temp < 26) return '#2196F3'; // Cool
+		if (temp >= 26 && temp <= 28) return '#4CAF50'; // Moderate
+		return '#FF5722'; // Warm
+	};
 
     const handleFilterChange = (filter) => {
         setFilters({ ...filters, [filter]: !filters[filter] });
@@ -431,63 +451,46 @@ const MapView = () => {
 	};
 
     const handleLegendClick = (legendType, legendItem) => {
-        // If a specific barangay is selected, highlight it
-        if (filters.selectedBarangay) {
-            setHighlightedAreas([{
-                name: filters.selectedBarangay,
-                color: legendType === 'soilType' ? 
-                    soilTypeColors[barangayData[filters.selectedBarangay].soilType] : 
-                    fruitColors[barangayData[filters.selectedBarangay].fruits],
-                opacity: 0.6
-            }]);
-            return;
-        }
-
-        // Otherwise, find and highlight all barangays that match the selected filter
-        const matchingBarangays = [];
-        barangays.forEach((barangay) => {
-            const name = barangay.name;
-            const data = barangayData[name];
-            let matches = false;
-            let color = '#3388ff'; // Default color
-            
-            if (legendType === 'soilType' && data.soilType === legendItem) {
-                matches = true;
-                color = soilTypeColors[data.soilType];
-            } else if (legendType === 'fruits' && data.fruits === legendItem) {
-                matches = true;
-                color = fruitColors[data.fruits];
-            } else if (legendType === 'pathways' && data.pathways === legendItem) {
-                matches = true;
-                color = pathwayStatusInfo[data.pathways].color;
-            } else if (legendType === 'elevation') {
-                // Handling elevation ranges: low, medium, high
-                const elevRange = legendItem === 'Low (0-200m)' ? data.elevation <= 200 :
-                                 legendItem === 'Medium (201-400m)' ? data.elevation > 200 && data.elevation <= 400 :
-                                 data.elevation > 400;
-                if (elevRange) {
-                    matches = true;
-                    color = legendItem === 'Low (0-200m)' ? '#2196F3' :
-                            legendItem === 'Medium (201-400m)' ? '#673AB7' : '#E91E63';
-                }
-            } else if (legendType === 'temperature') {
-				if (filters.temperature) {
-					// Define tempRange here, before using it in the filter
-					const tempRange = filters.temperature; // Assuming this is an array like [min, max]
-					
-					const matchingBarangays = barangays.filter(barangay => {
-						const temp = barangayWeather[barangay.name] ?? barangayData[barangay.name]?.temperature;
-						return temp >= tempRange[0] && temp <= tempRange[1];
-					});
-					
-					setHighlightedAreas(matchingBarangays.map(barangay => ({
-						name: barangay.name,
-						color: '#4CAF50',
-						opacity: 0.6
-					})));
-					return;
+		// If a specific barangay is selected, highlight it
+		if (filters.selectedBarangay) {
+			setHighlightedAreas([{
+				name: filters.selectedBarangay,
+				color: legendType === 'soilType' ? 
+					soilTypeColors[barangayData[filters.selectedBarangay].soilType] : 
+					fruitColors[barangayData[filters.selectedBarangay].fruits],
+				opacity: 0.6
+			}]);
+			return;
+		}
+	
+		// Otherwise, find and highlight all barangays that match the selected filter
+		const matchingBarangays = [];
+		barangays.forEach((barangay) => {
+			const name = barangay.name;
+			const data = barangayData[name];
+			let matches = false;
+			let color = '#3388ff'; // Default color
+			
+			if (legendType === 'soilType' && data.soilType === legendItem) {
+				matches = true;
+				color = soilTypeColors[data.soilType];
+			} else if (legendType === 'fruits' && data.fruits === legendItem) {
+				matches = true;
+				color = fruitColors[data.fruits];
+			} else if (legendType === 'pathways' && data.pathways === legendItem) {
+				matches = true;
+				color = pathwayStatusInfo[data.pathways].color;
+			} else if (legendType === 'elevation') {
+				// Handling elevation ranges: low, medium, high
+				const elevRange = legendItem === 'Low (0-200m)' ? data.elevation <= 200 :
+								 legendItem === 'Medium (201-400m)' ? data.elevation > 200 && data.elevation <= 400 :
+								 data.elevation > 400;
+				if (elevRange) {
+					matches = true;
+					color = legendItem === 'Low (0-200m)' ? '#2196F3' :
+							legendItem === 'Medium (201-400m)' ? '#673AB7' : '#E91E63';
 				}
-				
+			} else if (legendType === 'temperature') {
 				// Handling temperature ranges
 				const temp = barangayWeather[name] ?? data.temperature;
 				const tempRangeMatch = legendItem === 'Cool (< 26°C)' ? temp < 26 :
@@ -500,17 +503,17 @@ const MapView = () => {
 						   legendItem === 'Moderate (26-28°C)' ? '#4CAF50' : '#FF5722';
 				}
 			}
-            
-            if (matches) {
-                matchingBarangays.push({
-                    name: name,
-                    color: color,
-                    opacity: 0.6
-                });
-            }
-        });
-        setHighlightedAreas(matchingBarangays);
-    };
+			
+			if (matches) {
+				matchingBarangays.push({
+					name: name,
+					color: color,
+					opacity: 0.6
+				});
+			}
+		});
+		setHighlightedAreas(matchingBarangays);
+	};
 
     // Show all barangays when that option is selected
     useEffect(() => {
