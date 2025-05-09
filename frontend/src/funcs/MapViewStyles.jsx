@@ -10,6 +10,10 @@ export const GlobalStyles = createGlobalStyle`
 		background-color: #2C3E50;
 		color: #ecf0f1;
 		overflow-x: hidden;
+		box-sizing: border-box;
+	}
+	*, *:before, *:after {
+		box-sizing: inherit;
 	}
 `;
 
@@ -17,17 +21,26 @@ export const Container = styled.div`
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
-	margin-top: 80px;
+	align-items: stretch;
+	height: 100vh;
+	width: 100vw;
+	margin: 0;
+	padding: 0;
 
 	@media (max-width: 768px) {
 		flex-direction: column;
+		height: auto;
+		min-height: 100vh;
+		width: 100vw;
 	}
 `;
 
 export const MapSection = styled.div`
 	width: 70vw;
-	height: calc(100vh - 80px);
+	height: 100vh;
 	position: relative;
+	margin: 0;
+	padding: 0;
 
 	@media (max-width: 768px) {
 		width: 100vw;
@@ -37,9 +50,12 @@ export const MapSection = styled.div`
 
 export const FilterSection = styled.div`
 	width: 30vw;
-	height: calc(100vh - 80px);
+	height: 100vh;
 	background-color: #34495E;
 	color: #ecf0f1;
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
 
 	@media (max-width: 768px) {
 		width: 100vw;
