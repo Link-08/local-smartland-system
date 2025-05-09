@@ -76,8 +76,9 @@ import {
 } from 'react-leaflet';
 import { getBarangaysArray, getBarangaysObject } from './loadBarangays';
 
-// Import GeoJSON for OSM roads
+// Import GeoJSON for OSM roads and irrigation
 import roadsData from './cabanatuan-roads.json';
+import irrigationData from './cabanatuan-irrigations.json';
 
 const OPENWEATHERMAP_API_KEY = "c0a32e00d3c50ae032ea9efd623bcce4";
 
@@ -351,6 +352,46 @@ const roadCategoryMap = {
     }
 };
 
+// Define irrigation categories and their properties
+const irrigationCategories = [
+    'Rivers',
+    'Canals',
+    'Ditches'
+];
+
+const irrigationCategoryMap = {
+    'Rivers': {
+        label: 'Rivers',
+        color: '#1565C0', // Deeper blue for better contrast
+        hoverColor: '#0D47A1', // Even deeper blue for hover state
+        types: ['river', 'stream', 'water'],
+        description: 'Major water bodies and natural waterways. Important for irrigation and drainage.',
+        weight: 5, // Thicker lines for major waterways
+        opacity: 0.9,
+        fillOpacity: 0.5
+    },
+    'Canals': {
+        label: 'Canals',
+        color: '#29B6F6', // Brighter blue for better visibility
+        hoverColor: '#0288D1', // Darker blue for hover state
+        types: ['canal', 'drain'],
+        description: 'Man-made channels for water distribution and irrigation.',
+        weight: 4,
+        opacity: 0.85,
+        fillOpacity: 0.4
+    },
+    'Ditches': {
+        label: 'Ditches',
+        color: '#4FC3F7', // Light blue with better contrast
+        hoverColor: '#039BE5', // Darker blue for hover state
+        types: ['ditch', 'waterway'],
+        description: 'Smaller water channels for field-level irrigation and drainage.',
+        weight: 3,
+        opacity: 0.8,
+        fillOpacity: 0.3
+    }
+};
+
 const MapView = () => {
     // Initialize all state values with explicit defaults
     const [selectedLocation, setSelectedLocation] = useState({
@@ -392,6 +433,7 @@ const MapView = () => {
     const [selectedRoadCategory, setSelectedRoadCategory] = useState('');
     const [lastWeatherFetch, setLastWeatherFetch] = useState(null);
     const [barangayColors] = useState(() => generateBarangayColors(getBarangaysArray()));
+    const [selectedIrrigationCategory, setSelectedIrrigationCategory] = useState('');
 
     // Helper function to get color based on filter type and barangay
     const getBarangayColor = (barangay, filterType, barangayColors) => {
@@ -469,11 +511,12 @@ const MapView = () => {
         return { min, max, avg };
     };
 
-    // Ensure consistent state updates for filters
+    // Update handleFilterChange to handle irrigation
     const handleFilterChange = (filter) => {
         // Clear all visual elements first
         setHighlightedAreas([]);
         setSelectedRoadCategory('');
+        setSelectedIrrigationCategory('');
         setBarangayInfo(null);
 
         setFilters(prev => {
@@ -797,6 +840,51 @@ const MapView = () => {
                     }}
                   />
                 )}
+
+                {/* Add Irrigation GeoJSON Layer */}
+                {filters.irrigation && selectedIrrigationCategory && (
+                    <GeoJSON
+                        key={selectedIrrigationCategory}
+                        data={{
+                            type: 'FeatureCollection',
+                            features: irrigationData.features.filter(f => 
+                                irrigationCategoryMap[selectedIrrigationCategory].types.includes(f.properties.waterway)
+                            )
+                        }}
+                        style={{
+                            color: irrigationCategoryMap[selectedIrrigationCategory].color,
+                            weight: irrigationCategoryMap[selectedIrrigationCategory].weight,
+                            opacity: irrigationCategoryMap[selectedIrrigationCategory].opacity,
+                            fillColor: irrigationCategoryMap[selectedIrrigationCategory].color,
+                            fillOpacity: irrigationCategoryMap[selectedIrrigationCategory].fillOpacity,
+                            dashArray: selectedIrrigationCategory === 'Ditches' ? '5, 5' : null, // Dashed lines for ditches
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        }}
+                        onEachFeature={(feature, layer) => {
+                            layer.on({
+                                mouseover: (e) => {
+                                    const layer = e.target;
+                                    layer.setStyle({
+                                        color: irrigationCategoryMap[selectedIrrigationCategory].hoverColor,
+                                        weight: irrigationCategoryMap[selectedIrrigationCategory].weight + 1,
+                                        opacity: 1,
+                                        fillOpacity: irrigationCategoryMap[selectedIrrigationCategory].fillOpacity + 0.1
+                                    });
+                                },
+                                mouseout: (e) => {
+                                    const layer = e.target;
+                                    layer.setStyle({
+                                        color: irrigationCategoryMap[selectedIrrigationCategory].color,
+                                        weight: irrigationCategoryMap[selectedIrrigationCategory].weight,
+                                        opacity: irrigationCategoryMap[selectedIrrigationCategory].opacity,
+                                        fillOpacity: irrigationCategoryMap[selectedIrrigationCategory].fillOpacity
+                                    });
+                                }
+                            });
+                        }}
+                    />
+                )}
                 
                 {/* Render highlighted area circles */}
                 <LayerGroup>
@@ -986,10 +1074,9 @@ const MapView = () => {
                         type="checkbox" 
                         id="irrigation"
                         checked={filters.irrigation}
-                        onChange={() => {}}
-                        disabled
+                        onChange={() => handleFilterChange('irrigation')}
                       />
-                      <Label htmlFor="irrigation">Irrigation (coming soon)</Label>
+                      <Label htmlFor="irrigation">Irrigation</Label>
                     </FilterItem>
 
                     <FilterItem>
@@ -1217,6 +1304,69 @@ const MapView = () => {
                                     <div style={{ fontSize: '0.9em', color: '#bdc3c7', marginLeft: '28px', marginTop: '4px' }}>
                                         Types: {category.types.join(', ')}
                   </div>
+                                </div>
+                            ))}
+                        </div>
+                    </FilterGroup>
+                )}
+
+                {/* Irrigation Filter Section */}
+                {filters.irrigation && (
+                    <FilterGroup>
+                        <FilterTitle>Irrigation Categories</FilterTitle>
+                        <div style={{ marginTop: '10px' }}>
+                            {irrigationCategories.map(cat => (
+                                <div
+                                    key={cat}
+                                    style={{
+                                        padding: '12px',
+                                        marginBottom: '10px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px',
+                                        transition: 'all 0.2s ease-in-out',
+                                        border: selectedIrrigationCategory === cat ? 
+                                            `2px solid ${irrigationCategoryMap[cat].color}` : 
+                                            '2px solid transparent'
+                                    }}
+                                    onClick={() => setSelectedIrrigationCategory(cat)}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <input
+                                            type="radio"
+                                            name="irrigation-category"
+                                            value={cat}
+                                            checked={selectedIrrigationCategory === cat}
+                                            onChange={() => setSelectedIrrigationCategory(cat)}
+                                            style={{ margin: 0 }}
+                                        />
+                                        <div style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            backgroundColor: irrigationCategoryMap[cat].color,
+                                            borderRadius: '4px',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                            border: `2px solid ${irrigationCategoryMap[cat].hoverColor}`
+                                        }} />
+                                        <span style={{ 
+                                            fontWeight: 'bold',
+                                            color: '#fff',
+                                            fontSize: '1.1em'
+                                        }}>
+                                            {irrigationCategoryMap[cat].label}
+                                        </span>
+                                    </div>
+                                    <div style={{ 
+                                        fontSize: '0.9em', 
+                                        color: '#bdc3c7',
+                                        marginLeft: '34px',
+                                        lineHeight: '1.4'
+                                    }}>
+                                        {irrigationCategoryMap[cat].description}
+                                    </div>
                                 </div>
                             ))}
                         </div>
