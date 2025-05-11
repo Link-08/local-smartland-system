@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
     try {
-        const { username, email, password, role } = req.body;
+        const { email, password, role } = req.body;
         
         // Validate role
         if (role && !['buyer', 'seller'].includes(role)) {
@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
         }
 
         const user = await User.create({
-            username,
+            username: email, // Use email as username if not provided
             email,
             password,
             role: role || 'buyer'
@@ -28,7 +28,6 @@ router.post("/register", async (req, res) => {
         res.status(201).json({
             user: {
                 id: user.id,
-                username: user.username,
                 email: user.email,
                 role: user.role
             },
