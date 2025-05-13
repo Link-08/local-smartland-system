@@ -2,7 +2,11 @@
   "type": "FeatureCollection",
   "generator": "overpass-turbo",
   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+<<<<<<< HEAD
   "timestamp": "2025-04-21T14:52:04Z",
+=======
+  "timestamp": "2025-05-09T04:28:21Z",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
   "features": [
     {
       "type": "Feature",
@@ -12,7 +16,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -262,7 +270,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
         "nat_name": "Daang Maharlika",
@@ -293,7 +305,10 @@
         "highway": "primary",
         "lanes": "4",
         "lit": "yes",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Nueva Ecija-Aurora Road",
         "parking:both": "lane",
         "parking:both:orientation": "parallel",
@@ -539,7 +554,10 @@
         "alt_name": "Mayapyap - General Mamerto Natividad Road",
         "designation": "provincial_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sumbillo Street",
         "source": "1:50K topo map"
       },
@@ -638,7 +656,10 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "ref": "1"
       },
@@ -698,6 +719,13 @@
             15.5250865
           ],
           [
+<<<<<<< HEAD
+=======
+            120.9361012,
+            15.5253569
+          ],
+          [
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             120.9360361,
             15.5255319
           ],
@@ -718,6 +746,7 @@
             15.5279242
           ],
           [
+<<<<<<< HEAD
             120.9353139,
             15.528044
           ],
@@ -726,6 +755,8 @@
             15.5281181
           ],
           [
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             120.9352201,
             15.5282168
           ],
@@ -745,8 +776,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/36960478",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "50",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -801,6 +837,13 @@
             15.5174148
           ],
           [
+<<<<<<< HEAD
+=======
+            120.9398585,
+            15.5167093
+          ],
+          [
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             120.9402608,
             15.516204
           ],
@@ -945,6 +988,13 @@
             15.5230125
           ],
           [
+<<<<<<< HEAD
+=======
+            120.9328365,
+            15.5240658
+          ],
+          [
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             120.9329694,
             15.5242646
           ],
@@ -969,7 +1019,10 @@
       "properties": {
         "@id": "way/38425733",
         "highway": "primary",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Calle Vicente"
       },
       "geometry": {
@@ -1003,7 +1056,11 @@
         "highway": "secondary",
         "is_in:city": "Cabanatuan",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. H. del Pilar Street",
         "name:etymology": "Marcelo Hilario del Pilar",
         "name:etymology:wikidata": "Q312542",
@@ -1149,8 +1206,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/42391779",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Melencio Street"
       },
       "geometry": {
@@ -1188,9 +1250,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/52016416",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Street",
         "surface": "concrete"
       },
@@ -1261,9 +1329,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/52016635",
+<<<<<<< HEAD
         "highway": "secondary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Beedle Street",
         "surface": "concrete"
       },
@@ -1286,9 +1360,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/52018937",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Doña Isabel Avenue",
         "surface": "concrete"
       },
@@ -1335,10 +1415,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/60724260",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue",
         "oneway": "yes",
         "surface": "asphalt"
@@ -1382,9 +1469,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/60724261",
+<<<<<<< HEAD
         "highway": "secondary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Gabaldon Street",
         "surface": "concrete"
       },
@@ -1450,12 +1543,21 @@
             15.4900695
           ],
           [
+<<<<<<< HEAD
             120.9703138,
             15.4888639
           ],
           [
             120.9703359,
             15.4888107
+=======
+            120.9703272,
+            15.4888368
+          ],
+          [
+            120.9704417,
+            15.4885643
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9705301,
@@ -1500,10 +1602,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/60724264",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Zulueta Street",
         "surface": "asphalt"
       },
@@ -1586,8 +1695,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/60785732",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Luna Street",
         "oneway": "yes"
       },
@@ -1622,8 +1736,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/60785733",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "A. Valino Street",
         "source": "GPSTogo"
       },
@@ -1668,8 +1787,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/65969434",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Quimson Street",
         "source": "G-eMapper"
       },
@@ -1712,9 +1836,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/65969435",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street",
         "surface": "concrete"
       },
@@ -1749,9 +1879,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/65969448",
+<<<<<<< HEAD
         "highway": "secondary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "D. Garcia Street",
         "source": "GPSTogo",
         "surface": "concrete"
@@ -1935,7 +2071,10 @@
         "@id": "way/78400523",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -2021,7 +2160,11 @@
         "@id": "way/78406077",
         "designation": "national_tertiary_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sumacab Road"
       },
       "geometry": {
@@ -2297,7 +2440,10 @@
         "@id": "way/78406078",
         "highway": "trunk",
         "lanes": "6",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -2491,9 +2637,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78487609",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Don Manuel Avenue"
       },
       "geometry": {
@@ -2531,8 +2683,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78487833",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Soriano Street"
       },
       "geometry": {
@@ -2666,9 +2823,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78487840",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
         "name": "T Rodriguez Street"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "name": "T. Rodriguez Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -2772,7 +2935,11 @@
         "designation": "national_tertiary_road",
         "highway": "secondary",
         "lane_markings": "no",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "San Josef Road",
         "surface": "concrete"
       },
@@ -2887,8 +3054,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78621078",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -2949,8 +3121,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78621086",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -3099,7 +3276,11 @@
         "@id": "way/78621092",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road",
         "oneway": "yes"
       },
@@ -3122,9 +3303,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78621095",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "parking:left": "separate",
@@ -3180,8 +3367,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78622343",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road"
       },
       "geometry": {
@@ -3291,9 +3483,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78622344",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -3346,9 +3544,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78622345",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sanciangco Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -3376,9 +3580,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78625644",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -3537,8 +3747,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78625646",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Perigola Street"
       },
       "geometry": {
@@ -3572,8 +3787,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78625660",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -3776,7 +3996,10 @@
         "@id": "way/78625663",
         "designation": "national_tertiary_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "50",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Valdefuente-Fortaleza Road",
         "nat_name": "Valdefuente-Fortaleza Road"
       },
@@ -3835,8 +4058,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78625664",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -3968,10 +4196,17 @@
       "properties": {
         "@id": "way/78639623",
         "cycleway:both": "no",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "oneway:bicycle": "no",
@@ -4040,9 +4275,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78640963",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Luna Street",
         "oneway": "yes",
         "surface": "asphalt"
@@ -4074,8 +4315,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78644587",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Soriano Street",
         "source": "GPSTogo"
       },
@@ -4118,8 +4364,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78649516",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "paved"
       },
       "geometry": {
@@ -4193,8 +4444,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78649521",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "paved"
       },
       "geometry": {
@@ -4409,9 +4665,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/78652911",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Doña Encarnacion Avenue",
         "surface": "paved"
       },
@@ -5396,7 +5658,10 @@
       "properties": {
         "@id": "way/80720075",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Fairway Lane"
       },
       "geometry": {
@@ -5586,7 +5851,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -5696,8 +5965,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/102516903",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mampulog Road"
       },
       "geometry": {
@@ -5929,9 +6203,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106230867",
+<<<<<<< HEAD
         "addr:city": "Cabanatuan",
         "highway": "residential",
         "is_in:city": "Cabanatuan",
+=======
+        "highway": "residential",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "lane_markings": "no",
         "name": "Kapitan Pepe Avenue",
         "surface": "concrete"
@@ -6025,7 +6303,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
         "nat_name": "Daang Maharlika",
@@ -6162,9 +6444,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106234186",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Saint Joseph Avenue",
         "parking:both": "lane",
         "parking:both:orientation": "parallel",
@@ -6381,9 +6669,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106234191",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Rizal Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -6534,7 +6828,11 @@
         "int_ref:colour": "blue",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "maxweight": "18",
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
@@ -6563,10 +6861,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106234202",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "parking:both": "lane",
         "parking:both:orientation": "parallel",
@@ -6756,9 +7061,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106347822",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
         "name": "N Valino Street"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "name": "N. Valino Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -6787,8 +7098,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106349940",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -6814,9 +7130,15 @@
       "properties": {
         "@id": "way/106349941",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -6837,9 +7159,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/106349942",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Luna Street",
         "old_name": "MRR/PNR Arayat Line",
         "railway": "abandoned"
@@ -6868,7 +7196,10 @@
       "properties": {
         "@id": "way/106608520",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "20",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Calle Vicente"
       },
       "geometry": {
@@ -6920,7 +7251,10 @@
         "highway": "secondary",
         "lanes": "2",
         "lit": "yes",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. H. del Pilar Street",
         "name:etymology": "Marcelo Hilario del Pilar",
         "name:etymology:wikidata": "Q312542",
@@ -7424,8 +7758,17 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9759693,
             15.4874575
+=======
+            120.9759385,
+            15.4874627
+          ],
+          [
+            120.9760366,
+            15.4880054
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9761081,
@@ -7729,8 +8072,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700553",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -7828,8 +8176,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700559",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Luz de Guzman Street",
         "surface": "concrete"
       },
@@ -8027,8 +8380,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700564",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Pinatubo Street"
       },
       "geometry": {
@@ -8079,8 +8437,13 @@
             15.4851461
           ],
           [
+<<<<<<< HEAD
             120.9657118,
             15.4860483
+=======
+            120.9657198,
+            15.486025
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -8128,9 +8491,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700572",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "surface": "concrete"
       },
@@ -8251,8 +8620,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700577",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Quimson Street"
       },
       "geometry": {
@@ -8305,12 +8679,21 @@
             15.4893951
           ],
           [
+<<<<<<< HEAD
             120.9756756,
             15.4880541
           ],
           [
             120.9755941,
             15.4875286
+=======
+            120.9756474,
+            15.4880748
+          ],
+          [
+            120.9755713,
+            15.4874808
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -8346,8 +8729,12 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700583",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -8478,8 +8865,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115700591",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Tandang Sora Street"
       },
       "geometry": {
@@ -8664,9 +9056,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115701010",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "secondary",
         "maxspeed": "40"
+=======
+        "designation": "provincial_road",
+        "fixme": "name",
+        "highway": "secondary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -8704,6 +9102,7 @@
             15.5298701
           ],
           [
+<<<<<<< HEAD
             120.9569025,
             15.5302145
           ],
@@ -8746,6 +9145,50 @@
           [
             120.957151,
             15.5327021
+=======
+            120.9569213,
+            15.5302055
+          ],
+          [
+            120.9569767,
+            15.5306631
+          ],
+          [
+            120.9570116,
+            15.5308927
+          ],
+          [
+            120.9570328,
+            15.531157
+          ],
+          [
+            120.9570361,
+            15.5311877
+          ],
+          [
+            120.9570591,
+            15.5314363
+          ],
+          [
+            120.957096,
+            15.5317382
+          ],
+          [
+            120.9571331,
+            15.5320665
+          ],
+          [
+            120.9571415,
+            15.5323716
+          ],
+          [
+            120.9571523,
+            15.5325522
+          ],
+          [
+            120.9571624,
+            15.5326995
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9571765,
@@ -9103,8 +9546,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115701011",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -9297,8 +9745,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115719621",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Batisan Street",
         "source": "GPSTogo"
       },
@@ -9467,8 +9920,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115719630",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -10292,6 +10750,13 @@
             15.4979686
           ],
           [
+<<<<<<< HEAD
+=======
+            120.9660428,
+            15.4980005
+          ],
+          [
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             120.9663695,
             15.4982937
           ],
@@ -10366,6 +10831,7 @@
       "properties": {
         "@id": "way/115719701",
         "cycleway:both": "no",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "lit": "no",
@@ -10373,6 +10839,15 @@
         "name": "Obrero Road",
         "name:en": "Obrero Road",
         "name:fil": "Daang Obrero",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+        "lit": "no",
+        "name": "Obrero Road",
+        "name:en": "Obrero Road",
+        "name:tl": "Daang Obrero",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "parking:both": "on_kerb",
         "parking:both:orientation": "parallel",
         "sidewalk": "both",
@@ -10750,8 +11225,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115719713",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -10853,8 +11333,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115719723",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Victoria Avenue"
       },
       "geometry": {
@@ -10970,9 +11455,13 @@
         "@id": "way/115719726",
         "highway": "primary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
         "name": "General Tinio Extension",
         "source": "GPSTogo"
+=======
+        "name": "General Tinio Extension"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -11233,8 +11722,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115733450",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue"
       },
       "geometry": {
@@ -11284,8 +11778,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115734655",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -11366,8 +11865,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115734656",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "oneway": "yes"
       },
       "geometry": {
@@ -11401,8 +11905,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115734657",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Narra Street"
       },
       "geometry": {
@@ -11464,8 +11973,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/115734658",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "oneway": "yes"
       },
       "geometry": {
@@ -11541,9 +12055,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116357293",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Melencio Extension",
         "surface": "concrete"
       },
@@ -12680,7 +13200,10 @@
       "properties": {
         "@id": "way/116385546",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -17040,7 +17563,11 @@
         "alt_name": "NE Pacific Access Road",
         "highway": "tertiary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Felipe Vergara Highway",
         "surface": "concrete"
       },
@@ -18257,8 +18784,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116489745",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -18408,8 +18940,13 @@
             15.4839625
           ],
           [
+<<<<<<< HEAD
             120.9628842,
             15.484935
+=======
+            120.962899,
+            15.4849234
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9624794,
@@ -19063,8 +19600,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116552741",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Ipil Street"
       },
       "geometry": {
@@ -19352,8 +19894,13 @@
             15.5013815
           ],
           [
+<<<<<<< HEAD
             120.9826729,
             15.501188
+=======
+            120.982685,
+            15.5011725
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9828846,
@@ -19375,8 +19922,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116552754",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -20004,8 +20556,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116552776",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Samin Street"
       },
       "geometry": {
@@ -20038,6 +20595,13 @@
           [
             120.9754304,
             15.4824021
+<<<<<<< HEAD
+=======
+          ],
+          [
+            120.9758757,
+            15.4826038
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -20073,9 +20637,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116552778",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Zulueta Street"
       },
       "geometry": {
@@ -20692,12 +21262,21 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116553525",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "20",
         "name": "Obrero Road",
         "name:en": "Obrero Road",
         "name:fil": "Daang Obrero",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+        "name": "Obrero Road",
+        "name:en": "Obrero Road",
+        "name:tl": "Daang Obrero",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -21014,6 +21593,7 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116553535",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "lit": "no",
@@ -21021,6 +21601,15 @@
         "name": "Lagare Road",
         "name:en": "Lagare Road",
         "name:fil": "Daang Lagare",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+        "lit": "no",
+        "name": "Lagare Road",
+        "name:en": "Lagare Road",
+        "name:tl": "Daang Lagare",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -21246,8 +21835,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116553540",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -21480,9 +22074,15 @@
       "properties": {
         "@id": "way/116576590",
         "cycleway:both": "no",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Paco Roman Street",
         "oneway": "yes",
         "oneway:bicycle": "no",
@@ -21504,8 +22104,13 @@
             15.4838816
           ],
           [
+<<<<<<< HEAD
             120.9646552,
             15.4856373
+=======
+            120.9646686,
+            15.4856011
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9639495,
@@ -21519,9 +22124,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116576593",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue",
         "surface": "concrete"
       },
@@ -21533,8 +22144,13 @@
             15.4898593
           ],
           [
+<<<<<<< HEAD
             120.9683949,
             15.489977
+=======
+            120.9684311,
+            15.4899951
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9689108,
@@ -21600,9 +22216,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116576595",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Melencio Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -21634,8 +22256,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116576596",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sanciangco Street",
         "oneway": "yes"
       },
@@ -21651,8 +22278,13 @@
             15.485859
           ],
           [
+<<<<<<< HEAD
             120.9633121,
             15.4851125
+=======
+            120.9633201,
+            15.485097
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -21692,8 +22324,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116576601",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sanciangco Street",
         "oneway": "yes"
       },
@@ -21734,8 +22371,13 @@
             15.4889896
           ],
           [
+<<<<<<< HEAD
             120.9687594,
             15.4890904
+=======
+            120.9688157,
+            15.4891124
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -21875,8 +22517,13 @@
             15.4973022
           ],
           [
+<<<<<<< HEAD
             120.9634814,
             15.4971168
+=======
+            120.9634988,
+            15.4970987
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -21901,28 +22548,51 @@
             15.4918185
           ],
           [
+<<<<<<< HEAD
             120.9635245,
             15.4919535
+=======
+            120.9635433,
+            15.4918979
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9633157,
             15.4922428
           ],
           [
+<<<<<<< HEAD
             120.9625127,
             15.493349
+=======
+            120.9629284,
+            15.492748
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9622907,
             15.4936387
           ],
           [
+<<<<<<< HEAD
             120.9622699,
             15.4939021
           ],
           [
             120.9625765,
             15.4941264
+=======
+            120.9622447,
+            15.493763
+          ],
+          [
+            120.9622511,
+            15.4939111
+          ],
+          [
+            120.9623525,
+            15.4940023
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9626673,
@@ -21930,7 +22600,11 @@
           ],
           [
             120.9628251,
+<<<<<<< HEAD
             15.4942905
+=======
+            15.4942582
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9641768,
@@ -22147,8 +22821,13 @@
             15.4978513
           ],
           [
+<<<<<<< HEAD
             120.9637156,
             15.497359
+=======
+            120.963729,
+            15.4973422
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -22223,8 +22902,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116581765",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Quirino Valino Street"
       },
       "geometry": {
@@ -22372,6 +23056,7 @@
             15.4988279
           ],
           [
+<<<<<<< HEAD
             120.9643713,
             15.4984318
           ],
@@ -22402,6 +23087,38 @@
           [
             120.9633094,
             15.4969249
+=======
+            120.9643807,
+            15.4984292
+          ],
+          [
+            120.9643348,
+            15.4983409
+          ],
+          [
+            120.9642474,
+            15.4981901
+          ],
+          [
+            120.9641997,
+            15.4981128
+          ],
+          [
+            120.9638902,
+            15.4975522
+          ],
+          [
+            120.963729,
+            15.4973422
+          ],
+          [
+            120.9634988,
+            15.4970987
+          ],
+          [
+            120.9633349,
+            15.496921
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9629218,
@@ -24075,9 +24792,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116587243",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "fine_gravel"
       },
       "geometry": {
@@ -25245,8 +25968,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116588315",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -27228,8 +27956,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116613405",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "source": "GPSTogo"
       },
@@ -27697,9 +28430,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116697100",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -28930,8 +29669,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/116770646",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "secondary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -29314,9 +30058,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117140525",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
         "name": "T Rodriguez Street"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "name": "T. Rodriguez Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -29515,8 +30265,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117140531",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Quirino Valino Street"
       },
       "geometry": {
@@ -29902,8 +30657,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117299730",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Jimenez Street"
       },
       "geometry": {
@@ -29992,9 +30752,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117299734",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Beedle Street",
         "surface": "concrete"
       },
@@ -30476,8 +31242,13 @@
             15.4847445
           ],
           [
+<<<<<<< HEAD
             120.9641336,
             15.4854398
+=======
+            120.964143,
+            15.4854036
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -30800,9 +31571,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117313545",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Rizal Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -30830,9 +31607,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117313547",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Rizal Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -30856,9 +31639,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117313548",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Paco Roman Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -31189,8 +31978,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117370260",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -31506,8 +32300,13 @@
             15.4877904
           ],
           [
+<<<<<<< HEAD
             120.9759693,
             15.4874575
+=======
+            120.9760012,
+            15.4874507
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -31572,8 +32371,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117370283",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Tomacruz Street"
       },
       "geometry": {
@@ -31598,6 +32402,7 @@
     {
       "type": "Feature",
       "properties": {
+<<<<<<< HEAD
         "@id": "way/117370285",
         "highway": "residential",
         "lanes": "2",
@@ -31622,6 +32427,8 @@
     {
       "type": "Feature",
       "properties": {
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "@id": "way/117370289",
         "highway": "residential",
         "name": "Rosal Street"
@@ -32311,8 +33118,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117370340",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -32406,6 +33218,7 @@
             15.4894604
           ],
           [
+<<<<<<< HEAD
             120.9753277,
             15.488137
           ],
@@ -32420,6 +33233,22 @@
           [
             120.9747421,
             15.4876442
+=======
+            120.9753156,
+            15.488243
+          ],
+          [
+            120.9752852,
+            15.4881023
+          ],
+          [
+            120.975205,
+            15.4880011
+          ],
+          [
+            120.9747233,
+            15.4876804
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9745283,
@@ -32484,9 +33313,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117370357",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Nuñez Street",
         "surface": "concrete"
       },
@@ -32591,12 +33426,25 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9753429,
             15.4880816
           ],
           [
             120.9756756,
             15.4880541
+=======
+            120.9752852,
+            15.4881023
+          ],
+          [
+            120.9756474,
+            15.4880748
+          ],
+          [
+            120.9760366,
+            15.4880054
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -33433,8 +34281,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117374693",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -34251,8 +35104,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117374722",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Gabaldon Street Extension"
       },
       "geometry": {
@@ -34357,9 +35215,15 @@
       "properties": {
         "@id": "way/117376362",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -34381,8 +35245,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117376364",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -34405,7 +35274,11 @@
       "properties": {
         "@id": "way/117376366",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street"
       },
       "geometry": {
@@ -34430,7 +35303,11 @@
         "bridge": "yes",
         "highway": "secondary",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street"
       },
       "geometry": {
@@ -34605,8 +35482,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117382237",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -36164,6 +37046,7 @@
             15.4881209
           ],
           [
+<<<<<<< HEAD
             120.9692752,
             15.487872
           ],
@@ -36186,6 +37069,30 @@
           [
             120.9683949,
             15.489977
+=======
+            120.9693235,
+            15.4878772
+          ],
+          [
+            120.9691497,
+            15.4882753
+          ],
+          [
+            120.9688157,
+            15.4891124
+          ],
+          [
+            120.9686276,
+            15.4895773
+          ],
+          [
+            120.9684777,
+            15.4898936
+          ],
+          [
+            120.9684311,
+            15.4899951
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -36590,6 +37497,7 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9571116,
             15.5320807
           ],
@@ -36600,6 +37508,18 @@
           [
             120.9577418,
             15.5307397
+=======
+            120.9571331,
+            15.5320665
+          ],
+          [
+            120.957606,
+            15.5311401
+          ],
+          [
+            120.9577606,
+            15.5307578
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9578777,
@@ -36877,14 +37797,27 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117460822",
+<<<<<<< HEAD
         "highway": "residential"
+=======
+        "highway": "service"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9635026,
             15.4967233
+=======
+            120.9633349,
+            15.496921
+          ],
+          [
+            120.9635227,
+            15.4967336
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9641464,
@@ -36945,8 +37878,13 @@
             15.4986567
           ],
           [
+<<<<<<< HEAD
             120.9643713,
             15.4984318
+=======
+            120.9643807,
+            15.4984292
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -37086,8 +38024,13 @@
             15.4985222
           ],
           [
+<<<<<<< HEAD
             120.9641769,
             15.4980999
+=======
+            120.9641997,
+            15.4981128
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -38734,8 +39677,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/117471447",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -40385,8 +41333,13 @@
             15.4925018
           ],
           [
+<<<<<<< HEAD
             120.9653795,
             15.4920679
+=======
+            120.965354,
+            15.4920705
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -40473,7 +41426,11 @@
           ],
           [
             120.9628251,
+<<<<<<< HEAD
             15.4942905
+=======
+            15.4942582
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -40580,8 +41537,13 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9745801,
             15.4947848
+=======
+            120.9745778,
+            15.4947375
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.974576,
@@ -40937,7 +41899,11 @@
         "int_ref:colour": "blue",
         "lanes": "4",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "maxweight": "15",
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
@@ -40972,7 +41938,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
         "nat_name": "Daang Maharlika",
@@ -42627,12 +43597,21 @@
             15.4917723
           ],
           [
+<<<<<<< HEAD
             120.9631834,
             15.4918692
           ],
           [
             120.9635245,
             15.4919535
+=======
+            120.9631593,
+            15.4918511
+          ],
+          [
+            120.9635433,
+            15.4918979
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -42736,7 +43715,11 @@
         "@id": "way/117682460",
         "access": "private",
         "highway": "residential",
+<<<<<<< HEAD
         "name": "F.V. Ramos Street"
+=======
+        "name": "F. V. Ramos Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -42977,7 +43960,11 @@
         "@id": "way/117682473",
         "access": "private",
         "highway": "residential",
+<<<<<<< HEAD
         "name": "F.E. Marcos Street"
+=======
+        "name": "F. E. Marcos Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -43410,7 +44397,11 @@
         "@id": "way/117682488",
         "access": "private",
         "highway": "residential",
+<<<<<<< HEAD
         "name": "C.C. Aquino Street"
+=======
+        "name": "C. C. Aquino Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -44239,7 +45230,11 @@
         "@id": "way/117682527",
         "access": "private",
         "highway": "residential",
+<<<<<<< HEAD
         "name": "J.E. Estrada Street"
+=======
+        "name": "J. E. Estrada Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -44739,6 +45734,7 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.967264,
             15.488516
           ],
@@ -44761,14 +45757,43 @@
           [
             120.9684255,
             15.4873807
+=======
+            120.9678644,
+            15.4887438
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9679007,
             15.4886557
           ],
           [
+<<<<<<< HEAD
             120.9678644,
             15.4887438
+=======
+            120.9684255,
+            15.4873807
+          ],
+          [
+            120.96796,
+            15.48719
+          ],
+          [
+            120.9679285,
+            15.4871786
+          ],
+          [
+            120.9678527,
+            15.4871512
+          ],
+          [
+            120.967302,
+            15.4884266
+          ],
+          [
+            120.967264,
+            15.488516
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -44804,9 +45829,15 @@
       "properties": {
         "@id": "way/118115292",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "paved"
       },
       "geometry": {
@@ -44942,8 +45973,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118115295",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "paved"
       },
       "geometry": {
@@ -45532,7 +46568,11 @@
         "int_ref:colour": "blue",
         "lanes": "4",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "maxweight": "18",
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
@@ -45568,7 +46608,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -45837,8 +46881,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118165359",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Concepcion Street",
         "source": "GPSTogo"
       },
@@ -45946,9 +46995,15 @@
       "properties": {
         "@id": "way/118172144",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "D. Garcia Street"
       },
       "geometry": {
@@ -45970,9 +47025,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118172145",
+<<<<<<< HEAD
         "highway": "secondary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "D. Garcia Street",
         "surface": "concrete"
       },
@@ -46008,9 +47069,15 @@
       "properties": {
         "@id": "way/118174216",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Jimenez Street"
       },
       "geometry": {
@@ -46036,8 +47103,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118174217",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Jimenez Street"
       },
       "geometry": {
@@ -46103,9 +47175,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118174218",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "A. Valino Street",
         "source": "GPSTogo",
         "surface": "asphalt"
@@ -46178,9 +47256,15 @@
       "properties": {
         "@id": "way/118174219",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -46202,10 +47286,17 @@
       "properties": {
         "@id": "way/118174220",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30",
         "name": "N Valino Street"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "layer": "1",
+        "name": "N. Valino Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -46226,9 +47317,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118174221",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
         "name": "N Valino Street"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "name": "N. Valino Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -46271,8 +47368,13 @@
         "@id": "way/118397258",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "mapillary": "892729574915804",
         "maxspeed": "40",
+=======
+        "lit": "yes",
+        "mapillary": "892729574915804",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road",
         "surface": "concrete",
         "width": "6.7"
@@ -46344,8 +47446,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118397260",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Paco Roman Extension"
       },
       "geometry": {
@@ -46367,9 +47474,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118397261",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sanciangco Street",
         "oneway": "yes"
       },
@@ -46377,8 +47490,13 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9633121,
             15.4851125
+=======
+            120.9633201,
+            15.485097
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9637446,
@@ -46517,9 +47635,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/118400865",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -46742,10 +47866,17 @@
       "properties": {
         "@id": "way/118400869",
         "bridge": "yes",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -46869,9 +48000,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/119107089",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -48383,9 +49520,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/120278498",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue",
         "oneway": "yes",
         "surface": "asphalt"
@@ -48437,9 +49580,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/120278500",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue",
         "oneway": "yes",
         "surface": "asphalt"
@@ -48496,9 +49645,16 @@
       "properties": {
         "@id": "way/120667657",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "layer": "1",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "source": "G-eMapper"
       },
@@ -48521,9 +49677,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/120667658",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "source": "GPSTogo",
         "surface": "concrete"
@@ -48676,8 +49838,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/120735935",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Hinukay Street"
       },
       "geometry": {
@@ -49397,7 +50564,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -49557,7 +50728,11 @@
         "int_ref:colour": "blue",
         "lanes": "4",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -49584,10 +50759,17 @@
       "properties": {
         "@id": "way/127007996",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "1",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "1",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -49612,10 +50794,17 @@
       "properties": {
         "@id": "way/127007997",
         "cycleway:both": "no",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "oneway:bicycle": "no",
@@ -49652,10 +50841,17 @@
       "properties": {
         "@id": "way/127007998",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "1",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "1",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -49679,9 +50875,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/127007999",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "parking:left": "separate",
@@ -49790,10 +50992,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/127011256",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "oneway": "yes",
         "surface": "concrete"
       },
@@ -49840,11 +51049,18 @@
       "type": "Feature",
       "properties": {
         "@id": "way/127011257",
+<<<<<<< HEAD
+=======
+        "designation": "city_road",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "fixme": "name",
         "highway": "tertiary",
         "lanes": "2",
         "mapillary": "764104974288519",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -49918,8 +51134,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/129735891",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Paco Roman Extension",
         "oneway": "yes"
       },
@@ -49949,7 +51170,10 @@
         "bridge": "yes",
         "highway": "tertiary",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "20",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Calle Vicente"
       },
       "geometry": {
@@ -49972,7 +51196,10 @@
       "properties": {
         "@id": "way/129742271",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "20",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Calle Vicente"
       },
       "geometry": {
@@ -50357,7 +51584,11 @@
         "highway": "secondary",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road",
         "width": "6.7"
       },
@@ -50382,7 +51613,11 @@
         "@id": "way/143817747",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road",
         "surface": "concrete",
         "width": "6.7"
@@ -51626,7 +52861,10 @@
         "@id": "way/151199539",
         "highway": "trunk",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -51693,7 +52931,10 @@
         "highway": "trunk",
         "lanes": "4",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -53705,8 +54946,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/153086280",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -54926,8 +56172,13 @@
         "@id": "way/153809411",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "mapillary": "764104974288519",
         "maxspeed": "40",
+=======
+        "lit": "yes",
+        "mapillary": "764104974288519",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road",
         "surface": "concrete",
         "width": "6.7"
@@ -54963,8 +56214,13 @@
         "highway": "secondary",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "mapillary": "892729574915804",
         "maxspeed": "40",
+=======
+        "lit": "yes",
+        "mapillary": "892729574915804",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "maxweight": "14",
         "name": "Circumferential Road",
         "surface": "concrete",
@@ -55269,9 +56525,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/157032440",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "old_name": "MRR/PNR Arayat Line;Guiguinto-Cabanatuan Branch Line",
         "railway": "abandoned"
       },
@@ -56124,10 +57386,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/160106236",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "oneway": "yes",
         "surface": "concrete"
       },
@@ -56874,22 +58143,36 @@
       "type": "Feature",
       "properties": {
         "@id": "way/161765424",
+<<<<<<< HEAD
         "addr:city": "Cabanatuan",
         "highway": "tertiary",
         "is_in:city": "Cabanatuan",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Street"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9633121,
             15.4851125
           ],
           [
             120.9628842,
             15.484935
+=======
+            120.9633201,
+            15.485097
+          ],
+          [
+            120.962899,
+            15.4849234
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9624605,
@@ -56927,9 +58210,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/161765425",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -57006,8 +58295,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/163712409",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -58659,7 +59953,11 @@
       "properties": {
         "@id": "way/172614377",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street"
       },
       "geometry": {
@@ -59030,8 +60328,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/172618640",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -59630,7 +60933,14 @@
       "type": "Feature",
       "properties": {
         "@id": "way/172869987",
+<<<<<<< HEAD
         "highway": "residential"
+=======
+        "highway": "residential",
+        "lanes": "2",
+        "name": "Santiago Street",
+        "surface": "concrete"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -59662,6 +60972,13 @@
           [
             120.974758,
             15.4848567
+<<<<<<< HEAD
+=======
+          ],
+          [
+            120.9742947,
+            15.4846203
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -60963,9 +62280,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/172876280",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street",
         "source": "G-eMapper",
         "surface": "concrete"
@@ -61772,7 +63095,12 @@
       "type": "Feature",
       "properties": {
         "@id": "way/172921822",
+<<<<<<< HEAD
         "highway": "residential"
+=======
+        "highway": "residential",
+        "name": "F. Carlos Street"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -62001,8 +63329,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/173080705",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "F. S. Santos Sr. Avenue"
       },
       "geometry": {
@@ -64159,8 +65492,13 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9685592,
             15.4896057
+=======
+            120.9686276,
+            15.4895773
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9698131,
@@ -64489,8 +65827,13 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9642233,
             15.4981836
+=======
+            120.9642474,
+            15.4981901
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9649201,
@@ -64550,8 +65893,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/175865581",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "William Street"
       },
       "geometry": {
@@ -64583,12 +65931,21 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9748792,
             15.4869703
           ],
           [
             120.9745855,
             15.4867764
+=======
+            120.9748725,
+            15.4869961
+          ],
+          [
+            120.9745399,
+            15.4867958
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9747571,
@@ -64616,6 +65973,7 @@
             15.487358
           ],
           [
+<<<<<<< HEAD
             120.9748792,
             15.4869703
           ],
@@ -64634,6 +65992,26 @@
           [
             120.9756671,
             15.487494
+=======
+            120.9748725,
+            15.4869961
+          ],
+          [
+            120.9751152,
+            15.4871422
+          ],
+          [
+            120.9753844,
+            15.4873144
+          ],
+          [
+            120.9755363,
+            15.4874207
+          ],
+          [
+            120.9755713,
+            15.4874808
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -65569,9 +66947,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/176762787",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -66584,7 +67968,10 @@
         "@id": "way/177861633",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -66614,7 +68001,10 @@
         "@id": "way/177861634",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -66711,7 +68101,10 @@
       "properties": {
         "@id": "way/177861635",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -67465,6 +68858,7 @@
     {
       "type": "Feature",
       "properties": {
+<<<<<<< HEAD
         "@id": "way/185100368",
         "highway": "residential",
         "name": "Enriquez Street"
@@ -67507,6 +68901,8 @@
     {
       "type": "Feature",
       "properties": {
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "@id": "way/185118117",
         "highway": "service"
       },
@@ -67960,8 +69356,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/185564696",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Cantarilla Street"
       },
       "geometry": {
@@ -68485,7 +69886,11 @@
         "@id": "way/185930605",
         "designation": "national_tertiary_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sumacab Road"
       },
       "geometry": {
@@ -69730,7 +71135,10 @@
         "highway": "secondary",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mayapyap - General Mamerto Natividad Road",
         "sidewalk": "both",
         "surface": "concrete"
@@ -69878,10 +71286,17 @@
       "properties": {
         "@id": "way/202649096",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "layer": "1",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street",
         "source": "G-eMapper"
       },
@@ -70069,8 +71484,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/202969226",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -71284,8 +72704,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/205719158",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Victoria Avenue"
       },
       "geometry": {
@@ -71336,8 +72761,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/205719160",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Victoria Avenue"
       },
       "geometry": {
@@ -71548,8 +72978,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/205719171",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Victoria Avenue"
       },
       "geometry": {
@@ -71993,7 +73428,10 @@
         "@id": "way/222975950",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -72055,7 +73493,10 @@
         "@id": "way/222975951",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -72113,7 +73554,10 @@
         "@id": "way/222975952",
         "highway": "trunk",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -72250,7 +73694,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -72398,9 +73846,13 @@
         "@id": "way/245258327",
         "highway": "primary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
         "name": "General Tinio Extension",
         "source": "GPSTogo"
+=======
+        "name": "General Tinio Extension"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -72429,7 +73881,10 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "ref": "1",
         "surface": "asphalt"
@@ -73930,12 +75385,21 @@
       "type": "Feature",
       "properties": {
         "@id": "way/343782131",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "20",
         "name": "Obrero Road",
         "name:en": "Obrero Road",
         "name:fil": "Daang Obrero",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+        "name": "Obrero Road",
+        "name:en": "Obrero Road",
+        "name:tl": "Daang Obrero",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -74289,8 +75753,13 @@
         "@id": "way/354323993",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "mapillary": "764104974288519",
         "maxspeed": "40",
+=======
+        "lit": "yes",
+        "mapillary": "764104974288519",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road",
         "surface": "concrete",
         "width": "6.7"
@@ -74364,7 +75833,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -74595,10 +76068,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/354324014",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "oneway": "yes",
         "surface": "concrete"
       },
@@ -74884,9 +76364,15 @@
       "properties": {
         "@id": "way/361673277",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "layer": "1",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -74908,8 +76394,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/361673278",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -74994,7 +76485,10 @@
         "highway": "trunk",
         "lanes": "4",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -75019,7 +76513,10 @@
         "@id": "way/431398307",
         "highway": "trunk",
         "lanes": "6",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -77627,8 +79124,13 @@
             15.4964852
           ],
           [
+<<<<<<< HEAD
             120.9396759,
             15.4966449
+=======
+            120.9395753,
+            15.4966139
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -77960,9 +79462,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/437096260",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lit": "no",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "lit": "no"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -81075,8 +82583,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/441358334",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -81127,9 +82640,15 @@
       "properties": {
         "@id": "way/441358335",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "layer": "1",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -82846,9 +84365,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/614146061",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road",
         "width": "6.7"
       },
@@ -82907,9 +84432,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/614149293",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street",
         "source": "G-eMapper",
         "surface": "concrete"
@@ -82982,7 +84513,11 @@
       "properties": {
         "@id": "way/614149385",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Cabanatuan-Papaya Road"
       },
       "geometry": {
@@ -83072,7 +84607,10 @@
         "highway": "secondary",
         "lanes": "2",
         "lit": "yes",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mabini Street",
         "parking:both": "lane",
         "parking:both:orientation": "parallel",
@@ -83171,8 +84709,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/614151744",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -83254,9 +84797,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/616082518",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Street",
         "surface": "concrete"
       },
@@ -83264,6 +84813,7 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9646552,
             15.4856373
           ],
@@ -83274,6 +84824,18 @@
           [
             120.9633121,
             15.4851125
+=======
+            120.9646686,
+            15.4856011
+          ],
+          [
+            120.964143,
+            15.4854036
+          ],
+          [
+            120.9633201,
+            15.485097
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -83283,8 +84845,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/617831565",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Quimson Street"
       },
       "geometry": {
@@ -84729,6 +86296,7 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9826729,
             15.501188
           ],
@@ -84739,6 +86307,18 @@
           [
             120.9826039,
             15.5011727
+=======
+            120.982685,
+            15.5011725
+          ],
+          [
+            120.9825858,
+            15.5011505
+          ],
+          [
+            120.9824178,
+            15.5011226
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9822823,
@@ -84756,7 +86336,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -84856,9 +86440,15 @@
       "properties": {
         "@id": "way/721225232",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "secondary",
         "layer": "1",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -84880,8 +86470,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/721225233",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "60",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -85156,8 +86751,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/721225236",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Hinukay Street"
       },
       "geometry": {
@@ -85184,9 +86784,15 @@
       "properties": {
         "@id": "way/721225237",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Hinukay Street"
       },
       "geometry": {
@@ -86665,7 +88271,11 @@
         "designation": "national_secondary_road",
         "highway": "trunk",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Nueva Ecija-Aurora Road",
         "ref": "111",
         "surface": "asphalt"
@@ -86813,7 +88423,11 @@
         "designation": "national_secondary_road",
         "highway": "trunk",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Nueva Ecija-Aurora Road",
         "ref": "111",
         "surface": "asphalt"
@@ -86841,8 +88455,13 @@
         "designation": "national_secondary_road",
         "highway": "trunk",
         "lanes": "4",
+<<<<<<< HEAD
         "mapillary": "462354161541156",
         "maxspeed": "60",
+=======
+        "lit": "yes",
+        "mapillary": "462354161541156",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Nueva Ecija-Aurora Road",
         "ref": "111",
         "surface": "asphalt"
@@ -86928,9 +88547,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/837036183",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Rizal Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -87014,8 +88639,13 @@
             15.4922576
           ],
           [
+<<<<<<< HEAD
             120.9653795,
             15.4920679
+=======
+            120.965354,
+            15.4920705
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.965078,
@@ -87093,9 +88723,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/837725566",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sampaguita Street",
         "surface": "concrete"
       },
@@ -87122,8 +88758,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/837725567",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Sampaguita Street"
       },
       "geometry": {
@@ -87203,12 +88844,49 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9755941,
             15.4875286
           ],
           [
             120.9756671,
             15.487494
+=======
+            120.9755713,
+            15.4874808
+          ],
+          [
+            120.9756939,
+            15.4874753
+          ],
+          [
+            120.9759385,
+            15.4874627
+          ],
+          [
+            120.9760012,
+            15.4874507
+          ],
+          [
+            120.9766922,
+            15.4873361
+          ],
+          [
+            120.9768935,
+            15.4872826
+          ],
+          [
+            120.9770375,
+            15.4871064
+          ],
+          [
+            120.977261,
+            15.4868394
+          ],
+          [
+            120.977563,
+            15.4864855
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -87266,10 +88944,17 @@
       "type": "Feature",
       "properties": {
         "@id": "way/837741339",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "oneway": "yes",
         "surface": "concrete"
       },
@@ -87346,9 +89031,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/840725112",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "M. de Leon Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -87478,8 +89169,13 @@
             15.5300121
           ],
           [
+<<<<<<< HEAD
             120.9569025,
             15.5302145
+=======
+            120.9569213,
+            15.5302055
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -87729,6 +89425,7 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9733155,
             15.4953694
           ],
@@ -87739,6 +89436,18 @@
           [
             120.9741632,
             15.4953714
+=======
+            120.9733185,
+            15.4954007
+          ],
+          [
+            120.973582,
+            15.4953878
+          ],
+          [
+            120.9742056,
+            15.4953573
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -87754,12 +89463,25 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9735543,
             15.4953707
           ],
           [
             120.9736602,
             15.4956964
+=======
+            120.973582,
+            15.4953878
+          ],
+          [
+            120.9736335,
+            15.4956595
+          ],
+          [
+            120.9736438,
+            15.4957138
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -87775,6 +89497,7 @@
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9741917,
             15.495611
           ],
@@ -87785,6 +89508,14 @@
           [
             120.9741551,
             15.4953035
+=======
+            120.9742188,
+            15.4956199
+          ],
+          [
+            120.9742056,
+            15.4953573
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ],
           [
             120.9741873,
@@ -87798,12 +89529,18 @@
       "type": "Feature",
       "properties": {
         "@id": "way/853280656",
+<<<<<<< HEAD
         "highway": "service"
+=======
+        "highway": "service",
+        "name": "Phinma Avenue"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9736602,
             15.4956964
           ],
@@ -87838,6 +89575,14 @@
           [
             120.9760719,
             15.4951837
+=======
+            120.9742188,
+            15.4956199
+          ],
+          [
+            120.9754572,
+            15.4954234
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -89317,9 +91062,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/854224108",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "old_name": "MRR/PNR Arayat Line;Guiguinto-Cabanatuan Branch Line",
         "railway": "abandoned"
       },
@@ -89358,9 +91109,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/854224109",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Barrera Street",
         "old_name": "MRR/PNR Arayat Line",
         "railway": "abandoned"
@@ -89797,8 +91554,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/854841920",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -92001,8 +93763,12 @@
       "type": "Feature",
       "properties": {
         "@id": "way/877389947",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -92121,7 +93887,10 @@
         "@id": "way/877411729",
         "designation": "provincial_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Mayapyap - General Mamerto Natividad Road",
         "source": "1:50K topo map"
       },
@@ -92610,8 +94379,12 @@
       "type": "Feature",
       "properties": {
         "@id": "way/877455426",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -92645,9 +94418,15 @@
       "properties": {
         "@id": "way/877455427",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -92783,7 +94562,10 @@
         "highway": "secondary",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -92811,7 +94593,10 @@
         "highway": "secondary",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -92837,7 +94622,10 @@
         "@id": "way/877476380",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -92883,7 +94671,10 @@
         "@id": "way/877476381",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -94283,9 +96074,15 @@
       "properties": {
         "@id": "way/878073158",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -94306,9 +96103,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/878073159",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -98008,9 +99811,15 @@
       "properties": {
         "@id": "way/884680959",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -98031,12 +99840,21 @@
       "type": "Feature",
       "properties": {
         "@id": "way/884680960",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "20",
         "name": "Lagare Road",
         "name:en": "Lagare Road",
         "name:fil": "Daang Lagare",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+        "name": "Lagare Road",
+        "name:en": "Lagare Road",
+        "name:tl": "Daang Lagare",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "surface": "concrete"
       },
       "geometry": {
@@ -98071,9 +99889,15 @@
       "properties": {
         "@id": "way/884680961",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -98094,8 +99918,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/884680962",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -98552,9 +100381,15 @@
       "properties": {
         "@id": "way/884987737",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -98575,8 +100410,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/884987738",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -101066,8 +102906,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/886167215",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -101365,7 +103210,10 @@
         "int_ref:colour": "blue",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "ref": "1"
       },
@@ -101392,7 +103240,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "ref": "1"
       },
@@ -105727,8 +107579,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/891792879",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -108015,8 +109872,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/892264463",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20",
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Victoria Avenue"
       },
       "geometry": {
@@ -108476,9 +110338,16 @@
       "type": "Feature",
       "properties": {
         "@id": "way/892643901",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "source": "GPSTogo",
         "surface": "concrete"
@@ -109524,8 +111393,14 @@
       "type": "Feature",
       "properties": {
         "@id": "way/894161878",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue",
         "oneway": "yes"
       },
@@ -109548,8 +111423,14 @@
       "type": "Feature",
       "properties": {
         "@id": "way/894161879",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Burgos Avenue",
         "oneway": "yes"
       },
@@ -110076,7 +111957,10 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "ref": "1"
       },
@@ -112236,8 +114120,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985612",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Barrera Street",
         "old_name": "MRR/PNR Arayat Line",
         "railway": "abandoned"
@@ -112307,8 +114196,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985615",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -112333,8 +114227,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985616",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Circumferential Road"
       },
       "geometry": {
@@ -112356,9 +114255,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985617",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Don Manuel Avenue"
       },
       "geometry": {
@@ -112421,10 +114326,17 @@
       "properties": {
         "@id": "way/1016985618",
         "cycleway:both": "no",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "lit": "yes",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Extension",
         "parking:both": "lane",
         "parking:both:orientation": "parallel",
@@ -112531,8 +114443,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985621",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -112575,8 +114492,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985623",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -112607,7 +114529,11 @@
         "@id": "way/1016985624",
         "designation": "national_tertiary_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "50",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Valdefuente-Fortaleza Road",
         "nat_name": "Valdefuente-Fortaleza Road"
       },
@@ -112702,8 +114628,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985627",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Santarina Street"
       },
       "geometry": {
@@ -112725,9 +114656,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1016985628",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "A. Valino Street",
         "source": "GPSTogo",
         "surface": "asphalt"
@@ -112982,9 +114919,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017055813",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -113005,8 +114948,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017055814",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -113027,8 +114975,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017055815",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Narra Street"
       },
       "geometry": {
@@ -113112,8 +115065,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017055817",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -113185,7 +115143,10 @@
       "properties": {
         "@id": "way/1017055819",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Fairway Lane"
       },
       "geometry": {
@@ -113207,8 +115168,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017055820",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -113285,8 +115251,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017055821",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -113421,9 +115392,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1017662339",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lane_markings": "no",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lane_markings": "no",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "D. Garcia Street",
         "source": "GPSTogo",
         "surface": "concrete"
@@ -114035,9 +116012,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1028735467",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Paco Roman Street",
         "oneway": "yes",
         "surface": "concrete"
@@ -114107,8 +116090,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1037036584",
+<<<<<<< HEAD
         "highway": "secondary",
         "maxspeed": "50",
+=======
+        "designation": "national_tertiary_road",
+        "highway": "secondary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Carmen-Cabanatuan Road"
       },
       "geometry": {
@@ -114722,9 +116710,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1065704263",
+<<<<<<< HEAD
         "highway": "secondary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "secondary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Zulueta Street"
       },
       "geometry": {
@@ -115895,7 +117889,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -115953,7 +117951,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -117355,6 +119357,7 @@
             15.5268018
           ],
           [
+<<<<<<< HEAD
             120.9340633,
             15.5277661
           ],
@@ -117363,6 +119366,8 @@
             15.5278539
           ],
           [
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             120.9341013,
             15.5279612
           ],
@@ -118199,8 +120204,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1075800314",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Luz de Guzman Street",
         "surface": "concrete"
       },
@@ -118443,8 +120453,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1075800322",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Pinatubo Street"
       },
       "geometry": {
@@ -118536,8 +120551,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1075800326",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Pinatubo Street"
       },
       "geometry": {
@@ -119190,6 +121210,10 @@
         "embankment": "yes",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "oneway": "yes"
       },
@@ -119360,7 +121384,10 @@
         "designation": "national_tertiary_road",
         "highway": "secondary",
         "lane_markings": "no",
+<<<<<<< HEAD
         "maxspeed": "50",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Valdefuente-Fortaleza Road",
         "nat_name": "Valdefuente-Fortaleza Road",
         "surface": "concrete"
@@ -119405,7 +121432,10 @@
         "highway": "secondary",
         "lane_markings": "no",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "50",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "maxweight:signed": "no",
         "name": "Valdefuente-Fortaleza Road",
         "nat_name": "Valdefuente-Fortaleza Road",
@@ -119432,7 +121462,11 @@
         "@id": "way/1092043319",
         "designation": "national_tertiary_road",
         "highway": "secondary",
+<<<<<<< HEAD
         "maxspeed": "50",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Valdefuente-Fortaleza Road",
         "nat_name": "Valdefuente-Fortaleza Road"
       },
@@ -119535,7 +121569,10 @@
         "designation": "national_tertiary_road",
         "highway": "secondary",
         "layer": "1",
+<<<<<<< HEAD
         "maxspeed": "50",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Valdefuente-Fortaleza Road",
         "nat_name": "Valdefuente-Fortaleza Road"
       },
@@ -119840,12 +121877,19 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1138254882",
+<<<<<<< HEAD
         "highway": "unclassified"
+=======
+        "access": "private",
+        "highway": "service",
+        "service": "driveway"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [
+<<<<<<< HEAD
             120.9711946,
             15.489151
           ],
@@ -119872,6 +121916,74 @@
           [
             120.9703138,
             15.4888639
+=======
+            120.9711644,
+            15.4897605
+          ],
+          [
+            120.9712757,
+            15.4894891
+          ],
+          [
+            120.9713052,
+            15.4894077
+          ],
+          [
+            120.9713253,
+            15.4893147
+          ],
+          [
+            120.9713428,
+            15.4891996
+          ],
+          [
+            120.9713465,
+            15.4891534
+          ],
+          [
+            120.9713387,
+            15.489113
+          ],
+          [
+            120.9713126,
+            15.489081
+          ],
+          [
+            120.9712771,
+            15.48906
+          ],
+          [
+            120.9710954,
+            15.4889778
+          ],
+          [
+            120.9709767,
+            15.4889347
+          ],
+          [
+            120.9708599,
+            15.4889089
+          ],
+          [
+            120.9707728,
+            15.4889011
+          ],
+          [
+            120.9706589,
+            15.4889153
+          ],
+          [
+            120.9705649,
+            15.4889075
+          ],
+          [
+            120.9704925,
+            15.4888894
+          ],
+          [
+            120.9703847,
+            15.4888551
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -119919,6 +122031,7 @@
     {
       "type": "Feature",
       "properties": {
+<<<<<<< HEAD
         "@id": "way/1145026178",
         "highway": "unclassified"
       },
@@ -119963,6 +122076,11 @@
         "@id": "way/1147985062",
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "@id": "way/1147985062",
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -120008,9 +122126,15 @@
       "properties": {
         "@id": "way/1147985063",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -121783,8 +123907,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1163794103",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -121885,8 +124014,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1163794104",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -121916,9 +124050,15 @@
       "properties": {
         "@id": "way/1163794105",
         "bridge": "yes",
+<<<<<<< HEAD
         "highway": "tertiary",
         "layer": "1",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "highway": "tertiary",
+        "layer": "1"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -122771,9 +124911,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1164811508",
+<<<<<<< HEAD
         "fixme": "name",
         "highway": "tertiary",
         "maxspeed": "20"
+=======
+        "designation": "barangay_road",
+        "fixme": "name",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -122836,7 +124982,10 @@
         "@id": "way/1164811514",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -122890,7 +125039,10 @@
         "@id": "way/1164811515",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -122940,7 +125092,10 @@
         "@id": "way/1164813756",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -122982,7 +125137,10 @@
         "@id": "way/1164813758",
         "highway": "trunk",
         "lanes": "6",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "surface": "concrete"
       },
@@ -123083,7 +125241,10 @@
         "@id": "way/1164813760",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -124659,8 +126820,13 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1207339542",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -125168,7 +127334,11 @@
         "designation": "national_tertiary_road",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Zulueta Street",
         "surface": "concrete"
       },
@@ -125953,7 +128123,10 @@
         "@id": "way/1253505910",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -125987,7 +128160,10 @@
         "@id": "way/1253505911",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -126013,7 +128189,10 @@
         "@id": "way/1253505912",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -126039,7 +128218,10 @@
         "@id": "way/1253505913",
         "highway": "secondary",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "40",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -126065,7 +128247,10 @@
         "@id": "way/1253505914",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -126091,7 +128276,10 @@
         "@id": "way/1253505918",
         "highway": "trunk",
         "lanes": "3",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -126117,7 +128305,10 @@
         "@id": "way/1253505919",
         "highway": "trunk",
         "lanes": "3",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -126143,7 +128334,10 @@
         "@id": "way/1253505920",
         "highway": "trunk",
         "lanes": "3",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -126169,7 +128363,10 @@
         "@id": "way/1253505921",
         "highway": "trunk",
         "lanes": "3",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -126242,7 +128439,10 @@
       "properties": {
         "@id": "way/1253505927",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -126342,7 +128542,10 @@
       "properties": {
         "@id": "way/1253505929",
         "highway": "tertiary",
+<<<<<<< HEAD
         "maxspeed": "30",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -126438,8 +128641,14 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1253505931",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -126668,8 +128877,14 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1253505938",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Lakewood Avenue",
         "oneway": "yes",
         "surface": "concrete"
@@ -128647,8 +130862,14 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1298328620",
+<<<<<<< HEAD
         "highway": "tertiary",
         "maxspeed": "30"
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lit": "yes"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
       },
       "geometry": {
         "type": "LineString",
@@ -128671,7 +130892,10 @@
         "@id": "way/1298328621",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -128697,7 +130921,10 @@
         "@id": "way/1298328622",
         "highway": "trunk",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Emilio Vergara Highway",
         "oneway": "yes",
         "surface": "concrete"
@@ -129279,7 +131506,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
         "nat_name": "Daang Maharlika",
@@ -129312,7 +131543,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "2",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Daang Maharlika",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -129363,6 +131598,10 @@
         "highway": "trunk",
         "lanes": "2",
         "layer": "1",
+<<<<<<< HEAD
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "maxweight:hgv:conditional": "17@(axles=2);27@(axles=3);38@(axles>=5)",
         "name": "Maharlika Highway",
         "oneway": "yes"
@@ -129389,6 +131628,10 @@
         "embankment": "yes",
         "highway": "trunk",
         "layer": "1",
+<<<<<<< HEAD
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "oneway": "yes"
       },
@@ -130647,9 +132890,15 @@
       "type": "Feature",
       "properties": {
         "@id": "way/1356393573",
+<<<<<<< HEAD
         "highway": "tertiary",
         "lanes": "2",
         "maxspeed": "30",
+=======
+        "designation": "city_road",
+        "highway": "tertiary",
+        "lanes": "2",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "General Tinio Street",
         "surface": "concrete"
       },
@@ -130669,12 +132918,21 @@
             15.4861818
           ],
           [
+<<<<<<< HEAD
             120.9657118,
             15.4860483
           ],
           [
             120.9646552,
             15.4856373
+=======
+            120.9657198,
+            15.486025
+          ],
+          [
+            120.9646686,
+            15.4856011
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
           ]
         ]
       },
@@ -131177,7 +133435,11 @@
         "int_ref": "AH26",
         "int_ref:colour": "blue",
         "lanes": "4",
+<<<<<<< HEAD
         "maxspeed": "60",
+=======
+        "lit": "yes",
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         "name": "Maharlika Highway",
         "name:en": "Maharlika Highway",
         "name:tl": "Daang Maharlika",
@@ -131430,6 +133692,252 @@
         ]
       },
       "id": "way/1378305833"
+<<<<<<< HEAD
+=======
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1383741721",
+        "highway": "service",
+        "service": "driveway"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9703847,
+            15.4888551
+          ],
+          [
+            120.9703272,
+            15.4888368
+          ]
+        ]
+      },
+      "id": "way/1383741721"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1384364363",
+        "highway": "service"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.975516,
+            15.4953416
+          ],
+          [
+            120.9755079,
+            15.495289
+          ],
+          [
+            120.9755314,
+            15.4952392
+          ],
+          [
+            120.9756517,
+            15.4952195
+          ],
+          [
+            120.9759079,
+            15.4952156
+          ],
+          [
+            120.9760719,
+            15.4951837
+          ]
+        ]
+      },
+      "id": "way/1384364363"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1384364364",
+        "highway": "service"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9754758,
+            15.4953594
+          ],
+          [
+            120.975462,
+            15.4953764
+          ],
+          [
+            120.9754543,
+            15.4953967
+          ],
+          [
+            120.9754535,
+            15.4954183
+          ],
+          [
+            120.9754512,
+            15.4953863
+          ],
+          [
+            120.9754572,
+            15.4954234
+          ],
+          [
+            120.9754598,
+            15.495439
+          ],
+          [
+            120.9754724,
+            15.4954569
+          ],
+          [
+            120.9754901,
+            15.4954701
+          ],
+          [
+            120.9755112,
+            15.4954773
+          ],
+          [
+            120.9755356,
+            15.4954776
+          ],
+          [
+            120.9755587,
+            15.4954699
+          ],
+          [
+            120.9755777,
+            15.4954552
+          ],
+          [
+            120.9755905,
+            15.4954352
+          ],
+          [
+            120.9755955,
+            15.4954121
+          ],
+          [
+            120.9755921,
+            15.4953889
+          ],
+          [
+            120.9755808,
+            15.495368
+          ],
+          [
+            120.9755628,
+            15.4953521
+          ],
+          [
+            120.9755404,
+            15.4953429
+          ],
+          [
+            120.975516,
+            15.4953416
+          ],
+          [
+            120.9754944,
+            15.4953474
+          ],
+          [
+            120.9754758,
+            15.4953594
+          ]
+        ]
+      },
+      "id": "way/1384364364"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1384378826",
+        "highway": "footway"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9736335,
+            15.4956595
+          ],
+          [
+            120.9742188,
+            15.4956199
+          ]
+        ]
+      },
+      "id": "way/1384378826"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1384740110",
+        "highway": "service"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9398585,
+            15.5167093
+          ],
+          [
+            120.9399153,
+            15.516753
+          ],
+          [
+            120.9401903,
+            15.5169533
+          ],
+          [
+            120.9402157,
+            15.5169907
+          ],
+          [
+            120.9402546,
+            15.5171135
+          ],
+          [
+            120.9405912,
+            15.5173771
+          ]
+        ]
+      },
+      "id": "way/1384740110"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1384749871",
+        "highway": "residential"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9660428,
+            15.4980005
+          ],
+          [
+            120.9664397,
+            15.4975186
+          ],
+          [
+            120.9669332,
+            15.4969151
+          ]
+        ]
+      },
+      "id": "way/1384749871"
+>>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
     }
   ]
 }

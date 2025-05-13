@@ -2,13 +2,13 @@
 import barangaysJson from './barangays.json';
 
 export function getBarangaysArray() {
-  return barangaysJson;
+    return barangaysJson;
 }
 
 export function getBarangaysObject() {
-  const obj = {};
-  barangaysJson.forEach(b => {
-    obj[b.name] = b;
-  });
-  return obj;
+    const obj = {};
+    barangaysJson.forEach(b => {
+      obj[b.name] = b;
+    });
+    return obj;
 }

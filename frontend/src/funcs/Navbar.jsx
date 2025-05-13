@@ -5,13 +5,31 @@ import Login from "./Login";
 
 import { FaCircleUser } from "react-icons/fa6";
 
-const menuItems = ["Home", "About", "Admin", "Map"];
+const menuItems = ["Home", "About", "Map"];
 
-const Navbar = ({ navigateTo }) => {
+const Navbar = ({ navigateTo, currentPage }) => {
     const { user, logout } = useContext(AuthContext);
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginOpen, setLoginOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    const handleSettings = () => {
+        navigateTo("settings");
+        setDropdownOpen(false);
+    };
+
+    const handleYourListings = () => {
+        navigateTo("listings");
+        setDropdownOpen(false);
+    };
+
+    const handleLogout = () => {
+        logout();
+        setDropdownOpen(false);
+        if (currentPage === 'admin') {
+            navigateTo('home');
+        }
+    };
 
     return (
         <>
@@ -26,6 +44,11 @@ const Navbar = ({ navigateTo }) => {
                             {item}
                         </NavItem>
                     ))}
+                    {user?.role === 'admin' && (
+                        <NavItem onClick={() => navigateTo("admin")}>
+                            Admin
+                        </NavItem>
+                    )}
                     {user ? (
                         <ProfileSection>
                             <FaCircleUser 
@@ -35,9 +58,11 @@ const Navbar = ({ navigateTo }) => {
                             />
                             {dropdownOpen && (
                                 <Dropdown>
-                                    <DropdownItem>Settings</DropdownItem>
-                                    <DropdownItem>Your Listings</DropdownItem>
-                                    <DropdownItem onClick={logout}>Logout</DropdownItem>
+                                    <DropdownItem onClick={handleSettings}>Settings</DropdownItem>
+                                    {user.role === 'seller' && (
+                                        <DropdownItem onClick={handleYourListings}>Your Listings</DropdownItem>
+                                    )}
+                                    <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
                                 </Dropdown>
                             )}
                         </ProfileSection>

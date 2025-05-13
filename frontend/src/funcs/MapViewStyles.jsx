@@ -1,312 +1,425 @@
 import styled, { createGlobalStyle } from 'styled-components';
+import { styled as muiStyled } from '@mui/material/styles';
 
 // Global styles
 export const GlobalStyles = createGlobalStyle`
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Arial', sans-serif;
-    background-color: #2C3E50;
-    color: #ecf0f1;
-    overflow-x: hidden;
-  }
+	body {
+		margin: 0;
+		padding: 0;
+		font-family: 'Arial', sans-serif;
+		background-color: #2C3E50;
+		color: #ecf0f1;
+		overflow-x: hidden;
+		box-sizing: border-box;
+	}
+	*, *:before, *:after {
+		box-sizing: inherit;
+	}
 `;
 
-// Layout containers
 export const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  height: 100vh;
-  margin-top: 80px; // For navbar
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: stretch;
+	height: 100vh;
+	width: 100vw;
+	margin: 0;
+	padding: 0;
+
+	@media (max-width: 768px) {
+		flex-direction: column;
+		height: auto;
+		min-height: 100vh;
+		width: 100vw;
+	}
 `;
 
 export const MapSection = styled.div`
-  width: 70vw;
-  height: calc(100vh - 80px);
-  position: relative;
-  
-  @media (max-width: 768px) {
-    width: 100vw;
-    height: 60vh;
-  }
+	width: 70vw;
+	height: 100vh;
+	position: relative;
+	margin: 0;
+	padding: 0;
+
+	@media (max-width: 768px) {
+		width: 100vw;
+		height: 60vh;
+	}
 `;
 
 export const FilterSection = styled.div`
-  width: 30vw;
-  height: calc(100vh - 80px);
-  background-color: #34495E;
-  color: #ecf0f1;
-  
-  @media (max-width: 768px) {
-    width: 100vw;
-    height: 40vh;
-  }
+	width: 30vw;
+	height: 100vh;
+	background-color: #34495E;
+	color: #ecf0f1;
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
+
+	@media (max-width: 768px) {
+		width: 100vw;
+		height: 40vh;
+	}
 `;
 
 export const FilterScrollContainer = styled.div`
-  height: 100%;
-  overflow-y: auto;
-  padding: 20px;
+	height: 100%;
+	overflow-y: auto;
+	padding-top: 20px;
+	padding-left: 20px;
+	padding-right: 20px;
 `;
 
-// Form elements
 export const Label = styled.label`
-  font-size: 16px;
-  margin-left: 5px;
-  color: #ecf0f1;
+	font-size: 16px;
+	margin-left: 5px;
+	color: #ecf0f1;
 `;
 
 export const Select = styled.select`
-  width: 100%;
-  padding: 10px;
-  background-color: #2C3E50;
-  color: #ecf0f1;
-  border: 1px solid #7f8c8d;
-  margin-top: 10px;
-  border-radius: 5px;
-  font-size: 16px;
+	width: 100%;
+	padding: 10px;
+	background-color: #2C3E50;
+	color: #ecf0f1;
+	border: 1px solid #7f8c8d;
+	margin-top: 10px;
+	border-radius: 5px;
+	font-size: 16px;
 `;
 
 export const FilterGroup = styled.div`
-  margin-bottom: 20px;
+	margin-bottom: 20px;
 `;
 
 export const FilterTitle = styled.h4`
-  font-size: 18px;
-  margin-bottom: 10px;
-  color: #ecf0f1;
+	font-size: 18px;
+	margin-bottom: 10px;
+	color: #ecf0f1;
 `;
 
 export const FilterItem = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
+	display: flex;
+	align-items: center;
+	margin-bottom: 15px;
 `;
 
 export const FilterGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 8px;
 `;
 
 export const Divider = styled.hr`
-  margin: 20px 0;
-  border: 0;
-  border-top: 1px solid #7f8c8d;
+	margin: 20px 0;
+	border: 0;
+	border-top: 1px solid #7f8c8d;
 `;
 
-// Map overlay elements
 export const LocationOverlay = styled.div`
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 10px;
-  border-radius: 5px;
+	position: absolute;
+	bottom: 20px;
+	left: 20px;
+	background-color: rgba(0, 0, 0, 0.5);
+	padding: 10px;
+	border-radius: 5px;
 `;
 
 export const LocationName = styled.h3`
-  color: #ecf0f1;
-  font-size: 18px;
-  margin: 0;
+	color: #ecf0f1;
+	font-size: 18px;
+	margin: 0;
 `;
 
 export const DirectionsLink = styled.a`
-  display: flex;
-  align-items: center;
-  color: #3498db;
-  text-decoration: none;
-  font-size: 16px;
-  margin-top: 5px;
+	display: flex;
+	align-items: center;
+	color: #3498db;
+	text-decoration: none;
+	font-size: 16px;
+	margin-top: 5px;
 `;
 
 export const ViewLargerMapLink = styled.a`
-  color: #3498db;
-  text-decoration: none;
-  font-size: 16px;
-  margin-top: 5px;
+	color: #3498db;
+	text-decoration: none;
+	font-size: 16px;
+	margin-top: 5px;
 `;
 
-// Legend components
 export const Legend = styled.div`
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #34495E;
-  border-radius: 5px;
+	margin-top: 20px;
+	padding: 10px;
+	background-color: #34495E;
+	border-radius: 5px;
 `;
 
 export const LegendContainer = styled.div`
-  max-height: 200px;
-  overflow-y: auto;
+	max-height: 200px;
+	overflow-y: auto;
 `;
 
 export const LegendItem = styled.div`
-  padding: 10px;
-  margin: 5px 0;
-  cursor: pointer;
-  color: #ecf0f1;
-  font-size: 16px;
-  border-radius: 5px;
-  &:hover {
-    background-color: #16a085;
-  }
+	padding: 10px;
+	margin: 5px 0;
+	cursor: pointer;
+	color: #ecf0f1;
+	font-size: 16px;
+	border-radius: 5px;
+
+	&:hover {
+		background-color: #16a085;
+	}
 `;
 
-// Temperature range components
 export const TemperatureRangeCard = styled.div`
-  margin: 20px 0;
-  background: #263238;
-  padding: 16px;
-  border-radius: 8px;
+	margin: 20px 0;
+	background: #263238;
+	padding: 16px;
+	border-radius: 8px;
 `;
 
 export const FilterTitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  color: #ecf0f1;
-  font-weight: bold;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #ecf0f1;
+	font-weight: bold;
+	justify-content: space-between;
+	margin-bottom: 10px;
 `;
 
 export const RangeDisplay = styled.span`
-  color: #ecf0f1;
-  margin-left: 4px;
+	color: #ecf0f1;
+	margin-left: 4px;
 `;
 
 export const SearchSortRow = styled.div`
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
+	margin-top: 16px;
+	display: flex;
+	gap: 8px;
+	align-items: center;
 `;
 
-// Barangay list components
 export const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 20px 0;
+	display: flex;
+	justify-content: center;
+	padding: 20px 0;
 `;
 
 export const ScrollableList = styled.div`
-  background: #37474F;
-  border-radius: 8px;
-  max-height: 220px;
-  overflow-y: auto;
-  margin-top: 12px;
+	background: #37474F;
+	border-radius: 8px;
+	max-height: 220px;
+	overflow-y: auto;
+	margin-top: 12px;
 `;
 
 export const EmptyListItem = styled.div`
-  padding: 12px;
-  color: #fff;
-  text-align: center;
+	padding: 12px;
+	color: #fff;
+	text-align: center;
 `;
 
 export const BarangayListItem = styled.div`
-  padding: 10px 12px;
-  border-bottom: 1px solid #263238;
-  cursor: pointer;
-  background-color: ${props => props.selected ? '#455A64' : 'transparent'};
-  
-  &:hover {
-    background-color: '#455A64';
-  }
+	padding: 10px 12px;
+	border-bottom: 1px solid #263238;
+	cursor: pointer;
+	background-color: ${props => props.selected ? '#455A64' : 'transparent'};
+
+	&:hover {
+		background-color: '#455A64';
+	}
 `;
 
 export const BarangayName = styled.div`
-  color: #fff;
-  font-weight: bold;
+	color: #fff;
+	font-weight: bold;
 `;
 
 export const BarangayDetails = styled.div`
-  color: #b0bec5;
-  font-size: 0.85rem;
-  margin-top: 4px;
+	color: #b0bec5;
+	font-size: 0.85rem;
+	margin-top: 4px;
 `;
 
-// Selected barangay card components
 export const SelectedBarangayCard = styled.div`
-  margin-top: 16px;
-  background: #37474F;
-  border-radius: 8px;
-  padding: 16px;
-  color: #fff;
+	margin-top: 16px;
+	background: #37474F;
+	border-radius: 8px;
+	padding: 16px;
+	color: #fff;
 `;
 
 export const BarangayCardHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  font-size: 18px;
-  margin-bottom: 12px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-weight: bold;
+	font-size: 18px;
+	margin-bottom: 12px;
 `;
 
 export const ActionButtons = styled.div`
-  display: flex;
-  gap: 4px;
+	display: flex;
+	gap: 4px;
 `;
 
 export const BarangayInfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 8px;
 `;
 
 export const BarangayInfoItem = styled.div`
-  color: #ecf0f1;
+	color: #ecf0f1;
 `;
 
 export const BarangayNotes = styled.div`
-  margin-top: 12px;
-  font-style: italic;
-  color: #b0bec5;
+	margin-top: 12px;
+	font-style: italic;
+	color: #b0bec5;
 `;
 
 // Style objects
 export const barangayInfoBoxStyle = {
-  padding: '15px',
-  backgroundColor: '#2C3E50',
-  borderRadius: '8px',
-  marginTop: '15px',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-  border: '1px solid #1A2530'
+	padding: '15px',
+	backgroundColor: '#2C3E50',
+	borderRadius: '8px',
+	marginTop: '15px',
+	boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+	border: '1px solid #1A2530'
 };
 
 export const infoLabelStyle = {
-  fontWeight: 'bold',
-  marginRight: '5px',
-  color: '#ecf0f1'
+	fontWeight: 'bold',
+	marginRight: '5px',
+	color: '#ecf0f1'
 };
 
 export const infoValueStyle = {
-  color: '#bdc3c7'
+  	color: '#bdc3c7'
 };
 
 export const infoRowStyle = {
-  marginBottom: '12px',
-  display: 'flex',
-  flexDirection: 'column'
+	marginBottom: '12px',
+	display: 'flex',
+	flexDirection: 'column'
 };
 
 export const recommendationBoxStyle = {
-  backgroundColor: '#34495E',
-  padding: '10px',
-  borderRadius: '5px',
-  marginTop: '15px'
+	backgroundColor: '#34495E',
+	padding: '10px',
+	borderRadius: '5px',
+	marginTop: '15px'
 };
 
 export const fruitChipStyle = {
-  display: 'inline-block',
-  padding: '3px 8px',
-  margin: '3px',
-  backgroundColor: '#2C3E50',
-  borderRadius: '16px',
-  fontSize: '0.85rem',
-  color: '#ecf0f1'
+	display: 'inline-block',
+	padding: '3px 8px',
+	margin: '3px',
+	backgroundColor: '#2C3E50',
+	borderRadius: '16px',
+	fontSize: '0.85rem',
+	color: '#ecf0f1'
 };
+
+export const PopupContent = styled.div`
+	width: 100%;
+	max-width: 300px;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	font-family: 'Roboto', sans-serif;
+`;
+
+export const PopupHeader = styled.div`
+	padding: 10px 15px;
+	color: #000;
+	font-weight: 600;
+`;
+
+export const PopupTitle = styled.h3`
+	margin: 0;
+	font-size: 16px;
+	font-weight: bold;
+`;
+
+export const PopupBody = styled.div`
+	padding: 15px;
+	background-color: #fff;
+	color: #333;
+`;
+
+export const PopupInfoRow = styled.div`
+	display: flex;
+	margin-bottom: 8px;
+	font-size: 14px;
+	align-items: baseline;
+`;
+
+export const PopupLabel = styled.span`
+	font-weight: 600;
+	width: 120px;
+	color: #555;
+`;
+
+export const PopupValue = styled.span`
+	flex: 1;
+`;
+
+export const PopupDivider = styled.hr`
+	border: none;
+	border-top: 1px solid #eee;
+	margin: 12px 0;
+`;
+
+export const SmartFarmingBox = styled.div`
+	background-color: #f8f9fa;
+	border-radius: 6px;
+	padding: 12px;
+	position: relative;
+	border-left: 4px solid #4CAF50;
+`;
+
+export const SmartFarmingTitle = styled.h4`
+	margin: 0 0 8px 0;
+	font-size: 14px;
+	color: #2c3e50;
+`;
+
+export const SmartFarmingSummary = styled.p`
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.4;
+	color: #333;
+`;
+
+export const SmartFarmingBadge = styled.span`
+	position: absolute;
+	top: -10px;
+	right: 10px;
+	background-color: #4CAF50;
+	color: white;
+	font-size: 10px;
+	padding: 3px 8px;
+	border-radius: 10px;
+	font-weight: 600;
+`;
+
+// Add Clear Button styles
+export const ClearButton = muiStyled('button')(({ theme }) => ({
+	background: 'transparent',
+	border: '1px solid #90CAF9',
+	color: '#90CAF9',
+	borderRadius: '4px',
+	padding: '4px 8px',
+	fontSize: '12px',
+	cursor: 'pointer',
+	display: 'flex',
+	alignItems: 'center',
+	transition: '0.3s',
+	'&:hover': {
+		background: 'rgba(144, 202, 249, 0.1)',
+	}
+}));
