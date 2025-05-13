@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { mockUsers } from '../data/mockUsers';
 import { 
     GlobalStyle, AdminContainer, AdminHeader, AdminTitle, AdminStats,
     StatCard, StatNumber, StatLabel, TabContainer, Tab, SearchInput,
@@ -21,20 +22,37 @@ const Admin = () => {
     const [showModal, setShowModal] = useState(false);
     const [accountLogs, setAccountLogs] = useState([]);
 
+    // Load mock data
+    useEffect(() => {
+        setPendingUsers(mockUsers.pending);
+        setApprovedUsers(mockUsers.approved);
+        setRejectedUsers(mockUsers.rejected);
+    }, []);
+
     // Fetch users data from backend
     useEffect(() => {
         const fetchUsers = async () => {
-        try {
-            const token = localStorage.getItem('token'); // Adjust as needed
-            const res = await axios.get('/admin/users', {
-            headers: { Authorization: token ? `Bearer ${token}` : '' }
-            });
-            setPendingUsers(res.data.pending || []);
-            setApprovedUsers(res.data.approved || []);
-            setRejectedUsers(res.data.rejected || []);
-        } catch (error) {
-            console.error('Failed to fetch users:', error);
-        }
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.log('No authentication token found, using mock data');
+                    return; // Keep using mock data if not authenticated
+                }
+
+                const res = await axios.get('/admin/users', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Only update state if we got valid data back
+                if (res.data && Array.isArray(res.data.pending)) {
+                    setPendingUsers(res.data.pending);
+                    setApprovedUsers(res.data.approved);
+                    setRejectedUsers(res.data.rejected);
+                }
+            } catch (error) {
+                console.error('Failed to fetch users:', error);
+                // Keep using mock data on error
+            }
         };
         fetchUsers();
     }, []);
@@ -59,9 +77,10 @@ const Admin = () => {
     const filterUsers = (users) => {
         if (!searchTerm) return users;
         return users.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.location.toLowerCase().includes(searchTerm.toLowerCase())
+            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.role.toLowerCase().includes(searchTerm.toLowerCase())
         );
     };
 
@@ -134,6 +153,10 @@ const Admin = () => {
                 <DetailItem>
                     <DetailLabel>Email</DetailLabel>
                     <DetailValue>{selectedUser.email}</DetailValue>
+                </DetailItem>
+                <DetailItem>
+                    <DetailLabel>Role</DetailLabel>
+                    <DetailValue>{selectedUser.role}</DetailValue>
                 </DetailItem>
                 <DetailItem>
                     <DetailLabel>Registration Date</DetailLabel>

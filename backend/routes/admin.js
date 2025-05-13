@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
+const { checkRole } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ function mapUserDbToFrontend(user) {
 }
 
 // Get all users by status
-router.get("/users", authMiddleware, async (req, res) => {
+router.get("/users", authMiddleware, checkRole(['admin']), async (req, res) => {
     try {
         const pending = (await User.getUsersByStatus("pending")).map(mapUserDbToFrontend);
         const approved = (await User.getUsersByStatus("approved")).map(mapUserDbToFrontend);
@@ -32,7 +33,7 @@ router.get("/users", authMiddleware, async (req, res) => {
 });
 
 // Approve user
-router.post("/users/:id/approve", authMiddleware, async (req, res) => {
+router.post("/users/:id/approve", authMiddleware, checkRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
         await User.updateUserStatus(id, "approved");
@@ -43,7 +44,7 @@ router.post("/users/:id/approve", authMiddleware, async (req, res) => {
 });
 
 // Reject user
-router.post("/users/:id/reject", authMiddleware, async (req, res) => {
+router.post("/users/:id/reject", authMiddleware, checkRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
         const { reason } = req.body;
@@ -55,7 +56,7 @@ router.post("/users/:id/reject", authMiddleware, async (req, res) => {
 });
 
 // Get account creation logs (for admin)
-router.get("/logs", authMiddleware, async (req, res) => {
+router.get("/logs", authMiddleware, checkRole(['admin']), async (req, res) => {
     try {
         const logs = await User.getAccountLogs();
         res.json(logs);

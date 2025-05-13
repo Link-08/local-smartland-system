@@ -2,64 +2,80 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const authMiddleware = require("../middleware/authMiddleware");
+const { auth, JWT_SECRET } = require("../middleware/auth");
 require("dotenv").config();
 
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
     try {
-        const { username, email, password, userType } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const { email, password, role } = req.body;
+        
+        // Validate role
+        if (role && !['buyer', 'seller'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role' });
+        }
 
-        const user = await User.createUser(username, email, hashedPassword, userType);
+        const user = await User.create({
+            username: email, // Use email as username if not provided
+            email,
+            password,
+            role: role || 'buyer'
+        });
 
-        res.status(201).json({ message: "User created successfully", user });
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        
+        res.status(201).json({
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            },
+            token
+        });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(400).json({ error: error.message });
     }
 });
 
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.getUserByEmail(email);
-        if (!user) return res.status(400).json({ message: "User not found" });
+        const user = await User.findOne({ where: { email } });
 
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(400).json({ message: "Invalid credentials" });
+        if (!user || !(await user.validatePassword(password))) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-        const token = jwt.sign({ accountID: user.accountid, userType: user.usertype }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        if (!user.isActive) {
+            return res.status(401).json({ error: 'Account is deactivated' });
+        }
 
-        res.json({ token, user });
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        
+        res.json({
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            },
+            token
+        });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(400).json({ error: error.message });
     }
 });
 
-router.get("/me", async (req, res) => {
-    const authHeader = req.headers.authorization;
-    console.log("Received Auth Header:", authHeader); // Log token on backend
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(400).json({ message: "Invalid Token" });
-    }
-
-    const token = authHeader.split(" ")[1]; // Extract actual token
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await pool.query("SELECT userName, email FROM accounts WHERE accountID = $1", [decoded.userID]);
-
-        if (user.rows.length === 0) return res.status(404).json({ message: "User not found" });
-
-        res.json(user.rows[0]);
-    } catch (error) {
-        console.error("JWT Verification Error:", error);
-        res.status(401).json({ message: "Unauthorized" });
-    }
+router.get("/me", auth, async (req, res) => {
+    res.json({
+        user: {
+            id: req.user.id,
+            username: req.user.username,
+            email: req.user.email,
+            role: req.user.role
+        }
+    });
 });
-
-
 
 module.exports = router;
