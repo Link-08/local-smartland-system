@@ -5,7 +5,7 @@ import Login from "./Login";
 
 import { FaCircleUser } from "react-icons/fa6";
 
-const menuItems = ["Home", "About", "Map"];
+const menuItems = ["Home", "SpecList", "Listings", "Map"];
 
 const Navbar = ({ navigateTo, currentPage }) => {
     const { user, logout } = useContext(AuthContext);

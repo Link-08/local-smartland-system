@@ -39,6 +39,7 @@ export const AdminContainer = styled.div`
 	background-color: #2C3E50;
 	color: #ecf0f1;
 	overflow-x: hidden;
+	margin-top: 80px;
 `;
 
 export const AdminHeader = styled.div`

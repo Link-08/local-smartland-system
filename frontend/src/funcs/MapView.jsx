@@ -76,14 +76,9 @@ import {
 } from 'react-leaflet';
 import { getBarangaysArray, getBarangaysObject } from './loadBarangays';
 
-<<<<<<< HEAD
-// Import GeoJSON for OSM roads
-import roadsData from './cabanatuan-roads.json';
-=======
 // Import GeoJSON for OSM roads and irrigation
 import roadsData from './cabanatuan-roads.json';
 import irrigationData from './cabanatuan-irrigations.json';
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
 
 const OPENWEATHERMAP_API_KEY = "c0a32e00d3c50ae032ea9efd623bcce4";
 
@@ -270,21 +265,21 @@ const fruitElevationRanges = {
     'Watermelon': { min: 0, max: 500, optimal: 200 }
 };
 
-// --- IMPROVED ELEVATION FILTER CATEGORIES ---
-const elevationCategories = [
-  { label: 'Very Low (0-30m)', min: 0, max: 30, color: '#2196F3' },
-  { label: 'Low (31-40m)', min: 31, max: 40, color: '#4CAF50' },
-  { label: 'Moderate (41-50m)', min: 41, max: 50, color: '#FFC107' },
-  { label: 'High (51m+)', min: 51, max: Infinity, color: '#E91E63' },
-];
-
-// --- IMPROVED TEMPERATURE FILTER CATEGORIES ---
-const temperatureCategories = [
-  { label: 'Cool (< 26°C)', min: -Infinity, max: 25.99, color: '#2196F3' },
-  { label: 'Moderate (26-27°C)', min: 26, max: 27, color: '#4CAF50' },
-  { label: 'Warm (27.01-28.5°C)', min: 27.01, max: 28.5, color: '#FFC107' },
-  { label: 'Hot (> 28.5°C)', min: 28.51, max: Infinity, color: '#FF5722' },
-];
+// Pathways classification system (for UI display)
+const pathwayStatusInfo = {
+    'Good': {
+        color: '#4CAF50',
+        description: 'Well-maintained roads, accessible by vehicles year-round'
+    },
+    'Fair': {
+        color: '#FFC107',
+        description: 'Partially maintained, may have issues during rainy season'
+    },
+    'Poor': {
+        color: '#F44336',
+        description: 'Difficult access, only by foot or motorcycle in dry season'
+    }
+};
 
 // --- STANDARDIZED ELEVATION CATEGORIES ---
 const elevationCategories = [
@@ -411,11 +406,8 @@ const MapView = () => {
         fruits: false,
         elevation: false,
         temperature: false,
-<<<<<<< HEAD
-=======
         roads: false,
         irrigation: false,
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
         showAllBarangays: false,
         selectedBarangay: ''
     });
@@ -443,50 +435,6 @@ const MapView = () => {
     const [barangayColors] = useState(() => generateBarangayColors(getBarangaysArray()));
     const [selectedIrrigationCategory, setSelectedIrrigationCategory] = useState('');
 
-<<<<<<< HEAD
-    // --- GROUPED ROAD CATEGORIES ---
-    const roadCategories = [
-      {
-        key: 'main',
-        label: 'Main Roads',
-        types: ['primary', 'trunk', 'trunk_link', 'motorway'],
-        color: '#e74c3c' // Red
-      },
-      {
-        key: 'local',
-        label: 'Local Roads',
-        types: ['secondary', 'tertiary', 'residential', 'service'],
-        color: '#2980b9' // Blue
-      },
-      {
-        key: 'access',
-        label: 'Access Roads',
-        types: ['unclassified', 'track', 'path', 'pedestrian'],
-        color: '#27ae60' // Green
-      },
-      {
-        key: 'trails',
-        label: 'Trails & Footpaths',
-        types: ['footway', 'path', 'pedestrian'],
-        color: '#f39c12' // Orange
-      }
-    ];
-
-    // --- SIMPLIFIED ROAD FILTER STATE ---
-    const [selectedRoadCategory, setSelectedRoadCategory] = useState(''); // All hidden by default
-
-    // Handler for category selection
-    const handleRoadCategoryChange = (e) => {
-      setSelectedRoadCategory(e.target.value);
-    };
-
-    // Filter features by selected category
-    const selectedCategory = roadCategories.find(cat => cat.key === selectedRoadCategory);
-    const filteredRoadFeatures = selectedCategory
-      ? roadsData.features.filter(f => selectedCategory.types.includes(f.properties.highway))
-      : [];
-
-=======
     // Helper function to get color based on filter type and barangay
     const getBarangayColor = (barangay, filterType, barangayColors) => {
         if (!barangay) return '#666666';
@@ -511,7 +459,6 @@ const MapView = () => {
     };
 
     // Initialize barangays data and fetch weather
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
     useEffect(() => {
         const initialBarangays = getBarangaysArray();
         const initialBarangayData = getBarangaysObject();
@@ -554,46 +501,6 @@ const MapView = () => {
         fetchAllWeather();
     }, []);
 
-<<<<<<< HEAD
-    useEffect(() => {
-        if (!filters.temperature) {
-            setFilteredBarangays([]);
-            return;
-        }
-        let matches = barangays.filter(barangay => {
-            let temp;
-            if (barangayWeather && barangayWeather[barangay.name] !== undefined) {
-                temp = barangayWeather[barangay.name];
-            } else if (barangayData && barangayData[barangay.name] && barangayData[barangay.name].temperature !== undefined) {
-                temp = barangayData[barangay.name].temperature;
-            } else {
-                return false;
-            }
-            const nameMatch = barangay.name.toLowerCase().includes(searchTerm.toLowerCase());
-            return temp >= tempRange[0] && temp <= tempRange[1] && nameMatch;
-        });
-        // Sort matches
-        matches = matches.sort((a, b) => {
-            let aVal, bVal;
-            if (sortField === 'temperature') {
-                aVal = barangayWeather[a.name] ?? a.temperature;
-                bVal = barangayWeather[b.name] ?? b.temperature;
-            } else if (sortField === 'elevation') {
-                aVal = a.elevation;
-                bVal = b.elevation;
-            } else if (sortField === 'fruit') {
-                aVal = a.fruits;
-                bVal = b.fruits;
-            } else {
-                aVal = a.name;
-                bVal = b.name;
-            }
-            if (typeof aVal === 'string') return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-        });
-        setFilteredBarangays(matches);
-    }, [filters.temperature, tempRange, barangayWeather, barangays, sortField, sortOrder, searchTerm]);
-=======
     // Helper to compute min, max, avg temperature
     const getTemperatureStats = () => {
         const temps = Object.values(barangayWeather).filter(t => typeof t === 'number');
@@ -603,7 +510,6 @@ const MapView = () => {
         const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
         return { min, max, avg };
     };
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
 
     // Update handleFilterChange to handle irrigation
     const handleFilterChange = (filter) => {
@@ -748,11 +654,7 @@ const MapView = () => {
         return recommendations;
     };
 
-<<<<<<< HEAD
-    // --- USE ELEVATION CATEGORIES IN LEGEND HANDLING ---
-=======
     // Update the handleLegendClick function
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
     const handleLegendClick = (legendType, legendItem) => {
         // If a specific barangay is selected, highlight it
         if (filters.selectedBarangay) {
@@ -785,31 +687,12 @@ const MapView = () => {
                 matches = true;
                 color = fruitColors[data.fruits];
             } else if (legendType === 'elevation') {
-<<<<<<< HEAD
-                // Use improved elevation categories
-=======
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                 const cat = elevationCategories.find(cat => cat.label === legendItem);
                 if (cat && data.elevation >= cat.min && data.elevation <= cat.max) {
                     matches = true;
                     color = cat.color;
                 }
             } else if (legendType === 'temperature') {
-<<<<<<< HEAD
-                // Use improved temperature categories
-                const cat = temperatureCategories.find(cat => cat.label === legendItem);
-                let temp;
-                if (barangayWeather && barangayWeather[name] !== undefined) {
-                    temp = barangayWeather[name];
-                } else if (barangayData && barangayData[name] && barangayData[name].temperature !== undefined) {
-                    temp = barangayData[name].temperature;
-                } else {
-                    return;
-                }
-                if (cat && temp >= cat.min && temp <= cat.max) {
-                    matches = true;
-                    color = cat.color;
-=======
                 const cat = temperatureCategories.find(cat => cat.label === legendItem);
                 if (cat) {
                     const temp = barangayWeather[name] ?? data.temperature;
@@ -817,7 +700,6 @@ const MapView = () => {
                     matches = true;
                     color = cat.color;
                     }
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                 }
             }
             
@@ -846,15 +728,10 @@ const MapView = () => {
                   !filters.soilType && 
                   !filters.fruits && 
                   !filters.elevation && 
-<<<<<<< HEAD
-                  !filters.temperature) {
-            // Clear highlighted areas if no filters are active
-=======
                   !filters.temperature && 
                   !filters.roads && 
                   !filters.irrigation) {
             // Clear all visual elements if no filters are active
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
             setHighlightedAreas([]);
             setSelectedRoadCategory('');
             setBarangayInfo(null);
@@ -948,15 +825,6 @@ const MapView = () => {
                 />
                 <MapClickHandler />
                 
-<<<<<<< HEAD
-                {/* --- GROUPED ROADS BY CATEGORY --- */}
-                {selectedRoadCategory && (
-                  <GeoJSON
-                    key={selectedRoadCategory}
-                    data={{ type: 'FeatureCollection', features: filteredRoadFeatures }}
-                    style={{
-                      color: selectedCategory.color,
-=======
                 {/* Add OSM Roads GeoJSON Layer */}
                 {filters.roads && selectedRoadCategory && (
                   <GeoJSON
@@ -967,14 +835,11 @@ const MapView = () => {
                     }}
                     style={{
                       color: roadCategoryMap[selectedRoadCategory].color,
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                       weight: 4,
                       opacity: 0.9
                     }}
                   />
                 )}
-<<<<<<< HEAD
-=======
 
                 {/* Add Irrigation GeoJSON Layer */}
                 {filters.irrigation && selectedIrrigationCategory && (
@@ -1020,7 +885,6 @@ const MapView = () => {
                         }}
                     />
                 )}
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                 
                 {/* Render highlighted area circles */}
                 <LayerGroup>
@@ -1045,7 +909,8 @@ const MapView = () => {
                             <strong>Soil Type:</strong> {barangay.soilType}<br />
                             <strong>Main Fruit:</strong> {barangay.fruits}<br />
                             <strong>Elevation:</strong> {barangay.elevation}m<br />
-                            <strong>Avg. Temp:</strong> {barangay.temperature}°C
+                            <strong>Avg. Temp:</strong> {barangay.temperature}°C<br />
+                            <strong>Pathways:</strong> {barangay.pathways}
                           </div>
                         </Popup>
                       </Circle>
@@ -1082,14 +947,9 @@ const MapView = () => {
                             <strong>{area.name}</strong><br />
                             <strong>Soil Type:</strong> {barangay.soilType}<br />
                             <strong>Main Fruit:</strong> {barangay.fruits}<br />
-<<<<<<< HEAD
-                            <strong>Elevation:</strong> {barangay.elevation}m<br />
-                            <strong>Avg. Temp:</strong> {barangay.temperature}°C
-=======
                             <strong>Elevation:</strong> {barangay.elevation}m ({getElevationCategory(barangay.elevation).label})<br />
                             <strong>Avg. Temp:</strong> {barangay.temperature}°C ({getTemperatureCategory(barangay.temperature).label})<br />
                             <strong>Pathways:</strong> {barangay.pathways}
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                           </div>
                         </Popup>
                       </Circle>
@@ -1208,76 +1068,6 @@ const MapView = () => {
                       />
                       <Label htmlFor="temperature">Temperature</Label>
                     </FilterItem>
-<<<<<<< HEAD
-                  </FilterGrid>
-                </FilterGroup>
-      
-                {/* Display appropriate legend based on active filters */}
-                {(filters.soilType || filters.fruits || filters.elevation || filters.temperature) && (
-                  <Legend>
-                    <FilterTitle>Legend:</FilterTitle>
-                    <LegendContainer>
-                      {filters.soilType && (
-                        <>
-                          {Object.keys(soilTypeColors).map((soilType) => (
-                            <LegendItem 
-                              key={soilType} 
-                              onClick={() => handleLegendClick('soilType', soilType)} 
-                              style={{ backgroundColor: soilTypeColors[soilType] }}
-                            >
-                              {soilType}
-                            </LegendItem>
-                          ))}
-                        </>
-                      )}
-                      
-                      {filters.fruits && (
-                        <>
-                          {Object.keys(fruitColors).map((fruit) => (
-                            <LegendItem 
-                              key={fruit} 
-                              onClick={() => handleLegendClick('fruits', fruit)} 
-                              style={{ backgroundColor: fruitColors[fruit] }}
-                            >
-                              {fruit}
-                            </LegendItem>
-                          ))}
-                        </>
-                      )}
-                      
-                      {filters.elevation && (
-                        <>
-                          {elevationCategories.map((cat) => (
-                            <LegendItem 
-                              key={cat.label} 
-                              onClick={() => handleLegendClick('elevation', cat.label)} 
-                              style={{ backgroundColor: cat.color }}
-                            >
-                              {cat.label}
-                            </LegendItem>
-                          ))}
-                        </>
-                      )}
-                      
-                      {filters.temperature && (
-                        <>
-                          {temperatureCategories.map((cat) => (
-                            <LegendItem 
-                              key={cat.label} 
-                              onClick={() => handleLegendClick('temperature', cat.label)} 
-                              style={{ backgroundColor: cat.color }}
-                            >
-                              {cat.label}
-                            </LegendItem>
-                          ))}
-                        </>
-                      )}
-                    </LegendContainer>
-                  </Legend>
-                )}
-      
-                {/* Temperature Range Slider */}
-=======
                     
                     <FilterItem>
                       <Checkbox 
@@ -1302,7 +1092,6 @@ const MapView = () => {
                 </FilterGroup>
       
                 {/* Temperature Filter Section */}
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                 {filters.temperature && (
                     <FilterGroup>
                         <FilterTitle>Temperature Zones</FilterTitle>
@@ -1345,48 +1134,6 @@ const MapView = () => {
                               }}
                               onClick={() => handleLegendClick('temperature', category.label)}
                             >
-<<<<<<< HEAD
-                              <BarangayName>{b.name}</BarangayName>
-                              <BarangayDetails>
-                                Temp: {(barangayWeather[b.name] ?? b.temperature).toFixed(1)}°C | 
-                                Elev: {b.elevation}m | 
-                                Fruit: {b.fruits}
-                              </BarangayDetails>
-                            </BarangayListItem>
-                          ))
-                        )}
-                      </ScrollableList>
-                    )}
-                    
-                    {/* Detailed info card for selected barangay */}
-                    {selectedSidebarBarangay && (
-                      <SelectedBarangayCard>
-                        <BarangayCardHeader>
-                          {selectedSidebarBarangay.name}
-                          <ActionButtons>
-                            <Tooltip title="Show on map">
-                              <IconButton size="small" sx={{ color: '#4CAF50' }} onClick={() => setFilters(prev => ({ ...prev, selectedBarangay: selectedSidebarBarangay.name }))}>
-                                <InfoOutlinedIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Close">
-                              <IconButton size="small" sx={{ color: '#e57373' }} onClick={() => setSelectedSidebarBarangay(null)}>
-                                ×
-                              </IconButton>
-                            </Tooltip>
-                          </ActionButtons>
-                        </BarangayCardHeader>
-                        <BarangayInfoGrid>
-                          <BarangayInfoItem>Temperature: {(barangayWeather[selectedSidebarBarangay.name] ?? selectedSidebarBarangay.temperature).toFixed(1)}°C</BarangayInfoItem>
-                          <BarangayInfoItem>Elevation: {selectedSidebarBarangay.elevation} m</BarangayInfoItem>
-                          <BarangayInfoItem>Soil Type: {selectedSidebarBarangay.soilType}</BarangayInfoItem>
-                          <BarangayInfoItem>Main Fruit: {selectedSidebarBarangay.fruits}</BarangayInfoItem>
-                        </BarangayInfoGrid>
-                        <BarangayNotes>{selectedSidebarBarangay.notes}</BarangayNotes>
-                      </SelectedBarangayCard>
-                    )}
-                  </TemperatureRangeCard>
-=======
                               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
                                 <div
                                   style={{
@@ -1624,7 +1371,6 @@ const MapView = () => {
                             ))}
                         </div>
                     </FilterGroup>
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                 )}
       
                 <FilterGroup>
@@ -1665,150 +1411,6 @@ const MapView = () => {
                     ))}
                   </Select>
                 </FilterGroup>
-<<<<<<< HEAD
-      
-                {/* Barangay Information Display */}
-                {barangayInfo && (
-                  <div style={barangayInfoBoxStyle}>
-                    <h3 style={{ marginTop: 0, marginBottom: '15px', color: '#ecf0f1' }}>
-                      {barangayInfo.name} Barangay Information
-                    </h3>
-                    
-                    <div style={infoRowStyle}>
-                      <span style={infoLabelStyle}>Soil Type:</span>
-                      <span style={{
-                        ...infoValueStyle,
-                        backgroundColor: soilTypeColors[barangayInfo.soilType],
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        display: 'inline-block',
-                        width: 'fit-content',
-                        color: '#000'
-                      }}>
-                        {barangayInfo.soilType}
-                      </span>
-                    </div>
-                    
-                    <div style={infoRowStyle}>
-                      <span style={infoLabelStyle}>Currently Growing:</span>
-                      <span style={{
-                        ...infoValueStyle,
-                        backgroundColor: fruitColors[barangayInfo.currentFruit],
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        display: 'inline-block',
-                        width: 'fit-content',
-                        color: '#000'
-                      }}>
-                        {barangayInfo.currentFruit}
-                      </span>
-                    </div>
-                    
-                    <div style={infoRowStyle}>
-                      <span style={infoLabelStyle}>Elevation:</span>
-                      <span style={infoValueStyle}>
-                        {barangayInfo.elevation !== undefined ? `${barangayInfo.elevation} m` : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div style={infoRowStyle}>
-                      <span style={infoLabelStyle}>Average Temperature:</span>
-                      <span style={infoValueStyle}>
-                        {weatherLoading ? 'Loading...' : (barangayWeather[barangayInfo.name] ?? barangayInfo.temperature) + '°C'}
-                      </span>
-                      {weatherError && (
-                        <span style={{ color: 'red' }}>
-                          Error: {weatherError}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div style={infoRowStyle}>
-                      <span style={infoLabelStyle}>Suitable Fruits for this Soil:</span>
-                      <div>
-                        {barangayInfo.suitableFruits.map(fruit => (
-                          <span key={fruit} style={fruitChipStyle}>
-                            {fruit}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div style={{...infoRowStyle, marginTop: '10px'}}>
-                      <span style={infoLabelStyle}>Area Notes:</span>
-                      <span style={infoValueStyle}>
-                        {barangayInfo.notes}
-                      </span>
-                    </div>
-                    
-                    {/* Advanced Recommendation System */}
-                    <div style={recommendationBoxStyle}>
-                      <h4 style={{margin: '0 0 10px 0', color: '#ecf0f1'}}>
-                        Smart Farming Recommendations
-                      </h4>
-                      <div style={{marginBottom: '10px'}}>
-                        <strong style={{color: '#3498db'}}>Optimal Crops:</strong>
-                        <div style={{marginTop: '5px'}}>
-                          {barangayInfo.recommendations.bestFruits.length > 0 ? 
-                            barangayInfo.recommendations.bestFruits.map(fruit => (
-                              <span key={fruit} style={{
-                                ...fruitChipStyle,
-                                backgroundColor: fruit === barangayInfo.currentFruit ? 
-                                  '#27ae60' : '#2C3E50'
-                              }}>
-                                {fruit} {fruit === barangayInfo.currentFruit && '✓'}
-                              </span>
-                            )) :
-                            <span style={infoValueStyle}>
-                              No optimal crops identified. Consider soil amendments.
-                            </span>
-                          }
-                        </div>
-                      </div>
-                      
-                      <div style={{marginBottom: '10px'}}>
-                        <strong style={{color: '#3498db'}}>Analysis:</strong>
-                        <ul style={{margin: '5px 0', paddingLeft: '20px'}}>
-                          {barangayInfo.recommendations.notes.map((note, index) => (
-                            <li key={index} style={{...infoValueStyle, marginBottom: '5px'}}>
-                              {note}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div style={{
-                        padding: '10px', 
-                        backgroundColor: '#1A2530', 
-                        borderRadius: '4px',
-                        marginTop: '10px'
-                      }}>
-                        <strong style={{color: '#e74c3c'}}>Overall Recommendation:</strong>
-                        <p style={{...infoValueStyle, margin: '5px 0 0 0'}}>
-                          {barangayInfo.recommendations.overall}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-      
-                {/* --- FILTER ROADS BY CATEGORY --- */}
-                <Divider />
-                <FilterGroup>
-                  <FilterTitle>Filter Roads by Type</FilterTitle>
-                  <select
-                    value={selectedRoadCategory}
-                    onChange={handleRoadCategoryChange}
-                    style={{ padding: '7px', fontSize: 16, borderRadius: 8, minWidth: 180 }}
-                  >
-                    <option value="">-- Select Road Category --</option>
-                    {roadCategories.map(cat => (
-                      <option key={cat.key} value={cat.key}>{cat.label}</option>
-                    ))}
-                  </select>
-                </FilterGroup>
-=======
->>>>>>> 2b3ea2f7ad6ba4501ba50202cbd0ad87d4714987
                 <Divider />
               </FilterScrollContainer>
             </FilterSection>

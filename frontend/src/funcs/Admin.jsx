@@ -234,23 +234,6 @@ const Admin = () => {
         <AppWrapper>
         <GlobalStyle />
         
-        {/* Navbar */}
-        <NavContainer>
-            <Logo>
-            <Smartland>SMARTLAND</Smartland>
-            <System>MANAGEMENT SYSTEM</System>
-            </Logo>
-            <NavLinks>
-            <NavItem>Dashboard</NavItem>
-            <NavItem>Land Map</NavItem>
-            <NavItem>Reports</NavItem>
-            <NavItem>User Verification</NavItem>
-            </NavLinks>
-            <ProfileSection>
-            <Avatar src="/api/placeholder/40/40" alt="Admin" />
-            </ProfileSection>
-        </NavContainer>
-        
         {/* Admin Dashboard */}
         <AdminContainer>
             <AdminHeader>
@@ -305,7 +288,6 @@ const Admin = () => {
                 <tr>
                     <TableHeader>User</TableHeader>
                     <TableHeader>Location</TableHeader>
-                    <TableHeader>Land Area</TableHeader>
                     <TableHeader>Registration Date</TableHeader>
                     <TableHeader>Actions</TableHeader>
                 </tr>
@@ -324,7 +306,6 @@ const Admin = () => {
                         </div>
                         </TableCell>
                         <TableCell>{user.location}</TableCell>
-                        <TableCell>{user.landArea}</TableCell>
                         <TableCell>{user.registrationDate}</TableCell>
                         <TableCell>
                         <ViewButton onClick={() => handleViewUser(user)}>

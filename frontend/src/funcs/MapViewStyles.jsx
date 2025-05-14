@@ -26,6 +26,7 @@ export const Container = styled.div`
 	width: 100vw;
 	margin: 0;
 	padding: 0;
+	margin-top: 80px;
 
 	@media (max-width: 768px) {
 		flex-direction: column;
@@ -66,7 +67,6 @@ export const FilterSection = styled.div`
 export const FilterScrollContainer = styled.div`
 	height: 100%;
 	overflow-y: auto;
-	padding-top: 20px;
 	padding-left: 20px;
 	padding-right: 20px;
 `;
