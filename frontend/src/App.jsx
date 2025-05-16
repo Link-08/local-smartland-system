@@ -6,6 +6,8 @@ import Admin from "./funcs/Admin";
 import HomePage from "./funcs/HomePage";
 import ListingOverview from "./funcs/ListingOverview";
 import ListingPage from "./funcs/Listings";
+import BuyerDashboard from "./funcs/BuyerDashboard";
+import SellerDashboard from "./funcs/SellerDashboard";
 
 function App() {
     const [currentPage, setCurrentPage] = useState("home");
@@ -21,6 +23,8 @@ function App() {
 
                 {currentPage === "home" && <HomePage />}
                 {/* {currentPage === "about" && <AboutPage />} */}
+                {currentPage === "buyer dashboard" && <BuyerDashboard />}
+                {currentPage === "seller dashboard" && <SellerDashboard />}
                 {currentPage === "speclist" && <ListingPage />}
                 {currentPage === "listings" && <ListingOverview />}
                 {currentPage === "admin" && <Admin />}
