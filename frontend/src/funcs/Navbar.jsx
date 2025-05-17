@@ -2,16 +2,31 @@ import { useState, useContext } from "react";
 import AuthContext from "./AuthContext";
 import { NavContainer, Logo, Smartland, System, NavLinks, NavItem, LoginButton, MenuToggle, ProfileSection, DropdownItem, Dropdown } from "./NavbarStyles";
 import Login from "./Login";
-
 import { FaCircleUser } from "react-icons/fa6";
-
-const menuItems = ["Home", "Buyer Dashboard", "Seller Dashboard", "SpecList", "Listings", "Map"];
 
 const Navbar = ({ navigateTo, currentPage }) => {
     const { user, logout } = useContext(AuthContext);
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginOpen, setLoginOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    // Define menu items based on user role
+    const getMenuItems = () => {
+        if (!user) {
+            return ["Home"];
+        }
+
+        switch (user.role) {
+            case 'buyer':
+                return ["Buyer Dashboard", "Map"];
+            case 'seller':
+                return ["Seller Dashboard", "SpecList", "Listings", "Map"];
+            case 'admin':
+                return ["Admin", "Map"];
+            default:
+                return ["Home"];
+        }
+    };
 
     const handleSettings = () => {
         navigateTo("settings");
@@ -39,16 +54,19 @@ const Navbar = ({ navigateTo, currentPage }) => {
                     <System>SYSTEM</System>
                 </Logo>
                 <NavLinks $menuOpen={menuOpen}>
-                    {menuItems.map((item) => (
-                        <NavItem key={item} onClick={() => navigateTo(item.toLowerCase())}>
+                    {getMenuItems().map((item) => (
+                        <NavItem 
+                            key={item} 
+                            onClick={() => navigateTo(item.toLowerCase())}
+                            style={{ 
+                                display: 'flex', 
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
                             {item}
                         </NavItem>
                     ))}
-                    {user?.role === 'admin' && (
-                        <NavItem onClick={() => navigateTo("admin")}>
-                            Admin
-                        </NavItem>
-                    )}
                     {user ? (
                         <ProfileSection>
                             <FaCircleUser 

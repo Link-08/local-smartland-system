@@ -61,6 +61,7 @@ import SortIcon from '@mui/icons-material/Sort';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import DirectionsIcon from '@mui/icons-material/Directions';
 
 // Import map components
 import { 
@@ -108,6 +109,24 @@ const soilTypeColors = {
     'Clayey Silt': '#FFC107'
 };
 
+// Define soil type categories with colors and descriptions
+const soilTypeCategories = [
+    {
+        label: 'Sandy Soils',
+        types: ['Sandy Silt', 'Silty Sand', 'Well-Graded Sand'],
+        color: '#8BC34A', // Light green
+        hoverColor: '#7CB342',
+        description: 'Well-draining soils suitable for root crops and vegetables'
+    },
+    {
+        label: 'Clay Soils',
+        types: ['Clayey Sand', 'Sandy Lean Clay', 'Clayey Silt'],
+        color: '#795548', // Brown
+        hoverColor: '#6D4C41',
+        description: 'Moisture-retaining soils ideal for rice and water-loving crops'
+    }
+];
+
 // Generate unique colors for each barangay (for Show All Barangays)
 const generateBarangayColors = (barangays) => {
     // Use a more distinct color palette for barangays
@@ -126,6 +145,50 @@ const generateBarangayColors = (barangays) => {
         barangayColors[barangay.name] = colors[index % colors.length];
     });
     return barangayColors;
+};
+
+// Define elevation categories with colors and descriptions
+const elevationCategories = [
+    {
+        label: 'Low (0-35m)',
+        min: 0,
+        max: 35,
+        color: '#4CAF50', // Green
+        hoverColor: '#43A047',
+        description: 'Suitable for lowland crops and rice cultivation',
+        textColor: '#FFFFFF'
+    },
+    {
+        label: 'Moderate (36-50m)',
+        min: 36,
+        max: 50,
+        color: '#FFC107', // Amber
+        hoverColor: '#FFA000',
+        description: 'Ideal for most tropical fruits and vegetables',
+        textColor: '#000000'
+    },
+    {
+        label: 'High (>50m)',
+        min: 51,
+        max: Infinity,
+        color: '#FF5722', // Deep orange
+        hoverColor: '#F4511E',
+        description: 'Suitable for highland crops and certain fruit varieties',
+        textColor: '#FFFFFF'
+    }
+];
+
+// Helper function to get elevation category
+const getElevationCategory = (elevation) => {
+    if (elevation === null || elevation === undefined) {
+        return elevationCategories[1]; // Default to moderate if elevation is not available
+    }
+    
+    const category = elevationCategories.find(cat => 
+        elevation >= cat.min && elevation <= cat.max
+    ) || elevationCategories[1];
+    
+    return category;
 };
 
 // --- STANDARDIZED TEMPERATURE CATEGORIES ---
@@ -178,26 +241,110 @@ const getTemperatureCategory = (temperature, isHovered = false) => {
   };
 };
 
-// Helper function to get color based on filter type and barangay
-const getBarangayColor = (barangay, filterType, barangayColors) => {
-    if (!barangay) return '#666666';
+// Define viability levels with enhanced colors and descriptions
+const viabilityLevels = {
+    'High': {
+        color: '#4CAF50', // Vibrant green
+        hoverColor: '#43A047', // Darker green for hover
+        description: 'Excellent growing conditions',
+        textColor: '#FFFFFF'
+    },
+    'Moderate': {
+        color: '#FFC107', // Amber
+        hoverColor: '#FFA000', // Darker amber for hover
+        description: 'Suitable growing conditions',
+        textColor: '#000000'
+    },
+    'Low': {
+        color: '#FF5722', // Deep orange
+        hoverColor: '#F4511E', // Darker orange for hover
+        description: 'Challenging growing conditions',
+        textColor: '#FFFFFF'
+    },
+    'Restricted': {
+        color: '#F44336', // Red
+        hoverColor: '#E53935', // Darker red for hover
+        description: 'Not recommended for growing',
+        textColor: '#FFFFFF'
+    }
+};
 
-    switch (filterType) {
-        case 'soilType':
-            return soilTypeColors[barangay.soilType] || '#666666';
-        case 'elevation':
-            return getElevationCategory(barangay.elevation).color;
-        case 'temperature':
-            // Use stored temperature if weather data is not available
-            const temp = barangayWeather[barangay.name] ?? barangay.temperature ?? 25; // Default to 25°C if no data
-            const tempCat = getTemperatureCategory(temp);
-            return tempCat.color;
-        case 'showAll':
-            return barangayColors[barangay.name] || '#666666';
-        case 'selected':
-            return barangayColors[barangay.name] || '#2196F3';
-        default:
-            return '#666666';
+// Update fruit colors to match viability levels
+const fruitColors = {
+    'Calamansi': viabilityLevels.High.color,
+    'Corn': viabilityLevels.Moderate.color,
+    'Eggplant': viabilityLevels.High.color,
+    'Rice': viabilityLevels.High.color,
+    'Onion': viabilityLevels.Moderate.color
+};
+
+// Define irrigation categories and their properties
+const irrigationCategories = ['Rivers', 'Canals', 'Ditches'];
+
+const irrigationCategoryMap = {
+    'Rivers': {
+        label: 'Rivers',
+        types: ['river', 'stream'],
+        color: '#2196F3', // Blue
+        hoverColor: '#1976D2',
+        weight: 4,
+        opacity: 0.8,
+        fillOpacity: 0.2,
+        description: 'Major water bodies and natural waterways'
+    },
+    'Canals': {
+        label: 'Canals',
+        types: ['canal', 'drain'],
+        color: '#4CAF50', // Green
+        hoverColor: '#388E3C',
+        weight: 3,
+        opacity: 0.7,
+        fillOpacity: 0.15,
+        description: 'Man-made water channels for irrigation'
+    },
+    'Ditches': {
+        label: 'Ditches',
+        types: ['ditch'],
+        color: '#FFC107', // Amber
+        hoverColor: '#FFA000',
+        weight: 2,
+        opacity: 0.6,
+        fillOpacity: 0.1,
+        description: 'Small water channels for drainage and irrigation'
+    }
+};
+
+// Define road categories and their properties
+const roadCategories = ['Primary', 'Secondary', 'Tertiary', 'Residential'];
+
+const roadCategoryMap = {
+    'Primary': {
+        label: 'Primary Roads',
+        types: ['primary', 'primary_link'],
+        color: '#E53935', // Red
+        hoverColor: '#C62828',
+        description: 'Major highways and arterial roads'
+    },
+    'Secondary': {
+        label: 'Secondary Roads',
+        types: ['secondary', 'secondary_link'],
+        color: '#FB8C00', // Orange
+        hoverColor: '#EF6C00',
+        description: 'Important connecting roads between primary roads'
+    },
+    'Tertiary': {
+        label: 'Tertiary Roads',
+        types: ['tertiary', 'tertiary_link'],
+        color: '#FDD835', // Yellow
+        hoverColor: '#FBC02D',
+        description: 'Local connecting roads'
+    },
+    'Residential': {
+        label: 'Residential Roads',
+        types: ['residential', 'unclassified', 'living_street'],
+        color: '#7CB342', // Light Green
+        hoverColor: '#689F38',
+        description: 'Neighborhood and local access roads'
     }
 };
 
@@ -216,179 +363,6 @@ const getFilterOpacity = (filterType) => {
             return 0.7;
         default:
             return 0.5;
-    }
-};
-
-// Soil type categories for display
-const soilTypeCategories = [
-    {
-        label: 'Sandy Soils',
-        types: ['Sandy Silt', 'Silty Sand', 'Well-Graded Sand'],
-        color: '#8BC34A',
-        description: 'Good drainage, suitable for most crops'
-    },
-    {
-        label: 'Clay Soils',
-        types: ['Clayey Sand', 'Sandy Lean Clay', 'Clayey Silt'],
-        color: '#795548',
-        description: 'High water retention, good for water-intensive crops'
-    }
-];
-
-const fruitColors = {
-    'Mangoes': '#FF9800',
-    'Kalamansi': '#FFEB3B',
-    'Watermelon': '#FF4081'
-};
-
-// Fruit suitability per soil type
-const soilFruitSuitability = {
-    'Loamy Soil': ['Mangoes', 'Watermelon', 'Kalamansi'],
-    'Sandy Soil': ['Watermelon', 'Kalamansi'],
-    'Clay Soil': ['Mangoes'],
-    'Silty Soil': ['Mangoes', 'Kalamansi'],
-    'Peaty Soil': ['Watermelon'],
-    'Chalky Soil': ['Kalamansi']
-};
-
-// Define temperature ranges for optimal fruit growth
-const fruitTemperatureRanges = {
-    'Mangoes': { min: 24, max: 30, optimal: 27 },
-    'Kalamansi': { min: 20, max: 32, optimal: 25 },
-    'Watermelon': { min: 22, max: 35, optimal: 28 }
-};
-
-// Define ideal elevation ranges for fruits (in meters)
-const fruitElevationRanges = {
-    'Mangoes': { min: 0, max: 600, optimal: 300 },
-    'Kalamansi': { min: 100, max: 800, optimal: 400 },
-    'Watermelon': { min: 0, max: 500, optimal: 200 }
-};
-
-// Pathways classification system (for UI display)
-const pathwayStatusInfo = {
-    'Good': {
-        color: '#4CAF50',
-        description: 'Well-maintained roads, accessible by vehicles year-round'
-    },
-    'Fair': {
-        color: '#FFC107',
-        description: 'Partially maintained, may have issues during rainy season'
-    },
-    'Poor': {
-        color: '#F44336',
-        description: 'Difficult access, only by foot or motorcycle in dry season'
-    }
-};
-
-// --- STANDARDIZED ELEVATION CATEGORIES ---
-const elevationCategories = [
-  {
-    label: 'Lowland (≤ 200m)',
-    min: 0,
-    max: 200,
-    color: '#4CAF50',
-    description: 'Prone to flooding. Best for rice and water-intensive crops.'
-  },
-  {
-    label: 'Midland (201–320m)',
-    min: 201,
-    max: 320,
-    color: '#FFC107',
-    description: 'Suitable for most fruit trees and vegetables. Moderate flood risk.'
-  },
-  {
-    label: 'Highland (> 320m)',
-    min: 321,
-    max: Infinity,
-    color: '#2196F3',
-    description: 'Cooler, less flood risk. Good for mangoes, citrus, and high-value crops.'
-  }
-];
-
-// Helper function to get elevation category
-const getElevationCategory = (elevation) => {
-  return elevationCategories.find(cat => elevation >= cat.min && elevation <= cat.max) || elevationCategories[0];
-};
-
-const DirectionIcon = () => (
-    <svg width="16" height="16" fill="currentColor" className="bi bi-arrow-right" viewBox="0 0 16 16">
-        <path fillRule="evenodd" d="M11.3 8.3a.5.5 0 0 1 0 .4l-4 4a.5.5 0 0 1-.8-.4V10H1.5a.5.5 0 0 1 0-1h5V5.1a.5.5 0 0 1 .8-.4l4 4z"/>
-    </svg>
-);
-
-// Helper to fetch weather for a barangay
-async function fetchBarangayWeather(lat, lon) {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`;
-    const response = await axios.get(url);
-    return response.data.main.temp;
-}
-
-// Define simplified road categories and their properties
-const roadCategories = [
-    'Major Roads',
-    'Secondary Roads',
-    'Local Roads'
-];
-
-const roadCategoryMap = {
-    'Major Roads': {
-        label: 'Major Roads',
-        color: '#E53935', // Deep red
-        types: ['primary', 'primary_link', 'trunk', 'trunk_link'],
-        description: 'Main arterial roads connecting major areas. High traffic volume, multiple lanes.'
-    },
-    'Secondary Roads': {
-        label: 'Secondary Roads',
-        color: '#43A047', // Forest green
-        types: ['secondary', 'secondary_link', 'tertiary', 'tertiary_link'],
-        description: 'Connector roads between major and local roads. Moderate traffic flow.'
-    },
-    'Local Roads': {
-        label: 'Local Roads',
-        color: '#1E88E5', // Bright blue
-        types: ['residential', 'living_street', 'service', 'unclassified', 'road'],
-        description: 'Neighborhood and service roads. Low traffic, primarily local access.'
-    }
-};
-
-// Define irrigation categories and their properties
-const irrigationCategories = [
-    'Rivers',
-    'Canals',
-    'Ditches'
-];
-
-const irrigationCategoryMap = {
-    'Rivers': {
-        label: 'Rivers',
-        color: '#1565C0', // Deeper blue for better contrast
-        hoverColor: '#0D47A1', // Even deeper blue for hover state
-        types: ['river', 'stream', 'water'],
-        description: 'Major water bodies and natural waterways. Important for irrigation and drainage.',
-        weight: 5, // Thicker lines for major waterways
-        opacity: 0.9,
-        fillOpacity: 0.5
-    },
-    'Canals': {
-        label: 'Canals',
-        color: '#29B6F6', // Brighter blue for better visibility
-        hoverColor: '#0288D1', // Darker blue for hover state
-        types: ['canal', 'drain'],
-        description: 'Man-made channels for water distribution and irrigation.',
-        weight: 4,
-        opacity: 0.85,
-        fillOpacity: 0.4
-    },
-    'Ditches': {
-        label: 'Ditches',
-        color: '#4FC3F7', // Light blue with better contrast
-        hoverColor: '#039BE5', // Darker blue for hover state
-        types: ['ditch', 'waterway'],
-        description: 'Smaller water channels for field-level irrigation and drainage.',
-        weight: 3,
-        opacity: 0.8,
-        fillOpacity: 0.3
     }
 };
 
@@ -435,7 +409,7 @@ const MapView = () => {
     const [barangayColors] = useState(() => generateBarangayColors(getBarangaysArray()));
     const [selectedIrrigationCategory, setSelectedIrrigationCategory] = useState('');
 
-    // Helper function to get color based on filter type and barangay
+    // Move getBarangayColor inside the component
     const getBarangayColor = (barangay, filterType, barangayColors) => {
         if (!barangay) return '#666666';
 
@@ -445,10 +419,19 @@ const MapView = () => {
             case 'elevation':
                 return getElevationCategory(barangay.elevation).color;
             case 'temperature':
-                // Use stored temperature if weather data is not available
-                const temp = barangayWeather[barangay.name] ?? barangay.temperature ?? 25; // Default to 25°C if no data
+                const temp = barangayWeather[barangay.name] ?? barangay.temperature ?? 25;
                 const tempCat = getTemperatureCategory(temp);
                 return tempCat.color;
+            case 'fruits':
+                // Get the viability level for the selected crop
+                const selectedCrop = Object.keys(filters).find(key => 
+                    key.startsWith('selectedCrop_') && filters[key]
+                )?.replace('selectedCrop_', '');
+                
+                if (selectedCrop && barangay.fruits[selectedCrop]) {
+                    return viabilityLevels[barangay.fruits[selectedCrop]]?.color || '#666666';
+                }
+                return '#666666';
             case 'showAll':
                 return barangayColors[barangay.name] || '#666666';
             case 'selected':
@@ -511,7 +494,7 @@ const MapView = () => {
         return { min, max, avg };
     };
 
-    // Update handleFilterChange to handle irrigation
+    // Update the handleFilterChange function to handle crop selection
     const handleFilterChange = (filter) => {
         // Clear all visual elements first
         setHighlightedAreas([]);
@@ -526,7 +509,11 @@ const MapView = () => {
                     ...prev,
                     [filter]: false,
                     showAllBarangays: false,
-                    selectedBarangay: ''
+                    selectedBarangay: '',
+                    // Clear any selected crop
+                    ...Object.keys(prev)
+                        .filter(key => key.startsWith('selectedCrop_'))
+                        .reduce((acc, key) => ({ ...acc, [key]: false }), {})
                 };
             }
 
@@ -541,6 +528,10 @@ const MapView = () => {
                 irrigation: false,
                 showAllBarangays: false,
                 selectedBarangay: '',
+                // Clear any selected crop
+                ...Object.keys(prev)
+                    .filter(key => key.startsWith('selectedCrop_'))
+                    .reduce((acc, key) => ({ ...acc, [key]: false }), {}),
                 [filter]: true
             };
 
@@ -654,64 +645,26 @@ const MapView = () => {
         return recommendations;
     };
 
-    // Update the handleLegendClick function
-    const handleLegendClick = (legendType, legendItem) => {
-        // If a specific barangay is selected, highlight it
-        if (filters.selectedBarangay) {
-            setHighlightedAreas([{
-                name: filters.selectedBarangay,
-                color: legendType === 'soilType' ? 
-                    soilTypeColors[barangayData[filters.selectedBarangay].soilType] : 
-                    legendType === 'elevation' ?
-                    getElevationCategory(barangayData[filters.selectedBarangay].elevation).color :
-                    legendType === 'temperature' ?
-                    getTemperatureCategory(barangayData[filters.selectedBarangay].temperature).color :
-                    fruitColors[barangayData[filters.selectedBarangay].fruits],
-                opacity: 0.6
-            }]);
-            return;
-        }
-
-        // Otherwise, find and highlight all barangays that match the selected filter
-        const matchingBarangays = [];
-        barangays.forEach((barangay) => {
-            const name = barangay.name;
-            const data = barangayData[name];
-            let matches = false;
-            let color = '#3388ff'; // Default color
-            
-            if (legendType === 'soilType' && data.soilType === legendItem) {
-                matches = true;
-                color = soilTypeColors[data.soilType];
-            } else if (legendType === 'fruits' && data.fruits === legendItem) {
-                matches = true;
-                color = fruitColors[data.fruits];
-            } else if (legendType === 'elevation') {
-                const cat = elevationCategories.find(cat => cat.label === legendItem);
-                if (cat && data.elevation >= cat.min && data.elevation <= cat.max) {
-                    matches = true;
-                    color = cat.color;
-                }
-            } else if (legendType === 'temperature') {
-                const cat = temperatureCategories.find(cat => cat.label === legendItem);
-                if (cat) {
-                    const temp = barangayWeather[name] ?? data.temperature;
-                    if (temp >= cat.min && temp <= cat.max) {
-                    matches = true;
-                    color = cat.color;
-                    }
-                }
-            }
-            
-            if (matches) {
-                matchingBarangays.push({
-                    name: name,
-                    color: color,
+    // Update the handleLegendClick function to handle crop selection
+    const handleLegendClick = (filterType, category) => {
+        if (filterType === 'temperature') {
+            const selectedCategory = temperatureCategories.find(cat => cat.label === category);
+            if (selectedCategory) {
+                const matchingBarangays = barangays.filter(barangay => {
+                    const temp = barangayWeather[barangay.name] ?? barangay.temperature ?? 25;
+                    return temp >= selectedCategory.min && temp <= selectedCategory.max;
+                }).map(barangay => ({
+                    name: barangay.name,
+                    color: getTemperatureCategory(barangay.temperature).color,
                     opacity: 0.6
-                });
+                }));
+                setHighlightedAreas(matchingBarangays);
             }
-        });
-        setHighlightedAreas(matchingBarangays);
+        } else if (filterType === 'elevation') {
+            // ... existing elevation code ...
+        } else if (filterType === 'fruits') {
+            // ... existing fruits code ...
+        }
     };
 
     // Show all barangays when that option is selected
@@ -798,6 +751,29 @@ const MapView = () => {
                 return "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
         }
     };
+
+    // Add CSS for highlighted areas
+    const mapStyles = `
+        .highlighted-area {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .highlighted-area:hover {
+            fill-opacity: 0.8 !important;
+            stroke-width: 3px !important;
+        }
+    `;
+
+    // Add the styles to the document
+    useEffect(() => {
+        const styleElement = document.createElement('style');
+        styleElement.textContent = mapStyles;
+        document.head.appendChild(styleElement);
+        
+        return () => {
+            document.head.removeChild(styleElement);
+        };
+    }, []);
 
     return (
         <>
@@ -926,33 +902,85 @@ const MapView = () => {
                     if (filters.soilType) filterType = 'soilType';
                     else if (filters.elevation) filterType = 'elevation';
                     else if (filters.temperature) filterType = 'temperature';
+                    else if (filters.fruits) filterType = 'fruits';
                     
                     const color = getBarangayColor(barangay, filterType, barangayColors);
                     const opacity = getFilterOpacity(filterType);
                     
                     return (
-                      <Circle 
-                        key={`${area.name}-${index}`}
-                        center={barangay.center}
-                        radius={barangay.radius}
-                        pathOptions={{ 
-                          color: color,
-                          fillOpacity: opacity,
-                          weight: 2,
-                          dashArray: '5, 5'
-                        }}
-                      >
-                        <Popup>
-                          <div style={{ color: '#333' }}>
-                            <strong>{area.name}</strong><br />
-                            <strong>Soil Type:</strong> {barangay.soilType}<br />
-                            <strong>Main Fruit:</strong> {barangay.fruits}<br />
-                            <strong>Elevation:</strong> {barangay.elevation}m ({getElevationCategory(barangay.elevation).label})<br />
-                            <strong>Avg. Temp:</strong> {barangay.temperature}°C ({getTemperatureCategory(barangay.temperature).label})<br />
-                            <strong>Pathways:</strong> {barangay.pathways}
-                          </div>
-                        </Popup>
-                      </Circle>
+                        <Circle 
+                            key={`${area.name}-${index}`}
+                            center={barangay.center}
+                            radius={barangay.radius}
+                            pathOptions={{ 
+                                color: color,
+                                fillColor: color,
+                                fillOpacity: opacity,
+                                weight: 2,
+                                dashArray: '5, 5',
+                                className: 'highlighted-area'
+                            }}
+                        >
+                            <Popup>
+                                <div style={{ 
+                                    color: '#333',
+                                    padding: '8px',
+                                    maxWidth: '300px'
+                                }}>
+                                    <h3 style={{ 
+                                        margin: '0 0 12px 0',
+                                        fontSize: '1.2em',
+                                        color: '#2C3E50',
+                                        borderBottom: '2px solid #eee',
+                                        paddingBottom: '8px'
+                                    }}>
+                                        {area.name}
+                                    </h3>
+                                    
+                                    <div style={{ 
+                                        display: 'grid',
+                                        gridTemplateColumns: 'auto 1fr',
+                                        gap: '8px 12px',
+                                        fontSize: '0.95em'
+                                    }}>
+                                        <strong>Soil Type:</strong>
+                                        <span>{barangay.soilType}</span>
+                                        
+                                        <strong>Elevation:</strong>
+                                        <span>{barangay.elevation}m ({getElevationCategory(barangay.elevation).label})</span>
+                                        
+                                        <strong>Temperature:</strong>
+                                        <span>{barangay.temperature}°C ({getTemperatureCategory(barangay.temperature).label})</span>
+                                        
+                                        <strong>Pathways:</strong>
+                                        <span>{barangay.pathways}</span>
+                                        
+                                        {filters.fruits && (
+                                            <>
+                                                <strong>Crop Viability:</strong>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    {Object.entries(barangay.fruits).map(([fruit, viability]) => (
+                                                        <div key={fruit} style={{ 
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '8px'
+                                                        }}>
+                                                            <div style={{
+                                                                width: '12px',
+                                                                height: '12px',
+                                                                backgroundColor: viabilityLevels[viability]?.color || '#666666',
+                                                                borderRadius: '2px'
+                                                            }} />
+                                                            <span>{fruit}: {viability}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </Popup>
+                        </Circle>
                     );
                   })}
                 </LayerGroup>
@@ -968,7 +996,7 @@ const MapView = () => {
               <LocationOverlay>
                 <LocationName>{selectedLocation.name}</LocationName>
                 <DirectionsLink>
-                  <DirectionIcon />
+                  <DirectionsIcon />
                   Directions
                 </DirectionsLink>
                 <ViewLargerMapLink href="#">View larger map</ViewLargerMapLink>
@@ -1043,10 +1071,9 @@ const MapView = () => {
                         type="checkbox" 
                         id="fruits"
                         checked={filters.fruits} 
-                        onChange={() => {}}
-                        disabled
+                        onChange={() => handleFilterChange('fruits')}
                       />
-                      <Label htmlFor="fruits">Crops (coming soon)</Label>
+                      <Label htmlFor="fruits">Crops</Label>
                     </FilterItem>
                     
                     <FilterItem>
@@ -1128,9 +1155,10 @@ const MapView = () => {
                         borderRadius: '4px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease-in-out',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.15)'
-                                }
+                                border: highlightedAreas.some(area => 
+                                  barangays.find(b => b.name === area.name)?.temperature >= category.min && 
+                                  barangays.find(b => b.name === area.name)?.temperature <= category.max
+                                ) ? `2px solid ${category.color}` : '2px solid transparent'
                               }}
                               onClick={() => handleLegendClick('temperature', category.label)}
                             >
@@ -1141,23 +1169,12 @@ const MapView = () => {
                                     height: '20px',
                                     backgroundColor: category.color,
                                     marginRight: '8px',
-                                    borderRadius: '4px',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    borderRadius: '4px'
                                   }}
                                 />
-                                <span style={{ 
-                                    fontWeight: 'bold',
-                                    color: category.textColor
-                                }}>
-                                    {category.label}
-                                </span>
+                                <span style={{ fontWeight: 'bold' }}>{category.label}</span>
                     </div>
-                              <div style={{ 
-                                  fontSize: '0.9em', 
-                                  color: '#bdc3c7', 
-                                  marginLeft: '28px',
-                                  lineHeight: '1.4'
-                              }}>
+                              <div style={{ fontSize: '0.9em', color: '#bdc3c7', marginLeft: '28px' }}>
                                   {category.description}
                     </div>
                     </div>
@@ -1366,6 +1383,103 @@ const MapView = () => {
                                         lineHeight: '1.4'
                                     }}>
                                         {irrigationCategoryMap[cat].description}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </FilterGroup>
+                )}
+
+                {filters.fruits && (
+                    <FilterGroup>
+                        <FilterTitle>Crop Types</FilterTitle>
+                        <div style={{ marginTop: '10px' }}>
+                            {Object.keys(fruitColors).map((fruit) => (
+                                <div
+                                    key={fruit}
+                                    style={{
+                                        padding: '12px',
+                                        marginBottom: '10px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease-in-out',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                                    }}
+                                    onClick={() => handleLegendClick('fruits', fruit)}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                        <div
+                                            style={{
+                                                width: '24px',
+                                                height: '24px',
+                                                backgroundColor: fruitColors[fruit],
+                                                marginRight: '12px',
+                                                borderRadius: '4px',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                            }}
+                                        />
+                                        <span style={{ 
+                                            fontWeight: 'bold',
+                                            fontSize: '1.1em',
+                                            color: '#fff'
+                                        }}>{fruit}</span>
+                                    </div>
+                                    <div style={{ 
+                                        fontSize: '0.9em', 
+                                        color: '#bdc3c7',
+                                        marginLeft: '36px',
+                                        lineHeight: '1.4'
+                                    }}>
+                                        {(() => {
+                                            const viabilityCounts = {
+                                                High: 0,
+                                                Moderate: 0,
+                                                Low: 0,
+                                                Restricted: 0
+                                            };
+                                            
+                                            barangays.forEach(barangay => {
+                                                const viability = barangay.fruits[fruit];
+                                                if (viability) {
+                                                    viabilityCounts[viability]++;
+                                                }
+                                            });
+                                            
+                                            return (
+                                                <div>
+                                                    <div style={{ marginBottom: '8px' }}>
+                                                        {Object.entries(viabilityCounts).map(([level, count]) => (
+                                                            count > 0 && (
+                                                                <div key={level} style={{ 
+                                                                    display: 'flex', 
+                                                                    alignItems: 'center',
+                                                                    marginBottom: '4px'
+                                                                }}>
+                                                                    <div style={{
+                                                                        width: '12px',
+                                                                        height: '12px',
+                                                                        backgroundColor: viabilityLevels[level].color,
+                                                                        marginRight: '8px',
+                                                                        borderRadius: '2px'
+                                                                    }} />
+                                                                    <span style={{ color: '#fff' }}>
+                                                                        {level}: {count} areas
+                                                                    </span>
+                                                                </div>
+                                                            )
+                                                        ))}
+                                                    </div>
+                                                    <div style={{ 
+                                                        fontSize: '0.85em',
+                                                        color: '#95a5a6',
+                                                        fontStyle: 'italic'
+                                                    }}>
+                                                        Click to view suitable areas
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             ))}
