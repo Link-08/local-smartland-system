@@ -304,6 +304,138 @@ export const SellerDashboardStyles = {
             display: none;
         }
     `,
-}
+
+    // Add these to your SellerDashboardStyles object
+    ToolContainer: styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    `,
+
+    ToolSection: styled.div`
+    background-color: rgba(52, 73, 94, 0.05);
+    border-radius: 8px;
+    padding: 16px;
+    `,
+
+    ToolSectionTitle: styled.h3`
+    font-size: 18px;
+    font-weight: 600;
+    color: #dddddd;
+    margin-top: 0;
+    margin-bottom: 12px;
+    `,
+
+    ToolGrid: styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    `,
+
+    ToolCard: styled.div`
+    background-color: #34495E;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    `,
+
+    ToolCardTitle: styled.h4`
+    font-size: 16px;
+    font-weight: 600;
+    color: #ecf0f1;
+    margin-top: 0;
+    margin-bottom: 8px;
+    `,
+
+    ToolCardValue: styled.div`
+    font-size: ${props => props.large ? '28px' : '18px'};
+    font-weight: ${props => props.bold ? '700' : '500'};
+    color: ${props => props.color || '#ecf0f1'};
+    margin-bottom: 4px;
+    `,
+
+    RangeSlider: styled.input`
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #2C3E50;
+    outline: none;
+    -webkit-appearance: none;
+
+    &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+    }
+
+    &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+    }
+    `,
+
+    CheckboxGroup: styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 12px 0;
+    `,
+
+    Checkbox: styled.div`
+    display: flex;
+    align-items: center;
+    color: #ecf0f1;
+
+    input {
+    margin-right: 6px;
+    }
+
+    label {
+    cursor: pointer;
+    }
+    `,
+
+    ToolResultBox: styled.div`
+    background-color: rgba(52, 152, 219, 0.1);
+    border-left: 4px solid #3498db;
+    padding: 16px;
+    margin-top: 16px;
+    border-radius: 0 8px 8px 0;
+    `,
+
+    TipCard: styled.div`
+    background-color: ${props => props.bgColor || 'rgba(52, 152, 219, 0.1)'};
+    border-left: 4px solid ${props => props.accentColor || '#3498db'};
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 0 8px 8px 0;
+    `,
+
+    TipTitle: styled.h4`
+    font-size: 16px;
+    font-weight: 600;
+    color: #dddddd;
+    margin-top: 0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    `,
+
+    TipText: styled.p`
+    font-size: 14px;
+    color: #dddddd;
+    margin: 0;
+    line-height: 1.5;
+    `,
+    }
 
 export default SellerDashboardStyles;

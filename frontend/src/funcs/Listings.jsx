@@ -265,34 +265,34 @@ const ListingPage = () => {
             
             {contactModalOpen && (
                 <ListingStyles.ModalOverlay>
-                <ListingStyles.ModalContent>
-                    <ListingStyles.ModalHeader>
-                    <ListingStyles.ModalTitle>Contact {listing.seller.name}</ListingStyles.ModalTitle>
-                    <ListingStyles.CloseButton onClick={closeContactModal}>×</ListingStyles.CloseButton>
-                    </ListingStyles.ModalHeader>
-                    <ListingStyles.ContactForm>
-                    <ListingStyles.FormGroup>
-                        <ListingStyles.Label>Your Name</ListingStyles.Label>
-                        <ListingStyles.Input type="text" placeholder="Enter your name" />
-                    </ListingStyles.FormGroup>
-                    <ListingStyles.FormGroup>
-                        <ListingStyles.Label>Your Email</ListingStyles.Label>
-                        <ListingStyles.Input type="email" placeholder="Enter your email" />
-                    </ListingStyles.FormGroup>
-                    <ListingStyles.FormGroup>
-                        <ListingStyles.Label>Phone Number</ListingStyles.Label>
-                        <ListingStyles.Input type="tel" placeholder="Enter your phone number" />
-                    </ListingStyles.FormGroup>
-                    <ListingStyles.FormGroup>
-                        <ListingStyles.Label>Message</ListingStyles.Label>
-                        <ListingStyles.TextArea 
-                        placeholder="I'm interested in this agricultural property and would like more information about the soil conditions and irrigation access..."
-                        rows={5}
-                        />
-                    </ListingStyles.FormGroup>
-                    <ListingStyles.SendButton>Send Message</ListingStyles.SendButton>
-                    </ListingStyles.ContactForm>
-                </ListingStyles.ModalContent>
+                    <ListingStyles.ModalContent>
+                        <ListingStyles.ModalHeader>
+                        <ListingStyles.ModalTitle>Contact {listing.seller.name}</ListingStyles.ModalTitle>
+                        <ListingStyles.CloseButton onClick={closeContactModal}>×</ListingStyles.CloseButton>
+                        </ListingStyles.ModalHeader>
+                        <ListingStyles.ContactForm>
+                        <ListingStyles.FormGroup>
+                            <ListingStyles.Label>Your Name</ListingStyles.Label>
+                            <ListingStyles.Input type="text" placeholder="Enter your name" />
+                        </ListingStyles.FormGroup>
+                        <ListingStyles.FormGroup>
+                            <ListingStyles.Label>Your Email</ListingStyles.Label>
+                            <ListingStyles.Input type="email" placeholder="Enter your email" />
+                        </ListingStyles.FormGroup>
+                        <ListingStyles.FormGroup>
+                            <ListingStyles.Label>Phone Number</ListingStyles.Label>
+                            <ListingStyles.Input type="tel" placeholder="Enter your phone number" />
+                        </ListingStyles.FormGroup>
+                        <ListingStyles.FormGroup>
+                            <ListingStyles.Label>Message</ListingStyles.Label>
+                            <ListingStyles.TextArea 
+                            placeholder="I'm interested in this agricultural property and would like more information about the soil conditions and irrigation access..."
+                            rows={5}
+                            />
+                        </ListingStyles.FormGroup>
+                        <ListingStyles.SendButton>Send Message</ListingStyles.SendButton>
+                        </ListingStyles.ContactForm>
+                    </ListingStyles.ModalContent>
                 </ListingStyles.ModalOverlay>
             )}
         </ListingStyles.PageWrapper>

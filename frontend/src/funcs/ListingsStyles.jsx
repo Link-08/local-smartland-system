@@ -20,6 +20,10 @@ export const ListingStyles = {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         width: 100%;
         flex-shrink: 0;
+        
+        @media (max-width: 768px) {
+            padding: 0 16px;
+        }
     `,
 
     Logo: styled.div`
@@ -41,6 +45,10 @@ export const ListingStyles = {
     NavLinks: styled.div`
         display: flex;
         gap: 24px;
+        
+        @media (max-width: 768px) {
+            display: none; /* Hide on mobile - would need a hamburger menu implementation */
+        }
     `,
 
     NavItem: styled.a`
@@ -82,6 +90,10 @@ export const ListingStyles = {
         margin: 0 auto;
         padding: 24px;
         flex: 1;
+        
+        @media (max-width: 768px) {
+            padding: 16px;
+        }
     `,
 
     BreadcrumbNav: styled.div`
@@ -112,6 +124,10 @@ export const ListingStyles = {
         margin-bottom: 24px;
         flex-wrap: wrap;
         gap: 16px;
+        
+        @media (max-width: 768px) {
+            flex-direction: column;
+        }
     `,
 
     TitleSection: styled.div`
@@ -135,6 +151,10 @@ export const ListingStyles = {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
+        
+        @media (max-width: 768px) {
+            align-items: flex-start;
+        }
     `,
 
     ListingPrice: styled.div`
@@ -152,6 +172,10 @@ export const ListingStyles = {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 320px;
         gap: 24px;
+        
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
     `,
 
     MainContent: styled.div`
@@ -172,6 +196,10 @@ export const ListingStyles = {
         height: 500px;
         object-fit: cover;
         display: block;
+        
+        @media (max-width: 768px) {
+            height: 300px;
+        }
     `,
 
     GalleryControls: styled.div`
@@ -185,6 +213,10 @@ export const ListingStyles = {
         align-items: center;
         padding: 0 16px;
         pointer-events: none;
+        
+        @media (max-width: 480px) {
+            padding: 0 8px;
+        }
     `,
 
     // Base button style
@@ -266,6 +298,11 @@ export const ListingStyles = {
         gap: 8px;
         padding: 16px;
         overflow-x: auto;
+        
+        @media (max-width: 480px) {
+            padding: 8px;
+            gap: 4px;
+        }
     `,
 
     ThumbnailWrapper: styled.div`
@@ -275,6 +312,11 @@ export const ListingStyles = {
         width: 80px;
         height: 60px;
         flex-shrink: 0;
+        
+        @media (max-width: 480px) {
+            width: 60px;
+            height: 45px;
+        }
     `,
 
     Thumbnail: styled.img`
@@ -293,6 +335,10 @@ export const ListingStyles = {
         background-color: #34495E;
         border-radius: 8px;
         padding: 24px;
+        
+        @media (max-width: 768px) {
+            padding: 16px;
+        }
     `,
 
     SectionTitle: styled.h2`
@@ -308,6 +354,10 @@ export const ListingStyles = {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 16px;
+        
+        @media (max-width: 480px) {
+            grid-template-columns: 1fr 1fr;
+        }
     `,
 
     SpecItem: styled.div``,
@@ -338,6 +388,10 @@ export const ListingStyles = {
         padding: 0;
         margin: 0;
         list-style-type: none;
+        
+        @media (max-width: 480px) {
+            grid-template-columns: 1fr;
+        }
     `,
 
     AmenityItem: styled.li`
@@ -583,6 +637,12 @@ export const ListingStyles = {
         gap: 24px;
         flex-wrap: wrap;
         justify-content: center;
+        
+        @media (max-width: 768px) {
+            gap: 16px;
+            flex-direction: column;
+            align-items: center;
+        }
     `,
 
     FooterLink: styled.a`
@@ -623,6 +683,11 @@ export const ListingStyles = {
         padding: 24px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         color: #ecf0f1;
+        
+        @media (max-width: 480px) {
+            padding: 16px;
+            width: 100%;
+        }
     `,
 
     ModalHeader: styled.div`
@@ -671,6 +736,7 @@ export const ListingStyles = {
         background-color: #2C3E50;
         color: #ecf0f1;
         font-size: 16px;
+        box-sizing: border-box;
 
         &::placeholder {
         color: #7f8c8d;
@@ -691,6 +757,7 @@ export const ListingStyles = {
         color: #ecf0f1;
         font-size: 16px;
         resize: vertical;
+        box-sizing: border-box;
 
         &::placeholder {
         color: #7f8c8d;
@@ -715,6 +782,51 @@ export const ListingStyles = {
 
         &:hover {
         background-color: #27ae60;
+        }
+    `,
+
+    MobileMenuButton: styled.button`
+        display: none;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #ecf0f1;
+        cursor: pointer;
+        
+        @media (max-width: 768px) {
+            display: block;
+        }
+    `,
+
+    // Mobile Menu Component
+    MobileMenu: styled.div`
+        display: none;
+        position: fixed;
+        top: 80px;
+        left: 0;
+        right: 0;
+        background-color: #2C3E50;
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+        z-index: 100;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        
+        &.open {
+            display: flex;
+        }
+    `,
+
+    MobileNavItem: styled.a`
+        color: #ecf0f1;
+        font-size: 18px;
+        font-weight: 500;
+        text-decoration: none;
+        padding: 12px 8px;
+        border-bottom: 1px solid #34495E;
+        
+        &:last-child {
+            border-bottom: none;
         }
     `,
 };

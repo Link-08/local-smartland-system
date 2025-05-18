@@ -74,7 +74,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
                                 onClick={() => setDropdownOpen(!dropdownOpen)} 
                                 style={{ cursor: "pointer", color: "#fff" }} 
                             />
-                            {dropdownOpen && (
+                            {/* {dropdownOpen && (
                                 <Dropdown>
                                     <DropdownItem onClick={handleSettings}>Settings</DropdownItem>
                                     {user.role === 'seller' && (
@@ -82,7 +82,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
                                     )}
                                     <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
                                 </Dropdown>
-                            )}
+                            )} */}
                         </ProfileSection>
                     ) : (
                         <LoginButton onClick={() => setLoginOpen(true)}>Login / Register</LoginButton>
