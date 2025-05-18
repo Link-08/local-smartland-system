@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ListingOverviewStyles as S } from './ListingOverviewStyles';
 import { FaList, FaThLarge, FaSearch, FaFilter, FaHome, FaEye, FaStar, FaTree, FaTint, FaSeedling, FaMapMarkerAlt, FaRulerCombined, FaChevronLeft, FaChevronRight, FaAngleDown, FaRegCalendarAlt, FaTimes } from 'react-icons/fa';
+import cabanatuanLots from './cabanatuanLots.json';
+import barangays from './barangays.json';
 
 const ListingOverview = () => {
     // State for filters and view
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [viewMode, setViewMode] = useState('grid');
     const [showFilters, setShowFilters] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState('newest');
@@ -19,152 +21,155 @@ const ListingOverview = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     
-    // Sample data for demonstration
-    const listingsData = [
-        {
-        id: 1,
-        title: "Fertile Farm Land with Irrigation System",
-        location: "Barangay A, Cabanatuan",
-        price: "₱2,500,000",
-        pricePerSqm: "₱1,250",
-        size: "2,000 sqm",
-        crops: ["Rice", "Corn"],
-        fruits: ["Mango", "Banana"],
-        hasIrrigation: true,
-        isFeatured: true,
-        imageUrl: "/api/placeholder/400/320",
-        sellerName: "Maria Santos",
-        sellerAvatar: "/api/placeholder/50/50",
-        postedDate: "May 5, 2025"
-        },
-        {
-        id: 2,
-        title: "Agricultural Lot with Fruit-bearing Trees",
-        location: "Barangay B, Cabanatuan",
-        price: "₱1,800,000",
-        pricePerSqm: "₱900",
-        size: "2,000 sqm",
-        crops: ["Vegetables"],
-        fruits: ["Mango", "Coconut", "Durian"],
-        hasIrrigation: false,
-        isFeatured: false,
-        imageUrl: "/api/placeholder/400/320",
-        sellerName: "Juan Dela Cruz",
-        sellerAvatar: "/api/placeholder/50/50",
-        postedDate: "May 2, 2025"
-        },
-        {
-        id: 3,
-        title: "Rice Field with Modern Irrigation",
-        location: "Barangay C, Cabanatuan",
-        price: "₱3,200,000",
-        pricePerSqm: "₱800",
-        size: "4,000 sqm",
-        crops: ["Rice"],
-        fruits: [],
-        hasIrrigation: true,
-        isFeatured: false,
-        imageUrl: "/api/placeholder/400/320",
-        sellerName: "Pedro Reyes",
-        sellerAvatar: "/api/placeholder/50/50",
-        postedDate: "May 10, 2025"
-        },
-        {
-        id: 4,
-        title: "Sugar Cane Plantation Lot",
-        location: "Barangay D, Cabanatuan",
-        price: "₱5,000,000",
-        pricePerSqm: "₱1,000",
-        size: "5,000 sqm",
-        crops: ["Sugar Cane"],
-        fruits: [],
-        hasIrrigation: true,
-        isFeatured: true,
-        imageUrl: "/api/placeholder/400/320",
-        sellerName: "Ana Reyes",
-        sellerAvatar: "/api/placeholder/50/50",
-        postedDate: "April 30, 2025"
-        },
-        {
-        id: 5,
-        title: "Mixed Crop Agricultural Land",
-        location: "Barangay E, Cabanatuan",
-        price: "₱2,100,000",
-        pricePerSqm: "₱700",
-        size: "3,000 sqm",
-        crops: ["Rice", "Corn", "Vegetables"],
-        fruits: ["Banana"],
-        hasIrrigation: true,
-        isFeatured: false,
-        imageUrl: "/api/placeholder/400/320",
-        sellerName: "Jose Mendoza",
-        sellerAvatar: "/api/placeholder/50/50",
-        postedDate: "May 7, 2025"
-        },
-        {
-        id: 6,
-        title: "Coconut Farm with Ocean View",
-        location: "Barangay F, Cabanatuan",
-        price: "₱4,500,000",
-        pricePerSqm: "₱1,500",
-        size: "3,000 sqm",
-        crops: [],
-        fruits: ["Coconut"],
-        hasIrrigation: false,
-        isFeatured: false,
-        imageUrl: "/api/placeholder/400/320",
-        sellerName: "Carlos Lopez",
-        sellerAvatar: "/api/placeholder/50/50",
-        postedDate: "May 1, 2025"
-        }
-    ];
+    // Transform and enhance the property data
+    const [listingsData, setListingsData] = useState([]);
 
-    // Sample data for filter options
-    const barangays = [
-        "All Barangays",
-        "Barangay A, Cabanatuan",
-        "Barangay B, Cabanatuan",
-        "Barangay C, Cabanatuan",
-        "Barangay D, Cabanatuan",
-        "Barangay E, Cabanatuan",
-        "Barangay F, Cabanatuan"
-    ];
+    useEffect(() => {
+        const enhancedListings = cabanatuanLots.map(lot => {
+            // Find matching barangay data
+            const barangayData = barangays.find(b => 
+                lot.location.toLowerCase().includes(b.name.toLowerCase())
+            );
 
-    const cropTypes = ["Rice", "Corn", "Sugar Cane", "Vegetables"];
-    const fruitTypes = ["Mango", "Banana", "Coconut", "Durian"];
+            // Calculate price per sqm
+            const pricePerSqm = Array.isArray(lot.price_php) 
+                ? lot.price_php.map(price => Math.round(price / (Array.isArray(lot.lot_area_sqm) ? lot.lot_area_sqm[0] : lot.lot_area_sqm)))
+                : Math.round(lot.price_php / lot.lot_area_sqm);
+
+            return {
+                id: Math.random().toString(36).substr(2, 9),
+                title: lot.name,
+                location: lot.location,
+                price: `₱${lot.price_php.toLocaleString()}`,
+                pricePerSqm: `₱${pricePerSqm.toLocaleString()}`,
+                size: `${lot.lot_area_sqm.toLocaleString()} sqm`,
+                category: lot.category,
+                features: lot.features,
+                crops: barangayData?.fruits ? Object.entries(barangayData.fruits)
+                    .filter(([_, value]) => value === "High" || value === "Moderate")
+                    .map(([key]) => key) : [],
+                fruits: barangayData?.fruits ? Object.entries(barangayData.fruits)
+                    .filter(([_, value]) => value === "High" || value === "Moderate")
+                    .map(([key]) => key) : [],
+                hasIrrigation: lot.features?.toLowerCase().includes('irrigation') || false,
+                isFeatured: lot.isFeatured || false,
+                imageUrl: "/api/placeholder/400/320",
+                sellerName: "SmartLand System",
+                sellerAvatar: "/api/placeholder/50/50",
+                postedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            };
+        });
+
+        setListingsData(enhancedListings);
+    }, []);
+
+    // Get unique barangay names for filter
+    const barangayOptions = ['All Barangays', ...new Set(barangays.map(b => b.name))];
+
+    // Get unique crop and fruit types from barangay data
+    const cropTypes = [...new Set(barangays.flatMap(b => 
+        Object.entries(b.fruits)
+            .filter(([_, value]) => value === "High" || value === "Moderate")
+            .map(([key]) => key)
+    ))];
+
+    const fruitTypes = [...new Set(barangays.flatMap(b => 
+        Object.entries(b.fruits)
+            .filter(([_, value]) => value === "High" || value === "Moderate")
+            .map(([key]) => key)
+    ))];
 
     // Handle crop checkbox changes
     const handleCropChange = (crop) => {
         if (selectedCrops.includes(crop)) {
-        setSelectedCrops(selectedCrops.filter(item => item !== crop));
+            setSelectedCrops(selectedCrops.filter(item => item !== crop));
         } else {
-        setSelectedCrops([...selectedCrops, crop]);
+            setSelectedCrops([...selectedCrops, crop]);
         }
     };
 
     // Handle fruit checkbox changes
     const handleFruitChange = (fruit) => {
         if (selectedFruits.includes(fruit)) {
-        setSelectedFruits(selectedFruits.filter(item => item !== fruit));
+            setSelectedFruits(selectedFruits.filter(item => item !== fruit));
         } else {
-        setSelectedFruits([...selectedFruits, fruit]);
+            setSelectedFruits([...selectedFruits, fruit]);
         }
     };
 
-    // Apply filters (in a real app, this would filter the actual data)
+    // Apply filters
     const applyFilters = () => {
-        // This would typically fetch data or filter existing data based on selected filters
-        console.log("Applying filters with:", {
-        barangay: selectedBarangay,
-        priceRange,
-        sizeRange,
-        crops: selectedCrops,
-        fruits: selectedFruits,
-        irrigation: hasIrrigation
-        });
-        
-        // For demo purposes, just setting page to 1
-        setCurrentPage(1);
+        let filtered = [...listingsData];
+
+        // Filter by barangay
+        if (selectedBarangay !== 'All Barangays') {
+            filtered = filtered.filter(listing => 
+                listing.location.toLowerCase().includes(selectedBarangay.toLowerCase())
+            );
+        }
+
+        // Filter by price range
+        if (priceRange.min) {
+            filtered = filtered.filter(listing => {
+                const price = parseInt(listing.price.replace(/[^0-9]/g, ''));
+                return price >= parseInt(priceRange.min);
+            });
+        }
+        if (priceRange.max) {
+            filtered = filtered.filter(listing => {
+                const price = parseInt(listing.price.replace(/[^0-9]/g, ''));
+                return price <= parseInt(priceRange.max);
+            });
+        }
+
+        // Filter by size range
+        if (sizeRange.min) {
+            filtered = filtered.filter(listing => {
+                const size = parseInt(listing.size.replace(/[^0-9]/g, ''));
+                return size >= parseInt(sizeRange.min);
+            });
+        }
+        if (sizeRange.max) {
+            filtered = filtered.filter(listing => {
+                const size = parseInt(listing.size.replace(/[^0-9]/g, ''));
+                return size <= parseInt(sizeRange.max);
+            });
+        }
+
+        // Filter by crops
+        if (selectedCrops.length > 0) {
+            filtered = filtered.filter(listing => 
+                selectedCrops.some(crop => listing.crops.includes(crop))
+            );
+        }
+
+        // Filter by fruits
+        if (selectedFruits.length > 0) {
+            filtered = filtered.filter(listing => 
+                selectedFruits.some(fruit => listing.fruits.includes(fruit))
+            );
+        }
+
+        // Filter by irrigation
+        if (hasIrrigation) {
+            filtered = filtered.filter(listing => listing.hasIrrigation);
+        }
+
+        // Apply search term
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(listing => 
+                listing.title.toLowerCase().includes(term) ||
+                listing.location.toLowerCase().includes(term) ||
+                listing.features.toLowerCase().includes(term)
+            );
+        }
+
+        // Apply category filter
+        filtered = filterListingsByCategory(filtered);
+
+        setListingsData(filtered);
+        setShowFilters(false);
     };
 
     // Clear all filters
@@ -175,12 +180,117 @@ const ListingOverview = () => {
         setSelectedCrops([]);
         setSelectedFruits([]);
         setHasIrrigation(false);
+        setSearchTerm('');
+        setActiveCategory('all');
+        
+        // Reset listings to original data
+        const enhancedListings = cabanatuanLots.map(lot => {
+            const barangayData = barangays.find(b => 
+                lot.location.toLowerCase().includes(b.name.toLowerCase())
+            );
+            const pricePerSqm = Array.isArray(lot.price_php) 
+                ? lot.price_php.map(price => Math.round(price / (Array.isArray(lot.lot_area_sqm) ? lot.lot_area_sqm[0] : lot.lot_area_sqm)))
+                : Math.round(lot.price_php / lot.lot_area_sqm);
+
+            return {
+                id: Math.random().toString(36).substr(2, 9),
+                title: lot.name,
+                location: lot.location,
+                price: `₱${lot.price_php.toLocaleString()}`,
+                pricePerSqm: `₱${pricePerSqm.toLocaleString()}`,
+                size: `${lot.lot_area_sqm.toLocaleString()} sqm`,
+                category: lot.category,
+                features: lot.features,
+                crops: barangayData?.fruits ? Object.entries(barangayData.fruits)
+                    .filter(([_, value]) => value === "High" || value === "Moderate")
+                    .map(([key]) => key) : [],
+                fruits: barangayData?.fruits ? Object.entries(barangayData.fruits)
+                    .filter(([_, value]) => value === "High" || value === "Moderate")
+                    .map(([key]) => key) : [],
+                hasIrrigation: lot.features?.toLowerCase().includes('irrigation') || false,
+                isFeatured: lot.isFeatured || false,
+                imageUrl: "/api/placeholder/400/320",
+                sellerName: "SmartLand System",
+                sellerAvatar: "/api/placeholder/50/50",
+                postedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            };
+        });
+
+        setListingsData(enhancedListings);
     };
+
+    const filterListingsByCategory = (listings) => {
+        if (activeCategory === 'all') return listings;
+        return listings.filter(listing => {
+            switch(activeCategory) {
+                case 'crops':
+                    return listing.crops && listing.crops.length > 0;
+                case 'fruits':
+                    return listing.fruits && listing.fruits.length > 0;
+                case 'irrigated':
+                    return listing.hasIrrigation;
+                case 'featured':
+                    return listing.isFeatured;
+                default:
+                    return true;
+            }
+        });
+    };
+
+    const filterListingsBySearch = (listings) => {
+        if (!searchTerm) return listings;
+        const term = searchTerm.toLowerCase();
+        return listings.filter(listing => 
+            listing.title.toLowerCase().includes(term) ||
+            listing.location.toLowerCase().includes(term) ||
+            (listing.description && listing.description.toLowerCase().includes(term))
+        );
+    };
+
+    const sortListings = (listings) => {
+        const sorted = [...listings];
+        switch (sortOption) {
+            case 'newest':
+                sorted.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
+                break;
+            case 'oldest':
+                sorted.sort((a, b) => new Date(a.postedDate) - new Date(b.postedDate));
+                break;
+            case 'price_high':
+                sorted.sort((a, b) => 
+                    parseInt(b.price.replace(/[^0-9]/g, '')) - parseInt(a.price.replace(/[^0-9]/g, ''))
+                );
+                break;
+            case 'price_low':
+                sorted.sort((a, b) => 
+                    parseInt(a.price.replace(/[^0-9]/g, '')) - parseInt(b.price.replace(/[^0-9]/g, ''))
+                );
+                break;
+            case 'size_high':
+                sorted.sort((a, b) => 
+                    parseInt(b.size.replace(/[^0-9]/g, '')) - parseInt(a.size.replace(/[^0-9]/g, ''))
+                );
+                break;
+            case 'size_low':
+                sorted.sort((a, b) => 
+                    parseInt(a.size.replace(/[^0-9]/g, '')) - parseInt(b.size.replace(/[^0-9]/g, ''))
+                );
+                break;
+            default:
+                break;
+        }
+        return sorted;
+    };
+
+    const listingsPerPage = 6;
+    const startIdx = (currentPage - 1) * listingsPerPage;
+    const endIdx = startIdx + listingsPerPage;
+    const sortedListings = sortListings(filterListingsByCategory(filterListingsBySearch(listingsData)));
+    const paginatedListings = sortedListings.slice(startIdx, endIdx);
 
     // Render pagination
     const renderPagination = () => {
-        // For demonstration - in a real app, you'd calculate this based on actual data
-        const totalPages = 3;
+        const totalPages = Math.ceil(sortedListings.length / listingsPerPage);
         
         return (
         <S.PaginationContainer>
@@ -352,36 +462,6 @@ const ListingOverview = () => {
         }
     };
 
-    const filterListingsByCategory = (listings) => {
-        if (activeCategory === 'all') return listings;
-        
-        return listings.filter(listing => {
-            switch(activeCategory) {
-                case 'crops':
-                    return listing.crops && listing.crops.length > 0;
-                case 'fruits':
-                    return listing.fruits && listing.fruits.length > 0;
-                case 'irrigated':
-                    return listing.hasIrrigation;
-                case 'featured':
-                    return listing.featured;
-                default:
-                    return true;
-            }
-        });
-    };
-
-    const filterListingsBySearch = (listings) => {
-        if (!searchTerm) return listings;
-        
-        const term = searchTerm.toLowerCase();
-        return listings.filter(listing => 
-            listing.title.toLowerCase().includes(term) ||
-            listing.location.toLowerCase().includes(term) ||
-            (listing.description && listing.description.toLowerCase().includes(term))
-        );
-    };
-
     const generateSlug = (title) => {
         return title
             .toLowerCase()
@@ -391,7 +471,7 @@ const ListingOverview = () => {
             .trim();
     };
 
-    const filteredListings = filterListingsByCategory(filterListingsBySearch(searchTerm));
+    const filteredListings = filterListingsByCategory(filterListingsBySearch(listingsData));
 
     return (
         <S.PageWrapper>
@@ -466,7 +546,7 @@ const ListingOverview = () => {
                                     value={selectedBarangay}
                                     onChange={(e) => setSelectedBarangay(e.target.value)}
                                 >
-                                    {barangays.map((barangay, index) => (
+                                    {barangayOptions.map((barangay, index) => (
                                         <option key={index} value={barangay}>{barangay}</option>
                                     ))}
                                 </S.FilterSelect>
@@ -600,7 +680,7 @@ const ListingOverview = () => {
                 {/* Results Controls */}
                 <S.ResultControls>
                     <S.ResultCount>
-                        Showing <S.ResultHighlight>{listingsData.length}</S.ResultHighlight> listings
+                        Showing <S.ResultHighlight>{filteredListings.length}</S.ResultHighlight> listings
                     </S.ResultCount>
                     
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -639,15 +719,15 @@ const ListingOverview = () => {
                 </S.ResultControls>
 
                 {/* Listings Grid or List */}
-                {listingsData.length > 0 ? (
+                {paginatedListings.length > 0 ? (
                     <div>
                         {viewMode === 'grid' ? (
                             <S.GridContainer>
-                                {listingsData.map(listing => renderListingCard(listing))}
+                                {paginatedListings.map(listing => renderListingCard(listing))}
                             </S.GridContainer>
                         ) : (
                             <S.ListContainer>
-                                {listingsData.map(listing => renderListingCard(listing))}
+                                {paginatedListings.map(listing => renderListingCard(listing))}
                             </S.ListContainer>
                         )}
                         
