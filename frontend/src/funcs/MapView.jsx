@@ -241,7 +241,7 @@ const getTemperatureCategory = (temperature, isHovered = false) => {
   };
 };
 
-// Define viability levels with enhanced colors and descriptions
+// Define viability levels with more distinct colors
 const viabilityLevels = {
     'High': {
         color: '#4CAF50', // Vibrant green
@@ -366,6 +366,24 @@ const getFilterOpacity = (filterType) => {
     }
 };
 
+// Add these data structures at the top level
+const fruitTemperatureRanges = {
+    'Calamansi': { min: 20, max: 30 },
+    'Corn': { min: 21, max: 32 },
+    'Eggplant': { min: 22, max: 35 },
+    'Rice': { min: 20, max: 35 },
+    'Onion': { min: 15, max: 30 }
+};
+
+const soilFruitSuitability = {
+    'Sandy Silt': ['Calamansi', 'Corn', 'Eggplant'],
+    'Silty Sand': ['Corn', 'Rice'],
+    'Clayey Sand': ['Rice', 'Onion'],
+    'Well-Graded Sand': ['Corn', 'Eggplant'],
+    'Sandy Lean Clay': ['Rice', 'Onion'],
+    'Clayey Silt': ['Rice', 'Onion']
+};
+
 const MapView = () => {
     // Initialize all state values with explicit defaults
     const [selectedLocation, setSelectedLocation] = useState({
@@ -423,13 +441,17 @@ const MapView = () => {
                 const tempCat = getTemperatureCategory(temp);
                 return tempCat.color;
             case 'fruits':
-                // Get the viability level for the selected crop
+                // Get the selected crop
                 const selectedCrop = Object.keys(filters).find(key => 
                     key.startsWith('selectedCrop_') && filters[key]
                 )?.replace('selectedCrop_', '');
                 
-                if (selectedCrop && barangay.fruits[selectedCrop]) {
-                    return viabilityLevels[barangay.fruits[selectedCrop]]?.color || '#666666';
+                if (selectedCrop && barangay.fruits?.[selectedCrop]) {
+                    const viability = barangay.fruits[selectedCrop];
+                    // Only return color if viability is valid
+                    if (typeof viability === 'string' && Object.keys(viabilityLevels).includes(viability)) {
+                        return viabilityLevels[viability].color;
+                    }
                 }
                 return '#666666';
             case 'showAll':
@@ -645,8 +667,13 @@ const MapView = () => {
         return recommendations;
     };
 
-    // Update the handleLegendClick function to handle crop selection
+    // Update the handleLegendClick function to properly handle fruits
     const handleLegendClick = (filterType, category) => {
+        // Clear all existing filters and indicators first
+        setSelectedRoadCategory('');
+        setSelectedIrrigationCategory('');
+        setBarangayInfo(null);
+
         if (filterType === 'temperature') {
             const selectedCategory = temperatureCategories.find(cat => cat.label === category);
             if (selectedCategory) {
@@ -661,9 +688,53 @@ const MapView = () => {
                 setHighlightedAreas(matchingBarangays);
             }
         } else if (filterType === 'elevation') {
-            // ... existing elevation code ...
+            const selectedCategory = elevationCategories.find(cat => cat.label === category);
+            if (selectedCategory) {
+                const matchingBarangays = barangays.filter(barangay => 
+                    barangay.elevation >= selectedCategory.min && 
+                    barangay.elevation <= selectedCategory.max
+                ).map(barangay => ({
+                    name: barangay.name,
+                    color: getElevationCategory(barangay.elevation).color,
+                    opacity: 0.6
+                }));
+                setHighlightedAreas(matchingBarangays);
+            }
         } else if (filterType === 'fruits') {
-            // ... existing fruits code ...
+            // Clear any existing crop selections
+            setFilters(prev => ({
+                ...prev,
+                ...Object.keys(prev)
+                    .filter(key => key.startsWith('selectedCrop_'))
+                    .reduce((acc, key) => ({ ...acc, [key]: false }), {}),
+                [`selectedCrop_${category}`]: true
+            }));
+
+            // Find all barangays where the selected fruit has valid viability data
+            const matchingBarangays = barangays
+                .filter(barangay => {
+                    const viability = barangay.fruits?.[category];
+                    // Only include barangays with valid viability data
+                    return viability && typeof viability === 'string' && 
+                           Object.keys(viabilityLevels).includes(viability);
+                })
+                .map(barangay => {
+                    const viability = barangay.fruits[category];
+                    return {
+                        name: barangay.name,
+                        color: viabilityLevels[viability].color,
+                        opacity: 0.6,
+                        viability: viability
+                    };
+                });
+
+            // Sort barangays by viability (High -> Moderate -> Low -> Restricted)
+            const viabilityOrder = ['High', 'Moderate', 'Low', 'Restricted'];
+            matchingBarangays.sort((a, b) => {
+                return viabilityOrder.indexOf(a.viability) - viabilityOrder.indexOf(b.viability);
+            });
+
+            setHighlightedAreas(matchingBarangays);
         }
     };
 
@@ -1394,95 +1465,99 @@ const MapView = () => {
                     <FilterGroup>
                         <FilterTitle>Crop Types</FilterTitle>
                         <div style={{ marginTop: '10px' }}>
-                            {Object.keys(fruitColors).map((fruit) => (
-                                <div
-                                    key={fruit}
-                                    style={{
-                                        padding: '12px',
-                                        marginBottom: '10px',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s ease-in-out',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)'
-                                    }}
-                                    onClick={() => handleLegendClick('fruits', fruit)}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                                        <div
-                                            style={{
-                                                width: '24px',
-                                                height: '24px',
-                                                backgroundColor: fruitColors[fruit],
-                                                marginRight: '12px',
-                                                borderRadius: '4px',
-                                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                            }}
-                                        />
-                                        <span style={{ 
-                                            fontWeight: 'bold',
-                                            fontSize: '1.1em',
-                                            color: '#fff'
-                                        }}>{fruit}</span>
+                            {Object.keys(fruitColors).map((fruit) => {
+                                // Calculate viability counts for this fruit
+                                const viabilityCounts = {
+                                    High: 0,
+                                    Moderate: 0,
+                                    Low: 0,
+                                    Restricted: 0
+                                };
+                                
+                                barangays.forEach(barangay => {
+                                    const viability = barangay.fruits?.[fruit];
+                                    if (viability && typeof viability === 'string' && 
+                                        Object.keys(viabilityLevels).includes(viability)) {
+                                        viabilityCounts[viability]++;
+                                    }
+                                });
+
+                                // Only show fruits that have at least one barangay with valid viability data
+                                const hasValidData = Object.values(viabilityCounts).some(count => count > 0);
+                                if (!hasValidData) return null;
+
+                                return (
+                                    <div
+                                        key={fruit}
+                                        style={{
+                                            padding: '12px',
+                                            marginBottom: '10px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease-in-out',
+                                            border: filters[`selectedCrop_${fruit}`] ? 
+                                                `2px solid ${fruitColors[fruit]}` : 
+                                                '2px solid transparent'
+                                        }}
+                                        onClick={() => handleLegendClick('fruits', fruit)}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                            <div
+                                                style={{
+                                                    width: '24px',
+                                                    height: '24px',
+                                                    backgroundColor: fruitColors[fruit],
+                                                    marginRight: '12px',
+                                                    borderRadius: '4px',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                                }}
+                                            />
+                                            <span style={{ 
+                                                fontWeight: 'bold',
+                                                fontSize: '1.1em',
+                                                color: '#fff'
+                                            }}>{fruit}</span>
+                                        </div>
+                                        <div style={{ 
+                                            fontSize: '0.9em', 
+                                            color: '#bdc3c7',
+                                            marginLeft: '36px',
+                                            lineHeight: '1.4'
+                                        }}>
+                                            <div style={{ marginBottom: '8px' }}>
+                                                {Object.entries(viabilityCounts).map(([level, count]) => (
+                                                    count > 0 && (
+                                                        <div key={level} style={{ 
+                                                            display: 'flex', 
+                                                            alignItems: 'center',
+                                                            marginBottom: '4px'
+                                                        }}>
+                                                            <div style={{
+                                                                width: '12px',
+                                                                height: '12px',
+                                                                backgroundColor: viabilityLevels[level].color,
+                                                                marginRight: '8px',
+                                                                borderRadius: '2px'
+                                                            }} />
+                                                            <span style={{ color: '#fff' }}>
+                                                                {level}: {count} areas
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                ))}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: '0.85em',
+                                                color: '#95a5a6',
+                                                fontStyle: 'italic'
+                                            }}>
+                                                Click to view suitable areas
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div style={{ 
-                                        fontSize: '0.9em', 
-                                        color: '#bdc3c7',
-                                        marginLeft: '36px',
-                                        lineHeight: '1.4'
-                                    }}>
-                                        {(() => {
-                                            const viabilityCounts = {
-                                                High: 0,
-                                                Moderate: 0,
-                                                Low: 0,
-                                                Restricted: 0
-                                            };
-                                            
-                                            barangays.forEach(barangay => {
-                                                const viability = barangay.fruits[fruit];
-                                                if (viability) {
-                                                    viabilityCounts[viability]++;
-                                                }
-                                            });
-                                            
-                                            return (
-                                                <div>
-                                                    <div style={{ marginBottom: '8px' }}>
-                                                        {Object.entries(viabilityCounts).map(([level, count]) => (
-                                                            count > 0 && (
-                                                                <div key={level} style={{ 
-                                                                    display: 'flex', 
-                                                                    alignItems: 'center',
-                                                                    marginBottom: '4px'
-                                                                }}>
-                                                                    <div style={{
-                                                                        width: '12px',
-                                                                        height: '12px',
-                                                                        backgroundColor: viabilityLevels[level].color,
-                                                                        marginRight: '8px',
-                                                                        borderRadius: '2px'
-                                                                    }} />
-                                                                    <span style={{ color: '#fff' }}>
-                                                                        {level}: {count} areas
-                                                                    </span>
-                                                                </div>
-                                                            )
-                                                        ))}
-                                                    </div>
-                                                    <div style={{ 
-                                                        fontSize: '0.85em',
-                                                        color: '#95a5a6',
-                                                        fontStyle: 'italic'
-                                                    }}>
-                                                        Click to view suitable areas
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </FilterGroup>
                 )}

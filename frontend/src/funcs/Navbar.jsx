@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import AuthContext from "./AuthContext";
 import { NavContainer, Logo, Smartland, System, NavLinks, NavItem, LoginButton, MenuToggle, ProfileSection, DropdownItem, Dropdown } from "./NavbarStyles";
 import Login from "./Login";
@@ -9,6 +9,21 @@ const Navbar = ({ navigateTo, currentPage }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginOpen, setLoginOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // Handle click outside to close dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Define menu items based on user role
     const getMenuItems = () => {
@@ -18,9 +33,9 @@ const Navbar = ({ navigateTo, currentPage }) => {
 
         switch (user.role) {
             case 'buyer':
-                return ["Buyer Dashboard", "Map"];
+                return ["Buyer Dashboard", "SpecList", "Listings", "Map"];
             case 'seller':
-                return ["Seller Dashboard", "SpecList", "Listings", "Map"];
+                return ["Seller Dashboard", "Map"];
             case 'admin':
                 return ["Admin", "Map"];
             default:
@@ -28,22 +43,37 @@ const Navbar = ({ navigateTo, currentPage }) => {
         }
     };
 
+    const handleNavigation = (page) => {
+        // Check if user is trying to access buyer-only pages
+        if ((page === "speclist" || page === "listings") && user?.role !== "buyer") {
+            return; // Prevent navigation for non-buyers
+        }
+        navigateTo(page);
+        setMenuOpen(false);
+    };
+
     const handleSettings = () => {
         navigateTo("settings");
         setDropdownOpen(false);
     };
 
-    const handleYourListings = () => {
-        navigateTo("listings");
-        setDropdownOpen(false);
+    // Role-based redirection after login
+    const handleLoginSuccess = (user) => {
+        if (user.role === 'admin') {
+            navigateTo('admin');
+        } else if (user.role === 'buyer') {
+            navigateTo('listings');
+        } else if (user.role === 'seller') {
+            navigateTo('seller dashboard');
+        } else {
+            navigateTo('home');
+        }
     };
 
     const handleLogout = () => {
         logout();
         setDropdownOpen(false);
-        if (currentPage === 'admin') {
-            navigateTo('home');
-        }
+        navigateTo('home');
     };
 
     return (
@@ -57,7 +87,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
                     {getMenuItems().map((item) => (
                         <NavItem 
                             key={item} 
-                            onClick={() => navigateTo(item.toLowerCase())}
+                            onClick={() => handleNavigation(item.toLowerCase())}
                             style={{ 
                                 display: 'flex', 
                                 alignItems: 'center',
@@ -68,21 +98,18 @@ const Navbar = ({ navigateTo, currentPage }) => {
                         </NavItem>
                     ))}
                     {user ? (
-                        <ProfileSection>
+                        <ProfileSection ref={dropdownRef}>
                             <FaCircleUser 
                                 size={32} 
                                 onClick={() => setDropdownOpen(!dropdownOpen)} 
                                 style={{ cursor: "pointer", color: "#fff" }} 
                             />
-                            {/* {dropdownOpen && (
+                            {dropdownOpen && (
                                 <Dropdown>
                                     <DropdownItem onClick={handleSettings}>Settings</DropdownItem>
-                                    {user.role === 'seller' && (
-                                        <DropdownItem onClick={handleYourListings}>Your Listings</DropdownItem>
-                                    )}
                                     <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
                                 </Dropdown>
-                            )} */}
+                            )}
                         </ProfileSection>
                     ) : (
                         <LoginButton onClick={() => setLoginOpen(true)}>Login / Register</LoginButton>
@@ -92,7 +119,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
                     ☰
                 </MenuToggle>
             </NavContainer>
-            {loginOpen && <Login onClose={() => setLoginOpen(false)} />}
+            {loginOpen && <Login onClose={() => setLoginOpen(false)} onLoginSuccess={handleLoginSuccess} />}
         </>
     );
 };

@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import AuthContext from "../funcs/AuthContext";
 import { ModalOverlay, ModalContainer, Section, Title, Input, Button, CloseButton, Divider, RadioGroup, CheckboxGroup, CheckboxInput, ErrorText } from "./LoginStyles";
 
-const Login = ({ onClose }) => {
+const Login = ({ onClose, onLoginSuccess }) => {
     const { login, fetchUser } = useContext(AuthContext);
     const [loginData, setLoginData] = useState({ email: "", password: "", rememberMe: false });
     const [registerData, setRegisterData] = useState({ fullName: "", email: "", password: "", confirmPassword: "", phoneNumber: "", userType: "buyer", termsAccepted: false});
@@ -35,6 +35,7 @@ const Login = ({ onClose }) => {
             const data = await response.json();
             if (response.ok) {
                 login(data.user); // Save user data directly
+                if (onLoginSuccess) onLoginSuccess(data.user);
                 onClose();
             } else {
                 console.error("Login failed:", data.message);

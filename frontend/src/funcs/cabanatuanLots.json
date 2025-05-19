@@ -1,0 +1,75 @@
+[
+    {
+        "name": "Kapitan Pepe Subdivision Phase 2",
+        "location": "Barangay San Josef Sur, Cabanatuan City",
+        "lot_area_sqm": 240,
+        "price_php": 14500000,
+        "features": "Commercial lot with improvements, 20% downpayment, 80% loanable balance",
+        "category": "Residential",
+        "isFeatured": true
+    },
+    {
+        "name": "Kalikid Sur Shophouse",
+        "location": "Fort Magsaysay Rd, Kalikid Sur, Cabanatuan City",
+        "lot_area_sqm": 150,
+        "price_php": 4620001,
+        "features": "Residential/commercial property with 120 sqm floor area",
+        "category": "Residential"
+    },
+    {
+        "name": "Hermogenes C. Concepcion Sr. Corner Lot",
+        "location": "Near SM and Maharlika Highway, Cabanatuan City",
+        "lot_area_sqm": 248,
+        "price_php": 2108000,
+        "features": "Corner lot with clean title, updated tax",
+        "category": "Residential"
+    },
+    {
+        "name": "Brgy. Sta. Arcadio Agricultural Lot",
+        "location": "Brgy. Sta. Arcadio, Cabanatuan City",
+        "lot_area_sqm": 25213,
+        "price_php": 26000000,
+        "features": "Along secondary road, 40-meter frontage, clean title",
+        "category": "Agricultural"
+    },
+    {
+        "name": "Kalikid Farmhouse with Amenities",
+        "location": "Kalikid, Cabanatuan City",
+        "lot_area_sqm": 28128,
+        "price_php": 12000000,
+        "features": "Farmhouse with 5 rooms, swimming pool, piggery, fish pond, fruit-bearing trees",
+        "category": "Agricultural"
+    },
+    {
+        "name": "Santa Arcadia Agricultural Lot",
+        "location": "Santa Arcadia, Cabanatuan City",
+        "lot_area_sqm": 10358,
+        "price_php": 15537000,
+        "features": "Along main road, suitable for agricultural use",
+        "category": "Agricultural"
+    },
+    {
+        "name": "Undeveloped Subdivision",
+        "location": "Kalikid Norte, Cabanatuan City",
+        "lot_area_sqm": 26010,
+        "price_php": 45000000,
+        "features": "Residential property with clean title",
+        "category": "Commercial"
+    },
+    {
+        "name": "Corner Commercial Lot Near SM Megacenter",
+        "location": "Gabaldon St., Dicarma, Cabanatuan City",
+        "lot_area_sqm": 128,
+        "price_php": 7500000,
+        "features": "Corner lot with 22.89 meters frontage, clean title",
+        "category": "Commercial"
+    },
+    {
+        "name": "Camella Nueva Ecija Residential Lots",
+        "location": "Emilio Vergara Hwy, Santa Arcadia, Cabanatuan City",
+        "lot_area_sqm": 122,
+        "price_php": 4145000,
+        "features": "Bank financing available, located in a developed subdivision",
+        "category": "Residential"
+    }
+]
