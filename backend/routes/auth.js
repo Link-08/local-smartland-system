@@ -78,4 +78,61 @@ router.get("/me", auth, async (req, res) => {
     });
 });
 
+// Update user profile
+router.patch("/profile", auth, async (req, res) => {
+    try {
+        const { username, email, firstName, lastName, phone } = req.body;
+        const user = await User.findByPk(req.user.id);
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        // Optionally, validate email format, phone, etc.
+        if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+            return res.status(400).json({ error: "Invalid email format" });
+        }
+
+        user.username = username || user.username;
+        user.email = email || user.email;
+        user.firstName = firstName || user.firstName;
+        user.lastName = lastName || user.lastName;
+        user.phone = phone || user.phone;
+        await user.save();
+
+        res.json({ message: "Profile updated successfully", user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone
+        }});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Change password
+router.patch("/password", auth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: "Both current and new password are required" });
+        }
+        const user = await User.findByPk(req.user.id);
+        if (!user) return res.status(404).json({ error: "User not found" });
+        const isMatch = await user.validatePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ error: "Current password is incorrect" });
+        }
+        // Optionally, validate new password strength
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: "New password must be at least 6 characters" });
+        }
+        user.password = newPassword;
+        await user.save();
+        res.json({ message: "Password changed successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

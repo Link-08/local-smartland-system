@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ListingStyles } from './ListingsStyles';
+import cabanatuanLots from './cabanatuanLots.json';
 
 // Mock data for agricultural land in Cabanatuan
 const mockListing = {
@@ -39,9 +40,71 @@ const mockListing = {
     topography: 'Mostly flat with slight slope for drainage'
 };
 
-const ListingPage = () => {
+const getSellerInfo = (sellerKey) => {
+  // Example mapping, you can expand this as needed
+  const sellerProfiles = {
+    'real-estate.ph': {
+      name: 'Real Estate PH',
+      profileImage: '/api/placeholder/40/40',
+      rating: 4.5,
+      listings: 12,
+      memberSince: '2018-01-01',
+    },
+    'dotproperty.com.ph': {
+      name: 'Dot Property',
+      profileImage: '/api/placeholder/40/40',
+      rating: 4.2,
+      listings: 7,
+      memberSince: '2019-03-15',
+    },
+    'arealtyco.net': {
+      name: 'A Realty Co.',
+      profileImage: '/api/placeholder/40/40',
+      rating: 4.0,
+      listings: 5,
+      memberSince: '2020-07-10',
+    },
+    'myproperty.ph': {
+      name: 'MyProperty',
+      profileImage: '/api/placeholder/40/40',
+      rating: 4.3,
+      listings: 9,
+      memberSince: '2017-11-20',
+    },
+    'lamudi.com.ph': {
+      name: 'Lamudi',
+      profileImage: '/api/placeholder/40/40',
+      rating: 4.6,
+      listings: 15,
+      memberSince: '2016-05-05',
+    },
+  };
+  return sellerProfiles[sellerKey] || {
+    name: sellerKey,
+    profileImage: '/api/placeholder/40/40',
+    rating: 4.0,
+    listings: 1,
+    memberSince: '2021-01-01',
+  };
+};
+
+const ListingPage = ({ property }) => {
     const { id } = useParams();
-    const listing = mockListing; // In a real app, you would fetch the listing using the ID
+    const lot = cabanatuanLots.find(l => l.name === (property?.title || mockListing.title));
+    const sellerInfo = lot ? getSellerInfo(lot.seller) : mockListing.seller;
+    const listing = {
+        ...mockListing,
+        ...property,
+        ...(lot ? {
+            title: lot.name,
+            address: lot.location,
+            price: lot.price_php,
+            seller: sellerInfo,
+        } : {}),
+        images: (property && property.images && property.images.length > 0)
+            ? property.images
+            : mockListing.images
+    };
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [contactModalOpen, setContactModalOpen] = useState(false);
     
@@ -94,7 +157,7 @@ const ListingPage = () => {
                         <ListingStyles.ListingLocation>{listing.address}</ListingStyles.ListingLocation>
                     </ListingStyles.TitleSection>
                     <ListingStyles.PriceSection>
-                        <ListingStyles.ListingPrice>₱{listing.price.toLocaleString()}</ListingStyles.ListingPrice>
+                        <ListingStyles.ListingPrice>₱{listing.price && typeof listing.price === 'number' ? listing.price.toLocaleString() : ''}</ListingStyles.ListingPrice>
                         <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
                     </ListingStyles.PriceSection>
                 </ListingStyles.ListingHeader>

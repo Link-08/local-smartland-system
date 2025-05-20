@@ -25,7 +25,11 @@ const Login = ({ onClose, onLoginSuccess }) => {
     
     const handleLogin = async (e) => {
         e.preventDefault();
+        setLoginError("");
+        
         try {
+            console.log('Attempting login with:', loginData.email); // Debug log
+            
             const response = await fetch("http://localhost:5000/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -33,15 +37,34 @@ const Login = ({ onClose, onLoginSuccess }) => {
             });
     
             const data = await response.json();
+            console.log('Login response:', data); // Debug log
+            
             if (response.ok) {
-                login(data.user); // Save user data directly
+                // Store the token
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    console.log('Token stored in localStorage'); // Debug log
+                } else {
+                    console.error('No token received from server'); // Debug log
+                    setLoginError('Authentication failed: No token received');
+                    return;
+                }
+                
+                // Save user data
+                if (data.user) {
+                    login(data.user);
+                    console.log('User data saved to context'); // Debug log
+                }
+                
                 if (onLoginSuccess) onLoginSuccess(data.user);
                 onClose();
             } else {
-                console.error("Login failed:", data.message);
+                console.error("Login failed:", data.message); // Debug log
+                setLoginError(data.message || 'Login failed. Please try again.');
             }
         } catch (error) {
-            console.error("Error logging in:", error);
+            console.error("Error logging in:", error); // Debug log
+            setLoginError('An error occurred during login. Please try again.');
         }
     };               
     
@@ -64,6 +87,8 @@ const Login = ({ onClose, onLoginSuccess }) => {
         }
     
         try {
+            console.log('Attempting registration with:', registerData.email); // Debug log
+            
             const response = await fetch("http://localhost:5000/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -71,10 +96,20 @@ const Login = ({ onClose, onLoginSuccess }) => {
             });
     
             const data = await response.json();
+            console.log('Registration response:', data); // Debug log
+            
             if (!response.ok) throw new Error(data.error);
+            
+            // Store the token if provided
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                console.log('Token stored in localStorage after registration'); // Debug log
+            }
+            
             alert("Registration successful!");
             onClose();
         } catch (err) {
+            console.error('Registration error:', err); // Debug log
             setRegisterError(err.message);
         }
     };    

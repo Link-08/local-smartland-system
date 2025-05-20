@@ -33,7 +33,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
 
         switch (user.role) {
             case 'buyer':
-                return ["Buyer Dashboard", "SpecList", "Listings", "Map"];
+                return ["Buyer Dashboard", "Listings", "Map"];
             case 'seller':
                 return ["Seller Dashboard", "Map"];
             case 'admin':

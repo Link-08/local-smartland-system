@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   FaCamera, FaUser, FaSignOutAlt, FaFileAlt, FaTags, 
   FaSearch, FaBuilding, FaChartLine, FaMapMarkerAlt, 
@@ -11,8 +11,19 @@ import {
 import { DashboardStyles } from "./BuyerDashboardStyles";
 import { SellerDashboardStyles } from "./SellerDashboardStyles";
 import { ListingStyles } from "./ListingsStyles";
+import cabanatuanLots from './cabanatuanLots.json';
+import AuthContext from './AuthContext';
+import { api } from '../config/axios';
+import PriceCalculatorTool from "./PriceCalculatorTool";
+import MarketAnalysisTool from "./MarketAnalysisTool";
 
-const SellerDashboard = () => {
+const iconMap = {
+    FaExclamationTriangle: <FaExclamationTriangle />,
+    FaEye: <FaEye />,
+    FaCheck: <FaCheck />,
+};
+
+const SellerDashboard = ({ navigateTo }) => {
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -51,40 +62,131 @@ const SellerDashboard = () => {
     const [activeToolModal, setActiveToolModal] = useState(null); // 'priceCalculator', 'marketAnalysis', or 'listingEnhancement'
     const [previewModalOpen, setPreviewModalOpen] = useState(false);
     const [previewListing, setPreviewListing] = useState(null);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     
-    // Add this useEffect to handle keyboard shortcuts
+    const { logout } = useContext(AuthContext);
+    
+    // Add state for metrics
+    const [metrics, setMetrics] = useState({
+        totalViews: 0,
+        totalInquiries: 0,
+        avgTimeToSale: 0
+    });
+
+    // Mock seller accounts
+    const mockSellers = [
+        {
+            id: 'real-estate.ph',
+            firstName: 'Real',
+            lastName: 'Estate PH',
+            accountId: 'SELL10001',
+            email: 'contact@real-estate.ph',
+            phone: '0917 111 1111',
+            username: 'realestateph',
+            avatar: 'RE',
+            memberSince: '2018-01-01',
+        },
+        {
+            id: 'dotproperty.com.ph',
+            firstName: 'Dot',
+            lastName: 'Property',
+            accountId: 'SELL10002',
+            email: 'info@dotproperty.com.ph',
+            phone: '0917 222 2222',
+            username: 'dotproperty',
+            avatar: 'DP',
+            memberSince: '2019-03-15',
+        },
+        {
+            id: 'arealtyco.net',
+            firstName: 'A',
+            lastName: 'Realty Co.',
+            accountId: 'SELL10003',
+            email: 'hello@arealtyco.net',
+            phone: '0917 333 3333',
+            username: 'arealtyco',
+            avatar: 'AR',
+            memberSince: '2020-07-10',
+        },
+        {
+            id: 'myproperty.ph',
+            firstName: 'My',
+            lastName: 'Property',
+            accountId: 'SELL10004',
+            email: 'support@myproperty.ph',
+            phone: '0917 444 4444',
+            username: 'myproperty',
+            avatar: 'MP',
+            memberSince: '2017-11-20',
+        },
+        {
+            id: 'lamudi.com.ph',
+            firstName: 'Lamudi',
+            lastName: '',
+            accountId: 'SELL10005',
+            email: 'contact@lamudi.com.ph',
+            phone: '0917 555 5555',
+            username: 'lamudi',
+            avatar: 'LA',
+            memberSince: '2016-05-05',
+        },
+    ];
+
+    // Associate lots to sellers
+    const lotsBySeller = mockSellers.reduce((acc, seller) => {
+        acc[seller.id] = cabanatuanLots.filter(lot => lot.seller === seller.id).map((lot, idx) => ({
+            id: `${seller.id}-lot-${idx+1}`,
+            title: lot.name,
+            location: lot.location,
+            price: `₱${lot.price_php.toLocaleString()}`,
+            image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
+            acres: (lot.lot_area_sqm / 10000).toFixed(2),
+            waterRights: lot.features,
+            suitableCrops: lot.category,
+            status: 'active',
+            viewCount: 0,
+            inquiries: 0,
+            datePosted: new Date().toISOString().split('T')[0],
+        }));
+        return acc;
+    }, {});
+
+    // State for selected seller (default to first)
+    const [selectedSellerId, setSelectedSellerId] = useState(mockSellers[0].id);
+    const user = mockSellers.find(s => s.id === selectedSellerId);
+    const sellerListings = lotsBySeller[selectedSellerId] || [];
+
+    // Add state for property metrics
+    const [propertyMetrics, setPropertyMetrics] = useState({});
+
+    // Add useEffect to fetch property metrics
     useEffect(() => {
-        const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-            // Close any open modals
-            if (addNewOpen) setAddNewOpen(false);
-            if (editPropertyOpen) setEditPropertyOpen(false);
-            if (editProfileOpen) setEditProfileOpen(false);
-            if (toolModalOpen) setToolModalOpen(false); // For the new seller tools modals
-        }
+        const fetchPropertyMetrics = async () => {
+            try {
+                const response = await api.get(`/seller/metrics/${selectedSellerId}`);
+                const metrics = response.data;
+                
+                // Update property metrics state
+                setPropertyMetrics(metrics);
+                
+                // Update the lotsBySeller with real metrics
+                const updatedLots = sellerListings.map(lot => ({
+                    ...lot,
+                    viewCount: metrics.totalViews || 0,
+                    inquiries: metrics.totalInquiries || 0
+                }));
+                
+                // Update the lotsBySeller object
+                lotsBySeller[selectedSellerId] = updatedLots;
+            } catch (error) {
+                console.error('Error fetching property metrics:', error);
+            }
         };
-    
-        // Add event listener
-        window.addEventListener('keydown', handleKeyDown);
-        
-        // Clean up
-        return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [addNewOpen, editPropertyOpen, editProfileOpen, toolModalOpen]);
 
-    // Mock user data (same as provided)
-    const user = {
-        firstName: 'Alex',
-        lastName: 'Johnson',
-        accountId: 'SELL24578',
-        email: 'alex.johnson@example.com',
-        phone: '0912 345 6789',
-        username: 'alexj24',
-        listingCount: 4,
-        avatar: 'AJ'
-    };
+        fetchPropertyMetrics();
+    }, [selectedSellerId]);
 
+    // Add userProfile state for editing profile
     const [userProfile, setUserProfile] = useState({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
@@ -95,139 +197,37 @@ const SellerDashboard = () => {
         confirmPassword: '',
         avatar: user.avatar || ''
     });
-    
-    // Mock property listings the seller owns
-    const sellerListings = [
-        {
-        id: 1,
-        title: 'Prime Rice Farm with Irrigation',
-        location: 'Barangay Imelda, Cabanatuan, Nueva Ecija',
-        price: '₱8,750,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 5.2, // In hectares
-        waterRights: 'NIA Irrigation',
-        suitableCrops: 'Rice, Corn, Vegetables',
-        status: 'active',
-        viewCount: 245,
-        inquiries: 12,
-        datePosted: '2025-03-15'
-        },
-        {
-        id: 2,
-        title: 'Fertile Farmland for Root Crops',
-        location: 'Barangay Bantug, Cabanatuan, Nueva Ecija',
-        price: '₱6,800,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 3.5, // In hectares
-        waterRights: 'Deep Well',
-        suitableCrops: 'Onions, Garlic, Sweet Potato',
-        status: 'active',
-        viewCount: 189,
-        inquiries: 8,
-        datePosted: '2025-04-02'
-        },
-        {
-        id: 3,
-        title: 'Orchard Land with Established Trees',
-        location: 'Barangay San Josef, Cabanatuan, Nueva Ecija',
-        price: '₱12,500,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 7.8, // In hectares
-        waterRights: 'Deep Well + Rainwater Collection',
-        suitableCrops: 'Mango, Guava, Calamansi, Banana',
-        status: 'pending',
-        viewCount: 56,
-        inquiries: 3,
-        datePosted: '2025-05-08'
-        },
-        {
-        id: 4,
-        title: 'Lowland Farm with Rich Soil',
-        location: 'Barangay Pamaldan, Cabanatuan, Nueva Ecija',
-        price: '₱4,950,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 2.3, // In hectares
-        waterRights: 'Creek Access',
-        suitableCrops: 'Eggplant, Okra, String Beans, Bitter Gourd',
-        status: 'sold',
-        viewCount: 321,
-        inquiries: 15,
-        datePosted: '2025-02-20'
-        }
-    ];
 
-    // Mock recent activities for seller
-    const recentActivities = [
-        {
-        id: 1,
-        type: 'inquiry',
-        title: 'New inquiry received for "Prime Rice Farm with Irrigation"',
-        time: '2 hours ago',
-        icon: <FaExclamationTriangle />,
-        iconColor: '#3498db',
-        bgColor: 'rgba(52, 152, 219, 0.1)'
-        },
-        {
-        id: 2,
-        type: 'view',
-        title: 'Your "Fertile Farmland for Root Crops" received 28 new views',
-        time: '1 day ago',
-        icon: <FaEye />,
-        iconColor: '#2ecc71',
-        bgColor: 'rgba(46, 204, 113, 0.1)'
-        },
-        {
-        id: 3,
-        type: 'update',
-        title: 'Your "Orchard Land" listing has been approved',
-        time: '2 days ago',
-        icon: <FaCheck />,
-        iconColor: '#27ae60',
-        bgColor: 'rgba(39, 174, 96, 0.1)'
-        }
-    ];
+    // Add state for recent activities and market insights
+    const [recentActivities, setRecentActivities] = useState([]);
+    const [marketInsights, setMarketInsights] = useState([]);
 
-    // Mock market insights specific to sellers
-    const marketInsights = [
-        {
-        id: 1,
-        title: 'Price Trends for Rice Farms',
-        text: 'Rice farm prices in Nueva Ecija have increased by 8% in the last quarter. Properties with NIA Irrigation command 15% premium.',
-        accentColor: '#3498db'
-        },
-        {
-        id: 2,
-        title: 'Most Sought-After Areas',
-        text: 'Farms in Barangay Imelda and Bantug are receiving the most inquiries, with an average time-to-sale of 45 days.',
-        accentColor: '#e67e22'
-        },
-        {
-        id: 3,
-        title: 'Listing Optimization Tips',
-        text: 'Listings with detailed soil analysis and crop history receive 40% more inquiries. Consider adding these details to boost interest.',
-        accentColor: '#2ecc71'
-        }
-    ];
+    // Add useEffect to fetch recent activities and market insights
+    useEffect(() => {
+        if (!selectedSellerId) return;
+        api.get(`/seller/${selectedSellerId}/activity`).then(res => setRecentActivities(res.data));
+        api.get(`/seller/${selectedSellerId}/insights`).then(res => setMarketInsights(res.data));
+    }, [selectedSellerId]);
 
-    // Mock performance metrics
+    // Update performance metrics to use real data with proper defaults
     const performanceMetrics = [
         {
-        title: 'Total Views',
-        value: '811',
-        trend: '+12%',
-        isPositive: true
+            title: 'Total Views',
+            value: (metrics?.totalViews || 0).toString(),
+            trend: metrics?.trendViews !== undefined ? metrics.trendViews : '0%',
+            isPositive: metrics?.trendViews !== undefined ? parseFloat(metrics.trendViews) >= 0 : true
         },
         {
-        title: 'Total Inquiries',
-        value: '38',
-        trend: '+5%',
-        isPositive: true
+            title: 'Total Inquiries',
+            value: (metrics?.totalInquiries || 0).toString(),
+            trend: metrics?.trendInquiries !== undefined ? metrics.trendInquiries : '0%',
+            isPositive: metrics?.trendInquiries !== undefined ? parseFloat(metrics.trendInquiries) >= 0 : true
         },
         {
-        title: 'Avg. Time to Sale',
-        value: '52 days',
-        trend: '-8%',
-        isPositive: true
+            title: 'Avg. Time to Sale',
+            value: metrics?.avgTimeToSale ? `${metrics.avgTimeToSale} days` : '0 days',
+            trend: metrics?.trendAvgTimeToSale !== undefined ? metrics.trendAvgTimeToSale : '0%',
+            isPositive: metrics?.trendAvgTimeToSale !== undefined ? parseFloat(metrics.trendAvgTimeToSale) <= 0 : true // Lower time is positive
         }
     ];
 
@@ -336,22 +336,30 @@ const SellerDashboard = () => {
         }));
     };
     
-    const handleEditPropertySubmit = (e) => {
+    const handleEditPropertySubmit = async (e) => {
         e.preventDefault();
         
-        // Update listing in your state or make API call
-        const updatedListings = sellerListings.map(listing => 
-            listing.id === editProperty.id ? editProperty : listing
-        );
-        
-        // Update your state with the new listings
-        // setSellerListings(updatedListings);
-        
-        // Close the modal
-        setEditPropertyOpen(false);
-        
-        // Show success notification
-        alert('Property updated successfully!');
+        try {
+            const response = await api.put(`/properties/${editProperty.id}`, {
+                ...editProperty,
+                price: parseFloat(editProperty.price.replace(/[^0-9.-]+/g, '')),
+                acres: parseFloat(editProperty.acres)
+            });
+            
+            // Update local state
+            const updatedListings = sellerListings.map(listing => 
+                listing.id === editProperty.id ? response.data : listing
+            );
+            lotsBySeller[selectedSellerId] = updatedListings;
+            
+            // Close modal
+            setEditPropertyOpen(false);
+            
+            alert('Property updated successfully!');
+        } catch (error) {
+            console.error('Error updating property:', error);
+            alert('Error updating property. Please try again.');
+        }
     };
 
     const handleEditProfile = () => {
@@ -396,8 +404,44 @@ const SellerDashboard = () => {
     };
 
     const handlePreviewListing = (listing) => {
-        setPreviewListing(listing);
+        // Transform the listing data to match the preview structure
+        const previewData = {
+            ...listing,
+            images: [listing.image], // Use the single image for now
+            address: listing.location,
+            size: `${listing.acres} hectares`,
+            type: 'Agricultural Land',
+            soilType: 'To be determined',
+            zoning: 'Agricultural',
+            listedDate: listing.datePosted,
+            waterSource: listing.waterRights,
+            description: `Prime agricultural land located in ${listing.location}. This property is ideal for ${listing.suitableCrops}.`,
+            previousCrops: listing.suitableCrops.split(',').map(crop => crop.trim()),
+            averageYield: 'To be determined',
+            topography: 'Flat to gently rolling',
+            amenities: [
+                'Road Access',
+                'Water Source',
+                'Agricultural Zoning'
+            ],
+            restrictions: [
+                'Agricultural use only',
+                'Must maintain minimum agricultural activity'
+            ],
+            views: listing.viewCount || 0,
+            saved: 0,
+            seller: {
+                name: `${user.firstName} ${user.lastName}`,
+                profileImage: `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`,
+                rating: 4.5,
+                listings: sellerListings.length,
+                memberSince: user.memberSince
+            }
+        };
+        
+        setPreviewListing(previewData);
         setPreviewModalOpen(true);
+        recordPropertyView(listing.id);
     };
       
     const closePreviewModal = () => {
@@ -405,10 +449,20 @@ const SellerDashboard = () => {
     };
 
     // Function to handle delete listing
-    const handleDeleteListing = (listingId) => {
+    const handleDeleteListing = async (listingId) => {
         if (window.confirm('Are you sure you want to delete this listing?')) {
-        alert(`Listing ID ${listingId} would be deleted in a real application`);
-        // Add actual delete functionality here
+            try {
+                await api.delete(`/properties/${listingId}`);
+                
+                // Update local state
+                const updatedListings = sellerListings.filter(listing => listing.id !== listingId);
+                lotsBySeller[selectedSellerId] = updatedListings;
+                
+                alert('Property deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting property:', error);
+                alert('Error deleting property. Please try again.');
+            }
         }
     };
 
@@ -419,8 +473,10 @@ const SellerDashboard = () => {
 
     // Function to handle logout
     const handleLogout = () => {
-        alert('Logout functionality will be implemented here');
-        // Add actual logout functionality here
+        logout();
+        if (navigateTo) {
+            navigateTo('home');
+        }
     };
 
     const handleOpenTool = (tool) => {
@@ -451,24 +507,145 @@ const SellerDashboard = () => {
     };
     
     // Handler for form submission
-    const handleNewPropertySubmit = (e) => {
+    const handleNewPropertySubmit = async (e) => {
         e.preventDefault();
         
-        // In a real application, you would send this data to your backend
-        alert(`New property "${newProperty.title}" would be added to your listings in a real application.`);
-        
-        // Close the modal and reset the form
-        setAddNewOpen(false);
-        setNewProperty({
-            title: '',
-            location: '',
-            price: '',
-            acres: '',
-            waterRights: '',
-            suitableCrops: '',
-            image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
-        });
+        try {
+            const response = await api.post('/properties', {
+                ...newProperty,
+                price: parseFloat(newProperty.price.replace(/[^0-9.-]+/g, '')),
+                acres: parseFloat(newProperty.acres)
+            });
+            
+            // Update local state with the new property
+            const updatedListings = [...sellerListings, response.data];
+            lotsBySeller[selectedSellerId] = updatedListings;
+            
+            // Close modal and reset form
+            setAddNewOpen(false);
+            setNewProperty({
+                title: '',
+                location: '',
+                price: '',
+                acres: '',
+                waterRights: '',
+                suitableCrops: '',
+                image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
+            });
+            
+            alert('Property added successfully!');
+        } catch (error) {
+            console.error('Error adding property:', error);
+            alert('Error adding property. Please try again.');
+        }
     };
+
+    // Function to record a property view
+    const recordPropertyView = async (listingId) => {
+        try {
+            await api.post(`/seller/metrics/${selectedSellerId}/view`);
+            
+            // Update local state for both overall metrics and individual property
+            setMetrics(prev => ({
+                ...prev,
+                totalViews: (prev.totalViews || 0) + 1
+            }));
+
+            // Update the specific property's view count
+            const updatedListings = sellerListings.map(listing => 
+                listing.id === listingId 
+                    ? { ...listing, viewCount: (listing.viewCount || 0) + 1 }
+                    : listing
+            );
+            
+            // Update lotsBySeller
+            lotsBySeller[selectedSellerId] = updatedListings;
+        } catch (error) {
+            console.error('Error recording property view:', error);
+        }
+    };
+
+    // Function to record a property inquiry
+    const recordPropertyInquiry = async (listingId) => {
+        try {
+            await api.post(`/seller/metrics/${selectedSellerId}/inquiry`);
+            
+            // Update local state for both overall metrics and individual property
+            setMetrics(prev => ({
+                ...prev,
+                totalInquiries: (prev.totalInquiries || 0) + 1
+            }));
+
+            // Update the specific property's inquiry count
+            const updatedListings = sellerListings.map(listing => 
+                listing.id === listingId 
+                    ? { ...listing, inquiries: (listing.inquiries || 0) + 1 }
+                    : listing
+            );
+            
+            // Update lotsBySeller
+            lotsBySeller[selectedSellerId] = updatedListings;
+        } catch (error) {
+            console.error('Error recording property inquiry:', error);
+        }
+    };
+
+    // Function to record a property sale
+    const recordPropertySale = async (listingId, daysToSale) => {
+        try {
+            await api.post(`/seller/metrics/${selectedSellerId}/sale`, { daysToSale });
+            // Update local state
+            setMetrics(prev => ({
+                ...prev,
+                avgTimeToSale: Math.round((prev.avgTimeToSale + daysToSale) / 2)
+            }));
+        } catch (error) {
+            console.error('Error recording property sale:', error);
+        }
+    };
+
+    // Add these handlers for image navigation
+    const handlePrevImage = () => {
+        setActiveImageIndex(prev => (prev > 0 ? prev - 1 : previewListing.images.length - 1));
+    };
+
+    const handleNextImage = () => {
+        setActiveImageIndex(prev => (prev < previewListing.images.images.length - 1 ? prev + 1 : 0));
+    };
+
+    const handleThumbnailClick = (index) => {
+        setActiveImageIndex(index);
+    };
+
+    // Add handlers for preview actions
+    const handleContact = () => {
+        recordPropertyInquiry(previewListing.id);
+        alert('Contact form would open here');
+    };
+
+    const handleShare = () => {
+        // Implement share functionality
+        alert('Share functionality would open here');
+    };
+
+    const handleSave = () => {
+        // Implement save functionality
+        alert('Property saved to favorites');
+    };
+
+    // Add useEffect to fetch properties on component mount
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                const response = await api.get(`/properties/seller/${selectedSellerId}`);
+                lotsBySeller[selectedSellerId] = response.data;
+            } catch (error) {
+                console.error('Error fetching properties:', error);
+            }
+        };
+
+        fetchProperties();
+    }, [selectedSellerId]);
 
     return (
         <DashboardStyles.DashboardContainer>
@@ -491,6 +668,15 @@ const SellerDashboard = () => {
                 </DashboardStyles.WelcomeSection> */}
                 
                 <div style={{ marginBottom: '24px' }}>
+                    <label htmlFor="seller-select" style={{ fontWeight: 600, marginRight: 8 }}>Select Seller:</label>
+                    <select id="seller-select" value={selectedSellerId} onChange={e => setSelectedSellerId(e.target.value)}>
+                        {mockSellers.map(seller => (
+                            <option key={seller.id} value={seller.id}>{seller.firstName} {seller.lastName}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div style={{ marginBottom: '24px' }}>
                     <DashboardStyles.SectionTitle>
                         <FaChartBar size={20} style={{ marginRight: 8 }} /> Performance Metrics
                     </DashboardStyles.SectionTitle>
@@ -501,7 +687,7 @@ const SellerDashboard = () => {
                         <DashboardStyles.StatCard key={index}>
                             <DashboardStyles.StatCardTitle>{metric.title}</DashboardStyles.StatCardTitle>
                             <DashboardStyles.StatCardValue>{metric.value}</DashboardStyles.StatCardValue>
-                            <DashboardStyles.StatCardTrend isPositive={metric.isPositive}>
+                            <DashboardStyles.StatCardTrend $isPositive={metric.isPositive}>
                             {metric.isPositive ? <FaArrowUp size={12} /> : <FaArrowDown size={12} />} {metric.trend}
                             </DashboardStyles.StatCardTrend>
                         </DashboardStyles.StatCard>
@@ -524,16 +710,16 @@ const SellerDashboard = () => {
                         </div>
                         
                         <DashboardStyles.TabsContainer>
-                            <DashboardStyles.Tab active={activeTab === 'listings'} onClick={() => setActiveTab('listings')}>
+                            <DashboardStyles.Tab $active={activeTab === 'listings'} onClick={() => setActiveTab('listings')}>
                             All Listings ({sellerListings.length})
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'active'} onClick={() => setActiveTab('active')}>
+                            <DashboardStyles.Tab $active={activeTab === 'active'} onClick={() => setActiveTab('active')}>
                             Active ({sellerListings.filter(l => l.status === 'active').length})
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>
+                            <DashboardStyles.Tab $active={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>
                             Pending ({sellerListings.filter(l => l.status === 'pending').length})
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'sold'} onClick={() => setActiveTab('sold')}>
+                            <DashboardStyles.Tab $active={activeTab === 'sold'} onClick={() => setActiveTab('sold')}>
                             Sold ({sellerListings.filter(l => l.status === 'sold').length})
                             </DashboardStyles.Tab>
                         </DashboardStyles.TabsContainer>
@@ -597,16 +783,16 @@ const SellerDashboard = () => {
                                 
                                 <DashboardStyles.PropertyActions>
                                     <div style={{ display: 'flex', gap: '10px' }}>
-                                        <DashboardStyles.ActionButton small onClick={() => handleEditListing(listing)} style={{ backgroundColor: "#3498db" }}>
+                                        <DashboardStyles.ActionButton $small onClick={() => handleEditListing(listing)} style={{ backgroundColor: "#3498db" }}>
                                         <FaEdit size={12} style={{ marginRight: '4px' }} /> Edit
                                         </DashboardStyles.ActionButton>
                                         {listing.status !== 'sold' && (
-                                        <DashboardStyles.ActionButton small onClick={() => handleDeleteListing(listing.id)} style={{ backgroundColor: "#e74c3c" }}>
+                                        <DashboardStyles.ActionButton $small onClick={() => handleDeleteListing(listing.id)} style={{ backgroundColor: "#e74c3c" }}>
                                             <FaTrash size={12} style={{ marginRight: '4px' }} /> Delete
                                         </DashboardStyles.ActionButton>
                                         )}
                                     </div>
-                                    <DashboardStyles.ActionButton small onClick={() => handlePreviewListing(listing)} style={{ backgroundColor: "#2ecc71" }}>
+                                    <DashboardStyles.ActionButton $small onClick={() => handlePreviewListing(listing)} style={{ backgroundColor: "#2ecc71" }}>
                                         <FaEye size={12} style={{ marginRight: '4px' }} /> Preview
                                     </DashboardStyles.ActionButton>
                                 </DashboardStyles.PropertyActions>
@@ -619,7 +805,7 @@ const SellerDashboard = () => {
                         <DashboardStyles.MarketInsightsSection>
                         <DashboardStyles.InsightsTitle>Agricultural Market Insights for Sellers</DashboardStyles.InsightsTitle>
                         
-                        {marketInsights.map(insight => (
+                        {Array.isArray(marketInsights) && marketInsights.map(insight => (
                             <DashboardStyles.InsightCard key={insight.id} accentColor={insight.accentColor}>
                             <DashboardStyles.InsightTitle>{insight.title}</DashboardStyles.InsightTitle>
                             <DashboardStyles.InsightText>{insight.text}</DashboardStyles.InsightText>
@@ -687,7 +873,7 @@ const SellerDashboard = () => {
                             <DashboardStyles.ProfileButton onClick={handleEditProfile}>
                             <FaUser size={14} /> Edit Profile
                             </DashboardStyles.ProfileButton>
-                            <DashboardStyles.ProfileButton primary onClick={handleLogout}>
+                            <DashboardStyles.ProfileButton $primary onClick={handleLogout}>
                             <FaSignOutAlt size={14} /> Logout
                             </DashboardStyles.ProfileButton>
                         </DashboardStyles.ProfileActions>
@@ -807,13 +993,13 @@ const SellerDashboard = () => {
                         <DashboardStyles.RecentActivityTitle>Recent Activity</DashboardStyles.RecentActivityTitle>
                         
                         <DashboardStyles.ActivityList>
-                            {recentActivities.map(activity => (
+                            {Array.isArray(recentActivities) && recentActivities.map(activity => (
                             <DashboardStyles.ActivityItem key={activity.id}>
                                 <DashboardStyles.ActivityIcon 
                                 bgColor={activity.bgColor}
                                 iconColor={activity.iconColor}
                                 >
-                                {activity.icon}
+                                {iconMap[activity.icon] || null}
                                 </DashboardStyles.ActivityIcon>
                                 
                                 <DashboardStyles.ActivityContent>
@@ -1232,181 +1418,8 @@ const SellerDashboard = () => {
                             ×
                             </SellerDashboardStyles.ModalCloseButton>
                         </SellerDashboardStyles.ModalHeader>
-                        
-                        {activeToolModal === 'priceCalculator' && (
-                            <SellerDashboardStyles.ToolContainer>
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Location</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormSelect>
-                                <option>Select province</option>
-                                <option>Nueva Ecija</option>
-                                <option>Bulacan</option>
-                                <option>Isabela</option>
-                                <option>Pangasinan</option>
-                                <option>Iloilo</option>
-                                </SellerDashboardStyles.FormSelect>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.FormRow>
-                                <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Land Size (Hectares)</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormInput type="number" min="0.1" step="0.1" defaultValue="1.0" />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Water Source</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormSelect>
-                                    <option>Select water source</option>
-                                    <option>NIA Irrigation</option>
-                                    <option>Deep Well</option>
-                                    <option>Creek Access</option>
-                                    <option>Rain-fed Only</option>
-                                </SellerDashboardStyles.FormSelect>
-                                </SellerDashboardStyles.FormGroup>
-                            </SellerDashboardStyles.FormRow>
-                            
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Property Quality</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.RangeSlider type="range" min="1" max="5" defaultValue="3" />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                                <small>Basic</small>
-                                <small>Average</small>
-                                <small>Premium</small>
-                                </div>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Land Classification</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.CheckboxGroup>
-                                <SellerDashboardStyles.Checkbox>
-                                    <input type="checkbox" id="irrigated" defaultChecked />
-                                    <label htmlFor="irrigated">Irrigated Agricultural</label>
-                                </SellerDashboardStyles.Checkbox>
-                                <SellerDashboardStyles.Checkbox>
-                                    <input type="checkbox" id="nonirrigated" />
-                                    <label htmlFor="nonirrigated">Non-Irrigated Agricultural</label>
-                                </SellerDashboardStyles.Checkbox>
-                                <SellerDashboardStyles.Checkbox>
-                                    <input type="checkbox" id="commercial" />
-                                    <label htmlFor="commercial">Commercial Potential</label>
-                                </SellerDashboardStyles.Checkbox>
-                                </SellerDashboardStyles.CheckboxGroup>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.ToolResultBox>
-                                <div style={{ marginBottom: '12px' }}>
-                                <p style={{ fontSize: '14px', color: '#dddddd', margin: '0 0 8px 0' }}>Estimated price range based on current market conditions:</p>
-                                <SellerDashboardStyles.ToolCardValue large bold color="#2980b9">₱850,000 - ₱950,000 per hectare</SellerDashboardStyles.ToolCardValue>
-                                </div>
-                                <p style={{ fontSize: '13px', color: '#dddddd', margin: '0' }}>
-                                This estimate is based on recent sales data for similar properties in your selected region. Adjust the parameters above to refine the estimate.
-                                </p>
-                            </SellerDashboardStyles.ToolResultBox>
-                            
-                            <SellerDashboardStyles.FormActions>
-                                <SellerDashboardStyles.FormCancelButton onClick={() => setToolModalOpen(false)}>
-                                Close
-                                </SellerDashboardStyles.FormCancelButton>
-                                <SellerDashboardStyles.FormSubmitButton>
-                                Save Estimate
-                                </SellerDashboardStyles.FormSubmitButton>
-                            </SellerDashboardStyles.FormActions>
-                            </SellerDashboardStyles.ToolContainer>
-                        )}
-                        
-                        {activeToolModal === 'marketAnalysis' && (
-                            <SellerDashboardStyles.ToolContainer>
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Select Region</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormSelect>
-                                <option>All Philippines</option>
-                                <option>Luzon</option>
-                                <option>Visayas</option>
-                                <option>Mindanao</option>
-                                </SellerDashboardStyles.FormSelect>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.ToolGrid>
-                                <SellerDashboardStyles.ToolCard>
-                                <SellerDashboardStyles.ToolCardTitle>Avg. Price per Hectare</SellerDashboardStyles.ToolCardTitle>
-                                <SellerDashboardStyles.ToolCardValue large>₱875,000</SellerDashboardStyles.ToolCardValue>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}><FaArrowUp style={{ color: '#2ecc71' }} /> 3.5% vs last quarter</div>
-                                </SellerDashboardStyles.ToolCard>
-                                
-                                <SellerDashboardStyles.ToolCard>
-                                <SellerDashboardStyles.ToolCardTitle>Avg. Time to Sell</SellerDashboardStyles.ToolCardTitle>
-                                <SellerDashboardStyles.ToolCardValue large>72 days</SellerDashboardStyles.ToolCardValue>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}><FaArrowDown style={{ color: '#2ecc71' }} /> 5 days vs last quarter</div>
-                                </SellerDashboardStyles.ToolCard>
-                                
-                                <SellerDashboardStyles.ToolCard>
-                                <SellerDashboardStyles.ToolCardTitle>Active Listings</SellerDashboardStyles.ToolCardTitle>
-                                <SellerDashboardStyles.ToolCardValue large>543</SellerDashboardStyles.ToolCardValue>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}><FaArrowUp style={{ color: '#e74c3c' }} /> 12% vs last quarter</div>
-                                </SellerDashboardStyles.ToolCard>
-                            </SellerDashboardStyles.ToolGrid>
-                            
-                            <SellerDashboardStyles.ToolSection>
-                                <SellerDashboardStyles.ToolSectionTitle>Market Trends</SellerDashboardStyles.ToolSectionTitle>
-                                <div style={{ 
-                                height: '200px', 
-                                background: 'rgba(52, 152, 219, 0.1)', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                borderRadius: '8px',
-                                marginBottom: '16px'
-                                }}>
-                                <p>Market Trend Chart Would Appear Here</p>
-                                </div>
-                                <p style={{ fontSize: '14px', color: '#34495E', margin: '0' }}>
-                                Current trends show increasing demand for agricultural properties with reliable irrigation systems, particularly in rice-growing regions.
-                                </p>
-                            </SellerDashboardStyles.ToolSection>
-                            
-                            <SellerDashboardStyles.ToolSection>
-                                <SellerDashboardStyles.ToolSectionTitle>Comparable Properties</SellerDashboardStyles.ToolSectionTitle>
-                                <div style={{ fontSize: '14px', color: '#dddddd' }}>
-                                <div style={{ 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    background: 'rgba(52, 152, 219, 0.05)',
-                                    marginBottom: '8px'
-                                }}>
-                                    <div style={{ fontWeight: '600' }}>7.2 ha Rice Farm in Nueva Ecija</div>
-                                    <div>₱6,480,000 (₱900,000/ha) • Sold 45 days ago</div>
-                                </div>
-                                <div style={{ 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    background: 'rgba(52, 152, 219, 0.05)',
-                                    marginBottom: '8px'
-                                }}>
-                                    <div style={{ fontWeight: '600' }}>4.5 ha Agricultural Land in Bulacan</div>
-                                    <div>₱3,825,000 (₱850,000/ha) • Sold 27 days ago</div>
-                                </div>
-                                <div style={{ 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    background: 'rgba(52, 152, 219, 0.05)'
-                                }}>
-                                    <div style={{ fontWeight: '600' }}>3.8 ha Farm in Tarlac</div>
-                                    <div>₱3,230,000 (₱850,000/ha) • Sold 62 days ago</div>
-                                </div>
-                                </div>
-                            </SellerDashboardStyles.ToolSection>
-                            
-                            <SellerDashboardStyles.FormActions>
-                                <SellerDashboardStyles.FormCancelButton onClick={() => setToolModalOpen(false)}>
-                                Close
-                                </SellerDashboardStyles.FormCancelButton>
-                                <SellerDashboardStyles.FormSubmitButton>
-                                Download Report
-                                </SellerDashboardStyles.FormSubmitButton>
-                            </SellerDashboardStyles.FormActions>
-                            </SellerDashboardStyles.ToolContainer>
-                        )}
-                        
+                        {activeToolModal === 'priceCalculator' && <PriceCalculatorTool />}
+                        {activeToolModal === 'marketAnalysis' && <MarketAnalysisTool />}
                         {activeToolModal === 'listingEnhancement' && (
                             <SellerDashboardStyles.ToolContainer>
                             <p style={{ fontSize: '15px', color: '#34495E', lineHeight: '1.5' }}>
@@ -1500,17 +1513,17 @@ const SellerDashboard = () => {
                             <ListingStyles.ListingContainer>
                                 <ListingStyles.BreadcrumbNav>
                                     <ListingStyles.BreadcrumbLink href="/">Home</ListingStyles.BreadcrumbLink> &gt; 
-                                    <ListingStyles.BreadcrumbLink href="/listings"> Agricultural Lots</ListingStyles.BreadcrumbLink> &gt; 
-                                    <ListingStyles.BreadcrumbCurrent> {listing.title}</ListingStyles.BreadcrumbCurrent>
+                                    <ListingStyles.BreadcrumbLink href="/listings">Agricultural Lots</ListingStyles.BreadcrumbLink> &gt; 
+                                    <ListingStyles.BreadcrumbCurrent>{previewListing.title}</ListingStyles.BreadcrumbCurrent>
                                 </ListingStyles.BreadcrumbNav>
                                 
                                 <ListingStyles.ListingHeader>
                                     <ListingStyles.TitleSection>
-                                        <ListingStyles.ListingTitle>{listing.title}</ListingStyles.ListingTitle>
-                                        <ListingStyles.ListingLocation>{listing.address}</ListingStyles.ListingLocation>
+                                        <ListingStyles.ListingTitle>{previewListing.title}</ListingStyles.ListingTitle>
+                                        <ListingStyles.ListingLocation>{previewListing.address}</ListingStyles.ListingLocation>
                                     </ListingStyles.TitleSection>
                                     <ListingStyles.PriceSection>
-                                        <ListingStyles.ListingPrice>₱{previewListing.price.toLocaleString()}</ListingStyles.ListingPrice>
+                                        <ListingStyles.ListingPrice>{previewListing.price}</ListingStyles.ListingPrice>
                                         <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
                                     </ListingStyles.PriceSection>
                                 </ListingStyles.ListingHeader>
@@ -1558,7 +1571,7 @@ const SellerDashboard = () => {
                                         <ListingStyles.SpecItem>
                                         <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
                                         <ListingStyles.SpecValue>
-                                            {new Date(listing.listedDate).toLocaleDateString()}
+                                            {new Date(previewListing.listedDate).toLocaleDateString()}
                                         </ListingStyles.SpecValue>
                                         </ListingStyles.SpecItem>
                                         <ListingStyles.SpecItem>
@@ -1612,7 +1625,6 @@ const SellerDashboard = () => {
                                     <ListingStyles.Section>
                                     <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
                                     <ListingStyles.MapContainer>
-                                        {/* In a real app, this would be replaced with a proper map component */}
                                         <ListingStyles.MapPlaceholder>
                                         Map showing location at {previewListing.address}
                                         </ListingStyles.MapPlaceholder>
@@ -1628,7 +1640,7 @@ const SellerDashboard = () => {
                                         <ListingStyles.SellerInfo>
                                         <ListingStyles.SellerName>{previewListing.seller.name}</ListingStyles.SellerName>
                                         <ListingStyles.SellerRating>
-                                            {'★'.repeat(Math.round(listing.seller.rating))} 
+                                            {'★'.repeat(Math.round(previewListing.seller.rating))} 
                                             <ListingStyles.RatingValue>({previewListing.seller.rating})</ListingStyles.RatingValue>
                                         </ListingStyles.SellerRating>
                                         </ListingStyles.SellerInfo>
@@ -1640,7 +1652,7 @@ const SellerDashboard = () => {
                                         </ListingStyles.StatItem>
                                         <ListingStyles.StatItem>
                                         <ListingStyles.StatValue>
-                                            {new Date(listing.seller.memberSince).getFullYear()}
+                                            {new Date(previewListing.seller.memberSince).getFullYear()}
                                         </ListingStyles.StatValue>
                                         <ListingStyles.StatLabel>Member Since</ListingStyles.StatLabel>
                                         </ListingStyles.StatItem>

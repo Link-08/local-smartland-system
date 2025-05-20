@@ -436,6 +436,65 @@ export const SellerDashboardStyles = {
     margin: 0;
     line-height: 1.5;
     `,
+
+    StatCardTrend: styled.div`
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 14px;
+        color: ${props => props.$isPositive ? '#2ecc71' : '#e74c3c'};
+    `,
+
+    Tab: styled.div`
+        padding: 8px 16px;
+        cursor: pointer;
+        font-weight: ${props => props.$active ? '600' : '400'};
+        color: ${props => props.$active ? '#3498db' : '#7f8c8d'};
+        border-bottom: 2px solid ${props => props.$active ? '#3498db' : 'transparent'};
+        transition: all 0.2s ease;
+
+        &:hover {
+            color: #3498db;
+        }
+    `,
+
+    ActionButton: styled.button`
+        padding: ${props => props.$small ? '6px 12px' : '8px 16px'};
+        border-radius: 6px;
+        border: none;
+        background-color: ${props => props.$primary ? '#3498db' : '#f0f0f0'};
+        color: ${props => props.$primary ? 'white' : '#2C3E50'};
+        font-size: ${props => props.$small ? '13px' : '14px'};
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        &:hover {
+            background-color: ${props => props.$primary ? '#2980b9' : '#e0e0e0'};
+        }
+    `,
+
+    ProfileButton: styled.button`
+        padding: 10px 20px;
+        border-radius: 6px;
+        border: none;
+        background-color: ${props => props.$primary ? '#3498db' : '#f0f0f0'};
+        color: ${props => props.$primary ? 'white' : '#2C3E50'};
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &:hover {
+            background-color: ${props => props.$primary ? '#2980b9' : '#e0e0e0'};
+        }
+    `,
     }
 
 export default SellerDashboardStyles;

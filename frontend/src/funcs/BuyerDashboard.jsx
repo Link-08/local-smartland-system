@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
     FaHome, FaUser, FaSignOutAlt, FaBell, FaHeart, 
     FaSearch, FaBuilding, FaChartLine, FaMapMarkerAlt, 
@@ -7,25 +7,96 @@ import {
     FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse
   } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles"
+import axios from 'axios';
+import AuthContext from './AuthContext';
 
-const BuyerDashboard = () => {
+// Configure axios defaults
+axios.defaults.baseURL = 'http://localhost:5000';
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+const BuyerDashboard = ({ navigateTo }) => {
+    const { user: authUser, logout } = useContext(AuthContext);
+    
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('saved');
     
-    // Mock user data
-    const user = {
-        firstName: 'Alex',
-        lastName: 'Johnson',
-        accountId: 'BUY24578',
-        email: 'alex.johnson@example.com',
-        phone: '0912 345 6789',
-        username: 'alexj24',
-        listingCount: 12,
-        avatar: 'AJ'
-    };
+    // State for user data and loading
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     
+    // Fetch user data on component mount
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const token = localStorage.getItem('token');
+            console.log('Current token:', token); // Debug log
+            
+            if (!token) {
+                console.log('No token found in localStorage'); // Debug log
+                setError('No authentication token found. Please log in.');
+                setLoading(false);
+                navigateTo('/login');
+                return;
+            }
+
+            try {
+                console.log('Making request to /auth/me with token:', token); // Debug log
+                const response = await axios.get('/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('Response from /auth/me:', response.data); // Debug log
+                
+                if (response.data && response.data.user) {
+                    setUser(response.data.user);
+                    setError(null);
+                } else {
+                    console.log('Invalid response format:', response.data); // Debug log
+                    throw new Error('Invalid response format from server');
+                }
+            } catch (err) {
+                console.log('Error details:', {
+                    status: err.response?.status,
+                    data: err.response?.data,
+                    message: err.message
+                }); // Debug log
+                
+                let errorMessage = 'Failed to load user data. ';
+                
+                if (err.response) {
+                    switch (err.response.status) {
+                        case 401:
+                            errorMessage += 'Your session has expired. Please log in again.';
+                            console.log('Session expired, logging out...'); // Debug log
+                            logout();
+                            navigateTo('/login');
+                            break;
+                        case 404:
+                            errorMessage += 'User profile not found.';
+                            break;
+                        default:
+                            errorMessage += 'Please try again later.';
+                    }
+                } else if (err.request) {
+                    errorMessage += 'No response from server. Please check your connection.';
+                } else {
+                    errorMessage += err.message;
+                }
+                
+                setError(errorMessage);
+                console.error('Error fetching user data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [navigateTo, logout]);
+
     // Mock saved properties
     const savedProperties = [
         {
@@ -173,15 +244,65 @@ const BuyerDashboard = () => {
     
     // Function to handle logout
     const handleLogout = () => {
-        alert('Logout functionality will be implemented here');
-        // Add actual logout functionality here
+        logout();
+        navigateTo('/login');
     };
     
     // Function to redirect to property listings
     const goToPropertyListings = () => {
-        alert('Redirecting to property listings page');
-        // Add actual navigation here
+        navigateTo('listings');
     };
+
+    if (loading) {
+        return (
+            <DashboardStyles.DashboardContainer>
+                <DashboardStyles.DashboardContent>
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        Loading user data...
+                    </div>
+                </DashboardStyles.DashboardContent>
+            </DashboardStyles.DashboardContainer>
+        );
+    }
+
+    if (error) {
+        return (
+            <DashboardStyles.DashboardContainer>
+                <DashboardStyles.DashboardContent>
+                    <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>
+                        {error}
+                    </div>
+                </DashboardStyles.DashboardContent>
+            </DashboardStyles.DashboardContainer>
+        );
+    }
+
+    if (!user) {
+        return (
+            <DashboardStyles.DashboardContainer>
+                <DashboardStyles.DashboardContent>
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        Please log in to view your dashboard.
+                        <button 
+                            onClick={() => navigateTo('/login')}
+                            style={{
+                                display: 'block',
+                                margin: '1rem auto',
+                                padding: '0.5rem 1rem',
+                                backgroundColor: '#0a69a8',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Go to Login
+                        </button>
+                    </div>
+                </DashboardStyles.DashboardContent>
+            </DashboardStyles.DashboardContainer>
+        );
+    }
 
     return (
         <DashboardStyles.DashboardContainer>
@@ -191,7 +312,7 @@ const BuyerDashboard = () => {
                 <DashboardStyles.WelcomeSection>
                     <DashboardStyles.WelcomeContent>
                         <DashboardStyles.WelcomeTitle>
-                        Welcome back, {user.firstName}!
+                        Welcome back, {user.firstName || user.username}!
                         </DashboardStyles.WelcomeTitle>
                         <DashboardStyles.WelcomeText>
                         Your ideal agricultural property is waiting in Nueva Ecija, the Rice Granary of the Philippines. Discover farms perfect for growing rice, vegetables, fruits, and other high-value crops.
@@ -257,7 +378,7 @@ const BuyerDashboard = () => {
                         <DashboardStyles.ProfileSection>
                         <DashboardStyles.ProfileHeader>
                             <DashboardStyles.ProfileAvatarLarge>
-                            {user.avatar}
+                            {user.avatar || user.username.charAt(0).toUpperCase()}
                             </DashboardStyles.ProfileAvatarLarge>
                             <DashboardStyles.ProfileName>
                             {user.firstName} {user.lastName}
@@ -269,10 +390,10 @@ const BuyerDashboard = () => {
                             <DashboardStyles.ProfileDetailItem>
                                 <DashboardStyles.ProfileDetailLabel>Account ID</DashboardStyles.ProfileDetailLabel>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <DashboardStyles.ProfileDetailValue>{user.accountId}</DashboardStyles.ProfileDetailValue>
+                                    <DashboardStyles.ProfileDetailValue>{user.id}</DashboardStyles.ProfileDetailValue>
                                     <button 
                                     onClick={() => {
-                                        navigator.clipboard.writeText(user.accountId);
+                                        navigator.clipboard.writeText(user.id);
                                         alert('Account ID copied to clipboard!');
                                     }}
                                     style={{ 
@@ -304,7 +425,7 @@ const BuyerDashboard = () => {
                             
                             <DashboardStyles.ProfileDetailItem>
                                 <DashboardStyles.ProfileDetailLabel>Phone Number</DashboardStyles.ProfileDetailLabel>
-                                <DashboardStyles.ProfileDetailValue>{user.phone}</DashboardStyles.ProfileDetailValue>
+                                <DashboardStyles.ProfileDetailValue>{user.phone || 'Not provided'}</DashboardStyles.ProfileDetailValue>
                             </DashboardStyles.ProfileDetailItem>
                             
                             <DashboardStyles.ProfileDetailItem>
@@ -313,8 +434,10 @@ const BuyerDashboard = () => {
                             </DashboardStyles.ProfileDetailItem>
                             
                             <DashboardStyles.ProfileDetailItem>
-                                <DashboardStyles.ProfileDetailLabel>Listing Count</DashboardStyles.ProfileDetailLabel>
-                                <DashboardStyles.ProfileDetailValue>{user.listingCount}</DashboardStyles.ProfileDetailValue>
+                                <DashboardStyles.ProfileDetailLabel>Member Since</DashboardStyles.ProfileDetailLabel>
+                                <DashboardStyles.ProfileDetailValue>
+                                    {new Date(user.memberSince).toLocaleDateString()}
+                                </DashboardStyles.ProfileDetailValue>
                             </DashboardStyles.ProfileDetailItem>
                         </DashboardStyles.ProfileDetails>
                         

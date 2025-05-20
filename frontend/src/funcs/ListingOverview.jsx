@@ -4,7 +4,7 @@ import { FaList, FaThLarge, FaSearch, FaFilter, FaHome, FaEye, FaStar, FaTree, F
 import cabanatuanLots from './cabanatuanLots.json';
 import barangays from './barangays.json';
 
-const ListingOverview = () => {
+const ListingOverview = ({ navigateTo }) => {
     // State for filters and view
     const [viewMode, setViewMode] = useState('grid');
     const [showFilters, setShowFilters] = useState(false);
@@ -54,6 +54,12 @@ const ListingOverview = () => {
                 hasIrrigation: lot.features?.toLowerCase().includes('irrigation') || false,
                 isFeatured: lot.isFeatured || false,
                 imageUrl: "/api/placeholder/400/320",
+                images: [
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500"
+                ],
                 sellerName: "SmartLand System",
                 sellerAvatar: "/api/placeholder/50/50",
                 postedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -210,6 +216,12 @@ const ListingOverview = () => {
                 hasIrrigation: lot.features?.toLowerCase().includes('irrigation') || false,
                 isFeatured: lot.isFeatured || false,
                 imageUrl: "/api/placeholder/400/320",
+                images: [
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500"
+                ],
                 sellerName: "SmartLand System",
                 sellerAvatar: "/api/placeholder/50/50",
                 postedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -329,19 +341,15 @@ const ListingOverview = () => {
     
         // Navigation handler
         const navigateToListing = () => {
-            // Use your router's navigation method
-            // For example with React Router:
-            // history.push(`/properties/${slug}`);
-            
-            // Or with Next.js:
-            // router.push(`/properties/${slug}`);
-            
-            // For now, we'll just log it
-            console.log(`Navigating to: /properties/${slug}`);
+            if (navigateTo) {
+                navigateTo('speclist', { property: listing });
+            } else {
+                console.log(`Navigating to: /properties/${slug}`);
+            }
         }
         if (viewMode === 'grid') {
             return (
-                <S.ListingCard key={listing.id}>
+                <S.ListingCard key={listing.id} onClick={navigateToListing} style={{ cursor: 'pointer' }}>
                 <S.ListingImageContainer>
                     <S.ListingImage src={listing.imageUrl} alt={listing.title} />
                     {listing.isFeatured && <S.ListingBadge type="featured">Featured</S.ListingBadge>}
@@ -399,7 +407,7 @@ const ListingOverview = () => {
         } else {
         // List view rendering
             return (
-                <S.ListingCardHorizontal key={listing.id}>
+                <S.ListingCardHorizontal key={listing.id} onClick={navigateToListing} style={{ cursor: 'pointer' }}>
                     <S.ListingImageContainerHorizontal style={{ width: '280px', height: '220px' }}>
                         <S.ListingImage src={listing.imageUrl} alt={listing.title} />
                         {listing.isFeatured && <S.ListingBadge type="featured">Featured</S.ListingBadge>}
