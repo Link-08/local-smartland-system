@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   FaCamera, FaUser, FaSignOutAlt, FaFileAlt, FaTags, 
   FaSearch, FaBuilding, FaChartLine, FaMapMarkerAlt, 
@@ -6,13 +6,25 @@ import {
   FaArrowRight, FaChevronRight, FaArrowUp, FaArrowDown,
   FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse,
   FaEdit, FaTrash, FaPlus, FaMoneyBillWave, FaChartBar,
-  FaExclamationTriangle, FaCheck, FaEye
+  FaExclamationTriangle, FaCheck, FaEye, FaList, FaThLarge, FaFilter, FaHome, FaStar, FaTint, FaAngleDown, FaRegCalendarAlt, FaTimes, FaChevronLeft
 } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles";
 import { SellerDashboardStyles } from "./SellerDashboardStyles";
-import { ListingStyles } from "./ListingsStyles";
+import { useAuth } from '../contexts/AuthContext';
+import api from '../config/axios';
+import PriceCalculatorTool from "./PriceCalculatorTool";
+import MarketAnalysisTool from "./MarketAnalysisTool";
+import { formatPrice, formatDate } from './formatUtils';
+import styled from 'styled-components';
+import * as PreviewModalStyles from './PreviewModalStyles';
 
-const SellerDashboard = () => {
+const iconMap = {
+    FaExclamationTriangle: <FaExclamationTriangle />,
+    FaEye: <FaEye />,
+    FaCheck: <FaCheck />,
+};
+
+const SellerDashboard = ({ navigateTo }) => {
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -46,188 +58,182 @@ const SellerDashboard = () => {
     });
     const [editProfileOpen, setEditProfileOpen] = useState(false);
     const [activeProfileTab, setActiveProfileTab] = useState('personal');
-    // Add these state variables to your component
-    const [toolModalOpen, setToolModalOpen] = useState(false);
-    const [activeToolModal, setActiveToolModal] = useState(null); // 'priceCalculator', 'marketAnalysis', or 'listingEnhancement'
-    const [previewModalOpen, setPreviewModalOpen] = useState(false);
-    const [previewListing, setPreviewListing] = useState(null);
-    
-    // Add this useEffect to handle keyboard shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-            // Close any open modals
-            if (addNewOpen) setAddNewOpen(false);
-            if (editPropertyOpen) setEditPropertyOpen(false);
-            if (editProfileOpen) setEditProfileOpen(false);
-            if (toolModalOpen) setToolModalOpen(false); // For the new seller tools modals
-        }
-        };
-    
-        // Add event listener
-        window.addEventListener('keydown', handleKeyDown);
-        
-        // Clean up
-        return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [addNewOpen, editPropertyOpen, editProfileOpen, toolModalOpen]);
-
-    // Mock user data (same as provided)
-    const user = {
-        firstName: 'Alex',
-        lastName: 'Johnson',
-        accountId: 'SELL24578',
-        email: 'alex.johnson@example.com',
-        phone: '0912 345 6789',
-        username: 'alexj24',
-        listingCount: 4,
-        avatar: 'AJ'
-    };
-
     const [userProfile, setUserProfile] = useState({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        username: user.username || '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        username: '',
         password: '',
         confirmPassword: '',
-        avatar: user.avatar || ''
+        avatar: 'NA'
     });
+    const [toolModalOpen, setToolModalOpen] = useState(false);
+    const [activeToolModal, setActiveToolModal] = useState(null);
+    const [previewModalOpen, setPreviewModalOpen] = useState(false);
+    const [previewListing, setPreviewListing] = useState(null);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     
-    // Mock property listings the seller owns
-    const sellerListings = [
-        {
-        id: 1,
-        title: 'Prime Rice Farm with Irrigation',
-        location: 'Barangay Imelda, Cabanatuan, Nueva Ecija',
-        price: '₱8,750,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 5.2, // In hectares
-        waterRights: 'NIA Irrigation',
-        suitableCrops: 'Rice, Corn, Vegetables',
-        status: 'active',
-        viewCount: 245,
-        inquiries: 12,
-        datePosted: '2025-03-15'
-        },
-        {
-        id: 2,
-        title: 'Fertile Farmland for Root Crops',
-        location: 'Barangay Bantug, Cabanatuan, Nueva Ecija',
-        price: '₱6,800,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 3.5, // In hectares
-        waterRights: 'Deep Well',
-        suitableCrops: 'Onions, Garlic, Sweet Potato',
-        status: 'active',
-        viewCount: 189,
-        inquiries: 8,
-        datePosted: '2025-04-02'
-        },
-        {
-        id: 3,
-        title: 'Orchard Land with Established Trees',
-        location: 'Barangay San Josef, Cabanatuan, Nueva Ecija',
-        price: '₱12,500,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 7.8, // In hectares
-        waterRights: 'Deep Well + Rainwater Collection',
-        suitableCrops: 'Mango, Guava, Calamansi, Banana',
-        status: 'pending',
-        viewCount: 56,
-        inquiries: 3,
-        datePosted: '2025-05-08'
-        },
-        {
-        id: 4,
-        title: 'Lowland Farm with Rich Soil',
-        location: 'Barangay Pamaldan, Cabanatuan, Nueva Ecija',
-        price: '₱4,950,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 2.3, // In hectares
-        waterRights: 'Creek Access',
-        suitableCrops: 'Eggplant, Okra, String Beans, Bitter Gourd',
-        status: 'sold',
-        viewCount: 321,
-        inquiries: 15,
-        datePosted: '2025-02-20'
-        }
-    ];
+    // Use AuthContext for the signed-in seller
+    const { user, logout, loading, fetchUser, setUser, updateUser } = useAuth();
 
-    // Mock recent activities for seller
-    const recentActivities = [
-        {
-        id: 1,
-        type: 'inquiry',
-        title: 'New inquiry received for "Prime Rice Farm with Irrigation"',
-        time: '2 hours ago',
-        icon: <FaExclamationTriangle />,
-        iconColor: '#3498db',
-        bgColor: 'rgba(52, 152, 219, 0.1)'
-        },
-        {
-        id: 2,
-        type: 'view',
-        title: 'Your "Fertile Farmland for Root Crops" received 28 new views',
-        time: '1 day ago',
-        icon: <FaEye />,
-        iconColor: '#2ecc71',
-        bgColor: 'rgba(46, 204, 113, 0.1)'
-        },
-        {
-        id: 3,
-        type: 'update',
-        title: 'Your "Orchard Land" listing has been approved',
-        time: '2 days ago',
-        icon: <FaCheck />,
-        iconColor: '#27ae60',
-        bgColor: 'rgba(39, 174, 96, 0.1)'
-        }
-    ];
+    // Add state for seller listings
+    const [sellerListings, setSellerListings] = useState([]);
 
-    // Mock market insights specific to sellers
-    const marketInsights = [
-        {
-        id: 1,
-        title: 'Price Trends for Rice Farms',
-        text: 'Rice farm prices in Nueva Ecija have increased by 8% in the last quarter. Properties with NIA Irrigation command 15% premium.',
-        accentColor: '#3498db'
-        },
-        {
-        id: 2,
-        title: 'Most Sought-After Areas',
-        text: 'Farms in Barangay Imelda and Bantug are receiving the most inquiries, with an average time-to-sale of 45 days.',
-        accentColor: '#e67e22'
-        },
-        {
-        id: 3,
-        title: 'Listing Optimization Tips',
-        text: 'Listings with detailed soil analysis and crop history receive 40% more inquiries. Consider adding these details to boost interest.',
-        accentColor: '#2ecc71'
-        }
-    ];
+    // Add state for market insights
+    const [marketInsights, setMarketInsights] = useState({
+        totalListings: 0,
+        activeListings: 0,
+        totalViews: 0,
+        averagePrice: 0,
+        priceTrend: 0,
+        averageTimeToSale: 0,
+        optimizationTips: [],
+    });
 
-    // Mock performance metrics
+    // Add state for recent activities
+    const [recentActivities, setRecentActivities] = useState([
+        {
+            id: 'default-1',
+            type: 'welcome',
+            title: 'Welcome to your Seller Dashboard',
+            time: 'just now',
+            icon: 'FaCheck',
+            $iconColor: '#3498db',
+            $bgColor: 'rgba(52, 152, 219, 0.1)'
+        }
+    ]);
+
+    // Add state for metrics
+    const [metrics, setMetrics] = useState({
+        totalViews: 0,
+        totalInquiries: 0,
+        avgTimeToSale: 0,
+        trendViews: '0%',
+        trendInquiries: '0%',
+        trendAvgTimeToSale: '0%'
+    });
+
+    // Add useEffect to initialize userProfile when user data is available
+    useEffect(() => {
+        if (user) {
+            setUserProfile({
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                username: user.username || '',
+                password: '',
+                confirmPassword: '',
+                avatar: user.avatar || 'NA'
+            });
+        }
+    }, [user]);
+
+    // Add useEffect to fetch seller listings, market insights, and recent activities
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user?.id) return;
+
+            try {
+                // Fetch seller listings
+                const listingsResponse = await fetch(
+                    `http://localhost:5000/api/properties?sellerId=${user.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        },
+                    }
+                );
+                if (!listingsResponse.ok) throw new Error('Failed to fetch listings');
+                const listingsData = await listingsResponse.json();
+                setSellerListings(listingsData);
+
+                // Fetch market insights
+                const insightsResponse = await fetch(
+                    `http://localhost:5000/api/seller/metrics/${user.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        },
+                    }
+                );
+                if (!insightsResponse.ok) throw new Error('Failed to fetch insights');
+                const insightsData = await insightsResponse.json();
+                setMarketInsights(insightsData);
+
+                // No need to fetch activities since the endpoint doesn't exist
+                // We'll keep using the default welcome activity
+            } catch (error) {
+                console.error('Error fetching seller data:', error);
+                // Reset states on error
+                setSellerListings([]);
+                setMarketInsights({
+                    totalListings: 0,
+                    activeListings: 0,
+                    totalViews: 0,
+                    averagePrice: 0,
+                    priceTrend: 0,
+                    averageTimeToSale: 0,
+                    optimizationTips: [],
+                });
+                // Keep the default welcome activity
+            }
+        };
+
+        fetchData();
+    }, [user]);
+
+    // Add useEffect to fetch metrics data with error handling
+    useEffect(() => {
+        const fetchMetrics = async () => {
+            if (!user || !user.id) {
+                console.warn('No user data available');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch metrics');
+                }
+                const data = await response.json();
+                setMetrics(data);
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+            }
+        };
+
+        fetchMetrics();
+        // Set up polling to refresh metrics every 5 minutes
+        const intervalId = setInterval(fetchMetrics, 5 * 60 * 1000);
+
+        return () => clearInterval(intervalId);
+    }, [user]);
+
+    // Update performance metrics to use default data
     const performanceMetrics = [
         {
-        title: 'Total Views',
-        value: '811',
-        trend: '+12%',
-        isPositive: true
+            title: 'Total Views',
+            value: '0',
+            trend: '0%',
+            isPositive: true
         },
         {
-        title: 'Total Inquiries',
-        value: '38',
-        trend: '+5%',
-        isPositive: true
+            title: 'Total Inquiries',
+            value: '0',
+            trend: '0%',
+            isPositive: true
         },
         {
-        title: 'Avg. Time to Sale',
-        value: '52 days',
-        trend: '-8%',
-        isPositive: true
+            title: 'Average Time to Sale',
+            value: 'Not Available',
+            trend: '0%',
+            isPositive: true
         }
     ];
 
@@ -336,22 +342,20 @@ const SellerDashboard = () => {
         }));
     };
     
-    const handleEditPropertySubmit = (e) => {
+    const handleEditPropertySubmit = async (e) => {
         e.preventDefault();
-        
-        // Update listing in your state or make API call
-        const updatedListings = sellerListings.map(listing => 
-            listing.id === editProperty.id ? editProperty : listing
-        );
-        
-        // Update your state with the new listings
-        // setSellerListings(updatedListings);
-        
-        // Close the modal
-        setEditPropertyOpen(false);
-        
-        // Show success notification
-        alert('Property updated successfully!');
+        try {
+            const response = await api.put(`/api/properties/${editProperty.id}`, editProperty);
+            setSellerListings(prevListings => 
+                prevListings.map(listing => 
+                    listing.id === editProperty.id ? response.data : listing
+                )
+            );
+            setEditPropertyOpen(false);
+        } catch (error) {
+            console.error('Error updating listing:', error);
+            alert('Failed to update listing. Please try again.');
+        }
     };
 
     const handleEditProfile = () => {
@@ -363,7 +367,7 @@ const SellerDashboard = () => {
             username: user.username || '',
             password: '',
             confirmPassword: '',
-            avatar: user.avatar || ''
+            avatar: user.avatar || 'NA'
         });
         setEditProfileOpen(true);
     };
@@ -376,27 +380,202 @@ const SellerDashboard = () => {
         }));
     };
     
-    const handleProfileSubmit = (e) => {
+    const handleProfileSubmit = async (e) => {
         e.preventDefault();
-        
-        // Validate form
-        if (userProfile.password && userProfile.password !== userProfile.confirmPassword) {
-            alert("Passwords don't match!");
+        try {
+            const { firstName, lastName, email, phone, username, password, confirmPassword, currentPassword } = userProfile;
+            
+            // Handle password change if any password field is filled
+            if (password || confirmPassword || currentPassword) {
+                // Check if all password fields are filled
+                if (!currentPassword) {
+                    alert("Current password is required!");
+                    return;
+                }
+                if (!password) {
+                    alert("New password is required!");
+                    return;
+                }
+                if (!confirmPassword) {
+                    alert("Please confirm your new password!");
+                    return;
+                }
+
+                // Validate password length
+                if (password.length < 8) {
+                    alert("Password must be at least 8 characters long!");
+                    return;
+                }
+
+                // Validate password complexity
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasLowerCase = /[a-z]/.test(password);
+                const hasNumbers = /\d/.test(password);
+                const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+                if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+                    alert("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character!");
+                    return;
+                }
+
+                // Validate password match
+                if (password !== confirmPassword) {
+                    alert("New passwords don't match!");
+                    return;
+                }
+                
+                try {
+                    const response = await api.patch("/api/auth/password", {
+                        currentPassword,
+                        newPassword: password
+                    });
+
+                    if (response.data.success) {
+                        alert("Password updated successfully! You will be logged out for security.");
+                        // Log out the user after successful password change
+                        if (logout) {
+                            await logout();
+                            if (navigateTo) {
+                                navigateTo('login');
+                            }
+                        }
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Password update error:', error);
+                    alert("Failed to update password: " + (error.response?.data?.error || error.message));
+                    return;
+                }
+            }
+            
+            // Handle profile update
+            console.log('Submitting profile update with data:', { firstName, lastName, email, phone, username });
+            
+            const response = await api.patch("/api/auth/profile", {
+                firstName,
+                lastName,
+                email,
+                phone,
+                username
+            });
+            
+            console.log('Profile update response:', response.data);
+            
+            if (response.data && response.data.user) {
+                // Update the user in AuthContext
+                if (updateUser) {
+                    await updateUser(); // Use the new updateUser function
+                }
+                
+                // Update local state with the complete user data
+                setUserProfile(prev => ({
+                    ...prev,
+                    ...response.data.user,
+                    password: '', // Clear password fields
+                    confirmPassword: '',
+                    currentPassword: ''
+                }));
+                
+                setEditProfileOpen(false);
+                alert("Profile updated successfully!");
+            } else {
+                throw new Error('Invalid response format from server');
+            }
+        } catch (error) {
+            console.error('Profile update error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            alert("Failed to update profile: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.match(/^image\/(jpg|jpeg|png|gif)$/)) {
+            alert('Please select a valid image file (JPG, JPEG, PNG, or GIF)');
             return;
         }
-        
-        // Update user profile in your state or make API call
-        // setUser({...user, ...userProfile});
-        
-        // Close the modal
-        setEditProfileOpen(false);
-        
-        // Show success notification
-        alert('Profile updated successfully!');
+
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            const response = await api.post('/api/auth/profile/image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data && response.data.user) {
+                // Update the user in AuthContext
+                if (updateUser) {
+                    await updateUser(); // Use the new updateUser function
+                }
+
+                // Update local state with the complete user data
+                setUserProfile(prev => ({
+                    ...prev,
+                    ...response.data.user,
+                    password: '', // Clear password fields
+                    confirmPassword: '',
+                    currentPassword: ''
+                }));
+
+                alert('Profile image updated successfully!');
+            }
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            alert('Failed to upload profile image: ' + (error.response?.data?.error || error.message));
+        }
     };
 
     const handlePreviewListing = (listing) => {
-        setPreviewListing(listing);
+        // Record the view when a listing is previewed
+        recordPropertyView(listing.id);
+        
+        const previewData = {
+            ...listing,
+            images: listing.images || [listing.image || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'],
+            amenities: listing.amenities || [],
+            restrictions: listing.restrictions || [],
+            previousCrops: listing.previousCrops || [],
+            seller: {
+                name: `${user.firstName} ${user.lastName}`,
+                rating: 4.5,
+                listings: sellerListings.length,
+                memberSince: user.memberSince,
+                profileImage: user.avatar || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
+            },
+            // Add additional property details
+            size: `${listing.acres} hectares`,
+            type: 'Agricultural Land',
+            soilType: listing.soilType || 'Not specified',
+            zoning: listing.zoning || 'Agricultural',
+            waterSource: listing.waterRights || 'Not specified',
+            averageYield: listing.averageYield || 'Not specified',
+            topography: listing.topography || 'Not specified',
+            description: listing.description || 'No description available',
+            address: listing.location,
+            listedDate: listing.datePosted || new Date().toISOString(),
+            pricePerHectare: `₱${Math.round(listing.price / listing.acres).toLocaleString()}`,
+            status: listing.status || 'active',
+            viewCount: listing.viewCount || 0,
+            inquiries: listing.inquiries || 0
+        };
+        
+        setPreviewListing(previewData);
         setPreviewModalOpen(true);
     };
       
@@ -405,10 +584,15 @@ const SellerDashboard = () => {
     };
 
     // Function to handle delete listing
-    const handleDeleteListing = (listingId) => {
-        if (window.confirm('Are you sure you want to delete this listing?')) {
-        alert(`Listing ID ${listingId} would be deleted in a real application`);
-        // Add actual delete functionality here
+    const handleDeleteListing = async (listingId) => {
+        try {
+            await api.delete(`/api/properties/${listingId}`);
+            setSellerListings(prevListings => 
+                prevListings.filter(listing => listing.id !== listingId)
+            );
+        } catch (error) {
+            console.error('Error deleting listing:', error);
+            alert('Failed to delete listing. Please try again.');
         }
     };
 
@@ -419,8 +603,10 @@ const SellerDashboard = () => {
 
     // Function to handle logout
     const handleLogout = () => {
-        alert('Logout functionality will be implemented here');
-        // Add actual logout functionality here
+        logout();
+        if (navigateTo) {
+            navigateTo('home');
+        }
     };
 
     const handleOpenTool = (tool) => {
@@ -451,24 +637,176 @@ const SellerDashboard = () => {
     };
     
     // Handler for form submission
-    const handleNewPropertySubmit = (e) => {
+    const handleNewPropertySubmit = async (e) => {
         e.preventDefault();
-        
-        // In a real application, you would send this data to your backend
-        alert(`New property "${newProperty.title}" would be added to your listings in a real application.`);
-        
-        // Close the modal and reset the form
-        setAddNewOpen(false);
-        setNewProperty({
-            title: '',
-            location: '',
-            price: '',
-            acres: '',
-            waterRights: '',
-            suitableCrops: '',
-            image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
-        });
+        try {
+            // Check if user is authenticated
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('You must be logged in to create a listing');
+                return;
+            }
+
+            // Format the data according to the model requirements
+            const formattedData = {
+                ...newProperty,
+                id: `PROP-${Date.now()}`, // Generate a unique ID
+                sellerId: user.id, // Add the seller's ID
+                price: parseFloat(newProperty.price.replace(/[^0-9.]/g, '')), // Convert price to number
+                acres: parseFloat(newProperty.acres), // Convert acres to number
+                status: 'active', // Set default status
+                viewCount: 0,
+                inquiries: 0,
+                image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef' // Add default image
+            };
+
+            console.log('Sending property data:', formattedData);
+            console.log('Auth token:', token);
+
+            const response = await api.post('/api/properties', formattedData);
+            console.log('Server response:', response.data);
+            
+            setSellerListings(prevListings => [...prevListings, response.data]);
+            setAddNewOpen(false);
+            setNewProperty({
+                title: '',
+                location: '',
+                price: '',
+                acres: '',
+                waterRights: '',
+                suitableCrops: '',
+                image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
+            });
+        } catch (error) {
+            console.error('Error creating new listing:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            alert('Failed to create new listing. Please try again.');
+        }
     };
+
+    // Function to record a property view with error handling
+    const recordPropertyView = async (listingId) => {
+        try {
+            if (user && user.id) {
+                await fetch(`http://localhost:5000/api/seller/metrics/${user.id}/view`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                // Refresh metrics after recording view
+                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setMetrics(data);
+                }
+            }
+        } catch (error) {
+            console.error('Error recording property view:', error);
+        }
+    };
+
+    // Function to record a property inquiry with error handling
+    const recordPropertyInquiry = async (listingId) => {
+        try {
+            if (user && user.id) {
+                await fetch(`http://localhost:5000/api/seller/metrics/${user.id}/inquiry`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                // Refresh metrics after recording inquiry
+                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setMetrics(data);
+                }
+            }
+        } catch (error) {
+            console.error('Error recording property inquiry:', error);
+        }
+    };
+
+    // Function to record a property sale
+    const recordPropertySale = async (listingId, daysToSale) => {
+        try {
+            if (user && user.id) {
+                await fetch(`http://localhost:5000/api/seller/metrics/${user.id}/sale`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ daysToSale })
+                });
+                // Refresh metrics after recording sale
+                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setMetrics(data);
+                }
+            }
+        } catch (error) {
+            console.error('Error recording property sale:', error);
+        }
+    };
+
+    // Add these handlers for image navigation
+    const handlePrevImage = () => {
+        setActiveImageIndex(prev => (prev > 0 ? prev - 1 : previewListing.images.length - 1));
+    };
+
+    const handleNextImage = () => {
+        setActiveImageIndex(prev => (prev < previewListing.images.length - 1 ? prev + 1 : 0));
+    };
+
+    const handleThumbnailClick = (index) => {
+        setActiveImageIndex(index);
+    };
+
+    // Add handlers for preview actions
+    const handleContact = () => {
+        if (previewListing) {
+            // Record the inquiry when a user contacts the seller
+            recordPropertyInquiry(previewListing.id);
+            // TODO: Implement actual contact functionality
+            alert('Contact form will be implemented here');
+        }
+    };
+
+    const handleShare = () => {
+        // Implement share functionality
+        alert('Share functionality would open here');
+    };
+
+    const handleSave = () => {
+        // Implement save functionality
+        alert('Property saved to favorites');
+    };
+
+    if (loading) {
+        return <div style={{ color: '#2C3E50', textAlign: 'center', marginTop: '40px' }}>Loading seller profile...</div>;
+    }
+    if (!user) {
+        return <div style={{ color: '#e74c3c', textAlign: 'center', marginTop: '40px' }}>No seller profile found. Please log in.</div>;
+    }
 
     return (
         <DashboardStyles.DashboardContainer>
@@ -494,17 +832,16 @@ const SellerDashboard = () => {
                     <DashboardStyles.SectionTitle>
                         <FaChartBar size={20} style={{ marginRight: 8 }} /> Performance Metrics
                     </DashboardStyles.SectionTitle>
-                    {/* MOVED: Performance Metrics Section - NOW AT THE TOP */}
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                         {performanceMetrics.map((metric, index) => (
-                        <DashboardStyles.StatCard key={index}>
-                            <DashboardStyles.StatCardTitle>{metric.title}</DashboardStyles.StatCardTitle>
-                            <DashboardStyles.StatCardValue>{metric.value}</DashboardStyles.StatCardValue>
-                            <DashboardStyles.StatCardTrend isPositive={metric.isPositive}>
-                            {metric.isPositive ? <FaArrowUp size={12} /> : <FaArrowDown size={12} />} {metric.trend}
-                            </DashboardStyles.StatCardTrend>
-                        </DashboardStyles.StatCard>
+                            <DashboardStyles.StatCard key={index}>
+                                <DashboardStyles.StatCardTitle>{metric.title}</DashboardStyles.StatCardTitle>
+                                <DashboardStyles.StatCardValue>{metric.value}</DashboardStyles.StatCardValue>
+                                <DashboardStyles.StatCardTrend $isPositive={metric.isPositive}>
+                                    {metric.isPositive ? <FaArrowUp size={12} /> : <FaArrowDown size={12} />} {metric.trend}
+                                </DashboardStyles.StatCardTrend>
+                            </DashboardStyles.StatCard>
                         ))}
                     </div>
                 </div>
@@ -524,16 +861,16 @@ const SellerDashboard = () => {
                         </div>
                         
                         <DashboardStyles.TabsContainer>
-                            <DashboardStyles.Tab active={activeTab === 'listings'} onClick={() => setActiveTab('listings')}>
+                            <DashboardStyles.Tab $active={activeTab === 'listings'} onClick={() => setActiveTab('listings')}>
                             All Listings ({sellerListings.length})
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'active'} onClick={() => setActiveTab('active')}>
+                            <DashboardStyles.Tab $active={activeTab === 'active'} onClick={() => setActiveTab('active')}>
                             Active ({sellerListings.filter(l => l.status === 'active').length})
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>
+                            <DashboardStyles.Tab $active={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>
                             Pending ({sellerListings.filter(l => l.status === 'pending').length})
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'sold'} onClick={() => setActiveTab('sold')}>
+                            <DashboardStyles.Tab $active={activeTab === 'sold'} onClick={() => setActiveTab('sold')}>
                             Sold ({sellerListings.filter(l => l.status === 'sold').length})
                             </DashboardStyles.Tab>
                         </DashboardStyles.TabsContainer>
@@ -566,7 +903,7 @@ const SellerDashboard = () => {
                                 <DashboardStyles.PropertyLocation>
                                 <FaMapMarkerAlt size={12} /> {listing.location}
                                 </DashboardStyles.PropertyLocation>
-                                <DashboardStyles.PropertyPrice>{listing.price}</DashboardStyles.PropertyPrice>
+                                <DashboardStyles.PropertyPrice>{formatPrice(listing.price)}</DashboardStyles.PropertyPrice>
                                 
                                 <DashboardStyles.PropertySpecs>
                                 <DashboardStyles.PropertySpec>
@@ -592,21 +929,21 @@ const SellerDashboard = () => {
                                 }}>
                                 <span><FaEye size={12} style={{ marginRight: '4px' }} /> {listing.viewCount} views</span>
                                 <span><FaExclamationTriangle size={12} style={{ marginRight: '4px' }} /> {listing.inquiries} inquiries</span>
-                                <span><FaRegClock size={12} style={{ marginRight: '4px' }} /> Listed: {listing.datePosted}</span>
+                                <span><FaRegClock size={12} style={{ marginRight: '4px' }} /> Listed: {formatDate(listing.datePosted || listing.listedDate)}</span>
                                 </div>
                                 
                                 <DashboardStyles.PropertyActions>
                                     <div style={{ display: 'flex', gap: '10px' }}>
-                                        <DashboardStyles.ActionButton small onClick={() => handleEditListing(listing)} style={{ backgroundColor: "#3498db" }}>
+                                        <DashboardStyles.ActionButton $small onClick={() => handleEditListing(listing)} style={{ backgroundColor: "#3498db" }}>
                                         <FaEdit size={12} style={{ marginRight: '4px' }} /> Edit
                                         </DashboardStyles.ActionButton>
                                         {listing.status !== 'sold' && (
-                                        <DashboardStyles.ActionButton small onClick={() => handleDeleteListing(listing.id)} style={{ backgroundColor: "#e74c3c" }}>
+                                        <DashboardStyles.ActionButton $small onClick={() => handleDeleteListing(listing.id)} style={{ backgroundColor: "#e74c3c" }}>
                                             <FaTrash size={12} style={{ marginRight: '4px' }} /> Delete
                                         </DashboardStyles.ActionButton>
                                         )}
                                     </div>
-                                    <DashboardStyles.ActionButton small onClick={() => handlePreviewListing(listing)} style={{ backgroundColor: "#2ecc71" }}>
+                                    <DashboardStyles.ActionButton $small onClick={() => handlePreviewListing(listing)} style={{ backgroundColor: "#2ecc71" }}>
                                         <FaEye size={12} style={{ marginRight: '4px' }} /> Preview
                                     </DashboardStyles.ActionButton>
                                 </DashboardStyles.PropertyActions>
@@ -617,14 +954,21 @@ const SellerDashboard = () => {
                         
                         {/* Market Insights Section */}
                         <DashboardStyles.MarketInsightsSection>
-                        <DashboardStyles.InsightsTitle>Agricultural Market Insights for Sellers</DashboardStyles.InsightsTitle>
-                        
-                        {marketInsights.map(insight => (
-                            <DashboardStyles.InsightCard key={insight.id} accentColor={insight.accentColor}>
-                            <DashboardStyles.InsightTitle>{insight.title}</DashboardStyles.InsightTitle>
-                            <DashboardStyles.InsightText>{insight.text}</DashboardStyles.InsightText>
-                            </DashboardStyles.InsightCard>
-                        ))}
+                            <DashboardStyles.InsightsTitle>Agricultural Market Insights for Sellers</DashboardStyles.InsightsTitle>
+                            
+                            {marketInsights?.optimizationTips?.length > 0 ? (
+                                marketInsights.optimizationTips.map((tip, index) => (
+                                    <DashboardStyles.InsightCard key={index} $accentColor="#3498db">
+                                        <DashboardStyles.InsightTitle>{tip.title}</DashboardStyles.InsightTitle>
+                                        <DashboardStyles.InsightText>{tip.text}</DashboardStyles.InsightText>
+                                    </DashboardStyles.InsightCard>
+                                ))
+                            ) : (
+                                <DashboardStyles.InsightCard $accentColor="#3498db">
+                                    <DashboardStyles.InsightTitle>Welcome to SmartLand</DashboardStyles.InsightTitle>
+                                    <DashboardStyles.InsightText>Start by adding your first property listing to receive personalized market insights and recommendations.</DashboardStyles.InsightText>
+                                </DashboardStyles.InsightCard>
+                            )}
                         </DashboardStyles.MarketInsightsSection>
                     </div>
             
@@ -634,7 +978,27 @@ const SellerDashboard = () => {
                         <DashboardStyles.ProfileSection>
                         <DashboardStyles.ProfileHeader>
                             <DashboardStyles.ProfileAvatarLarge>
-                            {user.avatar}
+                                {user.avatar && user.avatar !== 'NA' ? (
+                                    <img
+                                        src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                                        alt="Profile"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                    />
+                                ) : (
+                                    <div style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#f0f0f0',
+                                        borderRadius: '50%',
+                                        fontSize: '32px',
+                                        color: '#666'
+                                    }}>
+                                        {user.firstName?.[0]}{user.lastName?.[0]}
+                                    </div>
+                                )}
                             </DashboardStyles.ProfileAvatarLarge>
                             <DashboardStyles.ProfileName>
                             {user.firstName} {user.lastName}
@@ -646,10 +1010,10 @@ const SellerDashboard = () => {
                             <DashboardStyles.ProfileDetailItem>
                                 <DashboardStyles.ProfileDetailLabel>Account ID</DashboardStyles.ProfileDetailLabel>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <DashboardStyles.ProfileDetailValue>{user.accountId}</DashboardStyles.ProfileDetailValue>
+                                    <DashboardStyles.ProfileDetailValue>{user.id}</DashboardStyles.ProfileDetailValue>
                                     <SellerDashboardStyles.CopyButton 
                                         onClick={() => {
-                                            navigator.clipboard.writeText(user.accountId);
+                                            navigator.clipboard.writeText(user.id);
                                             alert('Account ID copied to clipboard!');
                                         }}
                                         title="Copy Account ID"
@@ -679,7 +1043,7 @@ const SellerDashboard = () => {
                             
                             <DashboardStyles.ProfileDetailItem>
                             <DashboardStyles.ProfileDetailLabel>Listing Count</DashboardStyles.ProfileDetailLabel>
-                            <DashboardStyles.ProfileDetailValue>{user.listingCount}</DashboardStyles.ProfileDetailValue>
+                            <DashboardStyles.ProfileDetailValue>{sellerListings.length}</DashboardStyles.ProfileDetailValue>
                             </DashboardStyles.ProfileDetailItem>
                         </DashboardStyles.ProfileDetails>
                         
@@ -687,7 +1051,7 @@ const SellerDashboard = () => {
                             <DashboardStyles.ProfileButton onClick={handleEditProfile}>
                             <FaUser size={14} /> Edit Profile
                             </DashboardStyles.ProfileButton>
-                            <DashboardStyles.ProfileButton primary onClick={handleLogout}>
+                            <DashboardStyles.ProfileButton $primary onClick={handleLogout}>
                             <FaSignOutAlt size={14} /> Logout
                             </DashboardStyles.ProfileButton>
                         </DashboardStyles.ProfileActions>
@@ -804,25 +1168,25 @@ const SellerDashboard = () => {
                         
                         {/* Recent Activity Section */}
                         <DashboardStyles.RecentActivitySection>
-                        <DashboardStyles.RecentActivityTitle>Recent Activity</DashboardStyles.RecentActivityTitle>
-                        
-                        <DashboardStyles.ActivityList>
-                            {recentActivities.map(activity => (
-                            <DashboardStyles.ActivityItem key={activity.id}>
-                                <DashboardStyles.ActivityIcon 
-                                bgColor={activity.bgColor}
-                                iconColor={activity.iconColor}
-                                >
-                                {activity.icon}
-                                </DashboardStyles.ActivityIcon>
-                                
-                                <DashboardStyles.ActivityContent>
-                                <DashboardStyles.ActivityTitle>{activity.title}</DashboardStyles.ActivityTitle>
-                                <DashboardStyles.ActivityTime>{activity.time}</DashboardStyles.ActivityTime>
-                                </DashboardStyles.ActivityContent>
-                            </DashboardStyles.ActivityItem>
-                            ))}
-                        </DashboardStyles.ActivityList>
+                            <DashboardStyles.RecentActivityTitle>Recent Activity</DashboardStyles.RecentActivityTitle>
+                            
+                            <DashboardStyles.ActivityList>
+                                {recentActivities.map(activity => (
+                                    <DashboardStyles.ActivityItem key={activity.id}>
+                                        <DashboardStyles.ActivityIcon 
+                                            $bgColor={activity.$bgColor}
+                                            $iconColor={activity.$iconColor}
+                                        >
+                                            {iconMap[activity.icon] || null}
+                                        </DashboardStyles.ActivityIcon>
+                                        
+                                        <DashboardStyles.ActivityContent>
+                                            <DashboardStyles.ActivityTitle>{activity.title}</DashboardStyles.ActivityTitle>
+                                            <DashboardStyles.ActivityTime>{activity.time}</DashboardStyles.ActivityTime>
+                                        </DashboardStyles.ActivityContent>
+                                    </DashboardStyles.ActivityItem>
+                                ))}
+                            </DashboardStyles.ActivityList>
                         </DashboardStyles.RecentActivitySection>
                     </div>
                 </DashboardStyles.GridContainer>
@@ -914,8 +1278,8 @@ const SellerDashboard = () => {
                                     <SellerDashboardStyles.FormLabel>Suitable Crops*</SellerDashboardStyles.FormLabel>
                                     <CropSelector
                                         name="suitableCrops"
-                                        value={editProperty.suitableCrops}
-                                        onChange={handleEditPropertyChange}
+                                        value={newProperty.suitableCrops}
+                                        onChange={handleNewPropertyChange}
                                         required
                                     />
                                 </SellerDashboardStyles.FormGroup>
@@ -1077,13 +1441,13 @@ const SellerDashboard = () => {
                             
                             <SellerDashboardStyles.ProfileTabsContainer>
                                 <SellerDashboardStyles.ProfileTab 
-                                    active={activeProfileTab === 'personal'} 
+                                    $active={activeProfileTab === 'personal'} 
                                     onClick={() => setActiveProfileTab('personal')}
                                 >
                                     Personal Info
                                 </SellerDashboardStyles.ProfileTab>
                                 <SellerDashboardStyles.ProfileTab 
-                                    active={activeProfileTab === 'security'} 
+                                    $active={activeProfileTab === 'security'} 
                                     onClick={() => setActiveProfileTab('security')}
                                 >
                                     Security
@@ -1091,21 +1455,38 @@ const SellerDashboard = () => {
                             </SellerDashboardStyles.ProfileTabsContainer>
                             
                             <form onSubmit={handleProfileSubmit}>
-                                <SellerDashboardStyles.ProfileTabContent active={activeProfileTab === 'personal'}>
+                                <SellerDashboardStyles.ProfileTabContent $active={activeProfileTab === 'personal'}>
                                     <SellerDashboardStyles.AvatarUploadSection>
                                         <SellerDashboardStyles.AvatarPreview>
-                                            {userProfile.avatar}
+                                            {userProfile.avatar ? (
+                                                <img 
+                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `http://localhost:5000${userProfile.avatar}`} 
+                                                    alt="Profile" 
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                                />
+                                            ) : (
+                                                <div style={{ 
+                                                    width: '100%', 
+                                                    height: '100%', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    backgroundColor: '#f0f0f0',
+                                                    borderRadius: '50%',
+                                                    fontSize: '24px',
+                                                    color: '#666'
+                                                }}>
+                                                    {userProfile.firstName?.[0]}{userProfile.lastName?.[0]}
+                                                </div>
+                                            )}
                                         </SellerDashboardStyles.AvatarPreview>
                                         <SellerDashboardStyles.AvatarUploadButton>
                                             <FaCamera size={14} /> Change Photo
                                             <input 
                                                 type="file" 
                                                 accept="image/*" 
-                                                onChange={(e) => {
-                                                    // Handle file upload logic here
-                                                    console.log(e.target.files[0]);
-                                                    // You'd typically upload to a server and get back a URL
-                                                }} 
+                                                onChange={handleAvatarUpload}
+                                                style={{ display: 'none' }}
                                             />
                                         </SellerDashboardStyles.AvatarUploadButton>
                                     </SellerDashboardStyles.AvatarUploadSection>
@@ -1168,12 +1549,14 @@ const SellerDashboard = () => {
                                     </SellerDashboardStyles.FormGroup>
                                 </SellerDashboardStyles.ProfileTabContent>
                                 
-                                <SellerDashboardStyles.ProfileTabContent active={activeProfileTab === 'security'}>
+                                <SellerDashboardStyles.ProfileTabContent $active={activeProfileTab === 'security'}>
                                     <SellerDashboardStyles.FormGroup>
                                         <SellerDashboardStyles.FormLabel>Current Password</SellerDashboardStyles.FormLabel>
                                         <SellerDashboardStyles.FormInput
                                             type="password"
                                             name="currentPassword"
+                                            value={userProfile.currentPassword || ''}
+                                            onChange={handleProfileChange}
                                             placeholder="Enter your current password"
                                         />
                                     </SellerDashboardStyles.FormGroup>
@@ -1183,7 +1566,7 @@ const SellerDashboard = () => {
                                         <SellerDashboardStyles.FormInput
                                             type="password"
                                             name="password"
-                                            value={userProfile.password}
+                                            value={userProfile.password || ''}
                                             onChange={handleProfileChange}
                                             placeholder="Enter new password"
                                         />
@@ -1194,7 +1577,7 @@ const SellerDashboard = () => {
                                         <SellerDashboardStyles.FormInput
                                             type="password"
                                             name="confirmPassword"
-                                            value={userProfile.confirmPassword}
+                                            value={userProfile.confirmPassword || ''}
                                             onChange={handleProfileChange}
                                             placeholder="Confirm new password"
                                         />
@@ -1232,188 +1615,15 @@ const SellerDashboard = () => {
                             ×
                             </SellerDashboardStyles.ModalCloseButton>
                         </SellerDashboardStyles.ModalHeader>
-                        
-                        {activeToolModal === 'priceCalculator' && (
-                            <SellerDashboardStyles.ToolContainer>
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Location</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormSelect>
-                                <option>Select province</option>
-                                <option>Nueva Ecija</option>
-                                <option>Bulacan</option>
-                                <option>Isabela</option>
-                                <option>Pangasinan</option>
-                                <option>Iloilo</option>
-                                </SellerDashboardStyles.FormSelect>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.FormRow>
-                                <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Land Size (Hectares)</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormInput type="number" min="0.1" step="0.1" defaultValue="1.0" />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Water Source</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormSelect>
-                                    <option>Select water source</option>
-                                    <option>NIA Irrigation</option>
-                                    <option>Deep Well</option>
-                                    <option>Creek Access</option>
-                                    <option>Rain-fed Only</option>
-                                </SellerDashboardStyles.FormSelect>
-                                </SellerDashboardStyles.FormGroup>
-                            </SellerDashboardStyles.FormRow>
-                            
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Property Quality</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.RangeSlider type="range" min="1" max="5" defaultValue="3" />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                                <small>Basic</small>
-                                <small>Average</small>
-                                <small>Premium</small>
-                                </div>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Land Classification</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.CheckboxGroup>
-                                <SellerDashboardStyles.Checkbox>
-                                    <input type="checkbox" id="irrigated" defaultChecked />
-                                    <label htmlFor="irrigated">Irrigated Agricultural</label>
-                                </SellerDashboardStyles.Checkbox>
-                                <SellerDashboardStyles.Checkbox>
-                                    <input type="checkbox" id="nonirrigated" />
-                                    <label htmlFor="nonirrigated">Non-Irrigated Agricultural</label>
-                                </SellerDashboardStyles.Checkbox>
-                                <SellerDashboardStyles.Checkbox>
-                                    <input type="checkbox" id="commercial" />
-                                    <label htmlFor="commercial">Commercial Potential</label>
-                                </SellerDashboardStyles.Checkbox>
-                                </SellerDashboardStyles.CheckboxGroup>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.ToolResultBox>
-                                <div style={{ marginBottom: '12px' }}>
-                                <p style={{ fontSize: '14px', color: '#dddddd', margin: '0 0 8px 0' }}>Estimated price range based on current market conditions:</p>
-                                <SellerDashboardStyles.ToolCardValue large bold color="#2980b9">₱850,000 - ₱950,000 per hectare</SellerDashboardStyles.ToolCardValue>
-                                </div>
-                                <p style={{ fontSize: '13px', color: '#dddddd', margin: '0' }}>
-                                This estimate is based on recent sales data for similar properties in your selected region. Adjust the parameters above to refine the estimate.
-                                </p>
-                            </SellerDashboardStyles.ToolResultBox>
-                            
-                            <SellerDashboardStyles.FormActions>
-                                <SellerDashboardStyles.FormCancelButton onClick={() => setToolModalOpen(false)}>
-                                Close
-                                </SellerDashboardStyles.FormCancelButton>
-                                <SellerDashboardStyles.FormSubmitButton>
-                                Save Estimate
-                                </SellerDashboardStyles.FormSubmitButton>
-                            </SellerDashboardStyles.FormActions>
-                            </SellerDashboardStyles.ToolContainer>
-                        )}
-                        
-                        {activeToolModal === 'marketAnalysis' && (
-                            <SellerDashboardStyles.ToolContainer>
-                            <SellerDashboardStyles.FormGroup>
-                                <SellerDashboardStyles.FormLabel>Select Region</SellerDashboardStyles.FormLabel>
-                                <SellerDashboardStyles.FormSelect>
-                                <option>All Philippines</option>
-                                <option>Luzon</option>
-                                <option>Visayas</option>
-                                <option>Mindanao</option>
-                                </SellerDashboardStyles.FormSelect>
-                            </SellerDashboardStyles.FormGroup>
-                            
-                            <SellerDashboardStyles.ToolGrid>
-                                <SellerDashboardStyles.ToolCard>
-                                <SellerDashboardStyles.ToolCardTitle>Avg. Price per Hectare</SellerDashboardStyles.ToolCardTitle>
-                                <SellerDashboardStyles.ToolCardValue large>₱875,000</SellerDashboardStyles.ToolCardValue>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}><FaArrowUp style={{ color: '#2ecc71' }} /> 3.5% vs last quarter</div>
-                                </SellerDashboardStyles.ToolCard>
-                                
-                                <SellerDashboardStyles.ToolCard>
-                                <SellerDashboardStyles.ToolCardTitle>Avg. Time to Sell</SellerDashboardStyles.ToolCardTitle>
-                                <SellerDashboardStyles.ToolCardValue large>72 days</SellerDashboardStyles.ToolCardValue>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}><FaArrowDown style={{ color: '#2ecc71' }} /> 5 days vs last quarter</div>
-                                </SellerDashboardStyles.ToolCard>
-                                
-                                <SellerDashboardStyles.ToolCard>
-                                <SellerDashboardStyles.ToolCardTitle>Active Listings</SellerDashboardStyles.ToolCardTitle>
-                                <SellerDashboardStyles.ToolCardValue large>543</SellerDashboardStyles.ToolCardValue>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}><FaArrowUp style={{ color: '#e74c3c' }} /> 12% vs last quarter</div>
-                                </SellerDashboardStyles.ToolCard>
-                            </SellerDashboardStyles.ToolGrid>
-                            
-                            <SellerDashboardStyles.ToolSection>
-                                <SellerDashboardStyles.ToolSectionTitle>Market Trends</SellerDashboardStyles.ToolSectionTitle>
-                                <div style={{ 
-                                height: '200px', 
-                                background: 'rgba(52, 152, 219, 0.1)', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                borderRadius: '8px',
-                                marginBottom: '16px'
-                                }}>
-                                <p>Market Trend Chart Would Appear Here</p>
-                                </div>
-                                <p style={{ fontSize: '14px', color: '#34495E', margin: '0' }}>
-                                Current trends show increasing demand for agricultural properties with reliable irrigation systems, particularly in rice-growing regions.
-                                </p>
-                            </SellerDashboardStyles.ToolSection>
-                            
-                            <SellerDashboardStyles.ToolSection>
-                                <SellerDashboardStyles.ToolSectionTitle>Comparable Properties</SellerDashboardStyles.ToolSectionTitle>
-                                <div style={{ fontSize: '14px', color: '#dddddd' }}>
-                                <div style={{ 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    background: 'rgba(52, 152, 219, 0.05)',
-                                    marginBottom: '8px'
-                                }}>
-                                    <div style={{ fontWeight: '600' }}>7.2 ha Rice Farm in Nueva Ecija</div>
-                                    <div>₱6,480,000 (₱900,000/ha) • Sold 45 days ago</div>
-                                </div>
-                                <div style={{ 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    background: 'rgba(52, 152, 219, 0.05)',
-                                    marginBottom: '8px'
-                                }}>
-                                    <div style={{ fontWeight: '600' }}>4.5 ha Agricultural Land in Bulacan</div>
-                                    <div>₱3,825,000 (₱850,000/ha) • Sold 27 days ago</div>
-                                </div>
-                                <div style={{ 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    background: 'rgba(52, 152, 219, 0.05)'
-                                }}>
-                                    <div style={{ fontWeight: '600' }}>3.8 ha Farm in Tarlac</div>
-                                    <div>₱3,230,000 (₱850,000/ha) • Sold 62 days ago</div>
-                                </div>
-                                </div>
-                            </SellerDashboardStyles.ToolSection>
-                            
-                            <SellerDashboardStyles.FormActions>
-                                <SellerDashboardStyles.FormCancelButton onClick={() => setToolModalOpen(false)}>
-                                Close
-                                </SellerDashboardStyles.FormCancelButton>
-                                <SellerDashboardStyles.FormSubmitButton>
-                                Download Report
-                                </SellerDashboardStyles.FormSubmitButton>
-                            </SellerDashboardStyles.FormActions>
-                            </SellerDashboardStyles.ToolContainer>
-                        )}
-                        
+                        {activeToolModal === 'priceCalculator' && <PriceCalculatorTool />}
+                        {activeToolModal === 'marketAnalysis' && <MarketAnalysisTool />}
                         {activeToolModal === 'listingEnhancement' && (
                             <SellerDashboardStyles.ToolContainer>
                             <p style={{ fontSize: '15px', color: '#34495E', lineHeight: '1.5' }}>
                                 Use these expert tips to optimize your listings and attract more potential buyers.
                             </p>
                             
-                            <SellerDashboardStyles.TipCard accentColor="#3498db">
+                            <SellerDashboardStyles.TipCard $accentColor="#3498db">
                                 <SellerDashboardStyles.TipTitle>
                                 <FaCamera /> Quality Photography
                                 </SellerDashboardStyles.TipTitle>
@@ -1429,7 +1639,7 @@ const SellerDashboard = () => {
                                 </SellerDashboardStyles.TipText>
                             </SellerDashboardStyles.TipCard>
                             
-                            <SellerDashboardStyles.TipCard accentColor="#2ecc71" bgColor="rgba(46, 204, 113, 0.1)">
+                            <SellerDashboardStyles.TipCard $accentColor="#2ecc71" $bgColor="rgba(46, 204, 113, 0.1)">
                                 <SellerDashboardStyles.TipTitle>
                                 <FaFileAlt /> Detailed Descriptions
                                 </SellerDashboardStyles.TipTitle>
@@ -1445,7 +1655,7 @@ const SellerDashboard = () => {
                                 </SellerDashboardStyles.TipText>
                             </SellerDashboardStyles.TipCard>
                             
-                            <SellerDashboardStyles.TipCard accentColor="#f39c12" bgColor="rgba(243, 156, 18, 0.1)">
+                            <SellerDashboardStyles.TipCard $accentColor="#f39c12" $bgColor="rgba(243, 156, 18, 0.1)">
                                 <SellerDashboardStyles.TipTitle>
                                 <FaTags /> Strategic Pricing
                                 </SellerDashboardStyles.TipTitle>
@@ -1460,7 +1670,7 @@ const SellerDashboard = () => {
                                 </SellerDashboardStyles.TipText>
                             </SellerDashboardStyles.TipCard>
                             
-                            <SellerDashboardStyles.TipCard accentColor="#9b59b6" bgColor="rgba(155, 89, 182, 0.1)">
+                            <SellerDashboardStyles.TipCard $accentColor="#9b59b6" $bgColor="rgba(155, 89, 182, 0.1)">
                                 <SellerDashboardStyles.TipTitle>
                                 <FaRegClock /> Response Time
                                 </SellerDashboardStyles.TipTitle>
@@ -1490,197 +1700,164 @@ const SellerDashboard = () => {
                 )}
 
                 {previewModalOpen && previewListing && (
-                    <ListingStyles.ModalOverlay>
-                        <ListingStyles.ModalContent style={{ width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflow: 'auto' }}>
-                        <ListingStyles.ModalHeader>
-                            <ListingStyles.ModalTitle>Listing Preview</ListingStyles.ModalTitle>
-                            <ListingStyles.CloseButton onClick={closePreviewModal}>×</ListingStyles.CloseButton>
-                        </ListingStyles.ModalHeader>
-                        <div style={{ padding: '20px' }}>
-                            <ListingStyles.ListingContainer>
-                                <ListingStyles.BreadcrumbNav>
-                                    <ListingStyles.BreadcrumbLink href="/">Home</ListingStyles.BreadcrumbLink> &gt; 
-                                    <ListingStyles.BreadcrumbLink href="/listings"> Agricultural Lots</ListingStyles.BreadcrumbLink> &gt; 
-                                    <ListingStyles.BreadcrumbCurrent> {listing.title}</ListingStyles.BreadcrumbCurrent>
-                                </ListingStyles.BreadcrumbNav>
-                                
-                                <ListingStyles.ListingHeader>
-                                    <ListingStyles.TitleSection>
-                                        <ListingStyles.ListingTitle>{listing.title}</ListingStyles.ListingTitle>
-                                        <ListingStyles.ListingLocation>{listing.address}</ListingStyles.ListingLocation>
-                                    </ListingStyles.TitleSection>
-                                    <ListingStyles.PriceSection>
-                                        <ListingStyles.ListingPrice>₱{previewListing.price.toLocaleString()}</ListingStyles.ListingPrice>
-                                        <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
-                                    </ListingStyles.PriceSection>
-                                </ListingStyles.ListingHeader>
-                                
-                                <ListingStyles.ContentGrid>
-                                <ListingStyles.MainContent>
-                                    <ListingStyles.ImageGallery>
-                                    <ListingStyles.MainImage src={previewListing.images[activeImageIndex]} alt={`Image ${activeImageIndex + 1} of agricultural property`} />
-                                    <ListingStyles.GalleryControls>
-                                        <ListingStyles.GalleryLeftButton onClick={handlePrevImage}>&lt;</ListingStyles.GalleryLeftButton>
-                                        <ListingStyles.GalleryRightButton onClick={handleNextImage}>&gt;</ListingStyles.GalleryRightButton>
-                                    </ListingStyles.GalleryControls>
-                                    <ListingStyles.ImageThumbnails>
-                                        {previewListing.images.map((img, index) => (
-                                        <ListingStyles.ThumbnailWrapper key={index} active={index === activeImageIndex}>
-                                            <ListingStyles.Thumbnail 
-                                            src={img} 
-                                            alt={`Thumbnail ${index + 1}`} 
+                    <PreviewModalStyles.PreviewModal>
+                        <PreviewModalStyles.PreviewContent>
+                            <PreviewModalStyles.CloseButton onClick={closePreviewModal}>
+                                <FaTimes size={20} />
+                            </PreviewModalStyles.CloseButton>
+                            
+                            <PreviewModalStyles.ImageGallery>
+                                <PreviewModalStyles.MainImage src={previewListing.images[activeImageIndex]} alt={previewListing.title} />
+                                <PreviewModalStyles.ImageNavigation>
+                                    <PreviewModalStyles.NavButton onClick={handlePrevImage}>
+                                        <FaChevronLeft size={20} />
+                                    </PreviewModalStyles.NavButton>
+                                    <PreviewModalStyles.NavButton onClick={handleNextImage}>
+                                        <FaChevronRight size={20} />
+                                    </PreviewModalStyles.NavButton>
+                                </PreviewModalStyles.ImageNavigation>
+                                <PreviewModalStyles.ThumbnailsContainer>
+                                    {previewListing.images.map((image, index) => (
+                                        <PreviewModalStyles.Thumbnail
+                                            key={index}
+                                            src={image}
+                                            alt={`${previewListing.title} - Image ${index + 1}`}
+                                            active={index === activeImageIndex}
                                             onClick={() => handleThumbnailClick(index)}
                                             />
-                                        </ListingStyles.ThumbnailWrapper>
-                                        ))}
-                                    </ListingStyles.ImageThumbnails>
-                                    </ListingStyles.ImageGallery>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Overview</ListingStyles.SectionTitle>
-                                    <ListingStyles.PropertySpecs>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Size</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.size}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Type</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.type}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Soil Type</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.soilType}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Zoning</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.zoning}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>
-                                            {new Date(listing.listedDate).toLocaleDateString()}
-                                        </ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Water Source</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.waterSource}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                    </ListingStyles.PropertySpecs>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Description</ListingStyles.SectionTitle>
-                                    <ListingStyles.Description>{previewListing.description}</ListingStyles.Description>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Farm Details</ListingStyles.SectionTitle>
-                                    <ListingStyles.PropertySpecs>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Previous Crops</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.previousCrops.join(', ')}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Average Yield</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.averageYield}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Topography</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.topography}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                    </ListingStyles.PropertySpecs>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Amenities</ListingStyles.SectionTitle>
-                                    <ListingStyles.AmenitiesList>
-                                        {previewListing.amenities.map((amenity, index) => (
-                                        <ListingStyles.AmenityItem key={index}>{amenity}</ListingStyles.AmenityItem>
-                                        ))}
-                                    </ListingStyles.AmenitiesList>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Restrictions</ListingStyles.SectionTitle>
-                                    <ListingStyles.RestrictionsList>
-                                        {previewListing.restrictions.map((restriction, index) => (
-                                        <ListingStyles.RestrictionItem key={index}>{restriction}</ListingStyles.RestrictionItem>
-                                        ))}
-                                    </ListingStyles.RestrictionsList>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
-                                    <ListingStyles.MapContainer>
-                                        {/* In a real app, this would be replaced with a proper map component */}
-                                        <ListingStyles.MapPlaceholder>
-                                        Map showing location at {previewListing.address}
-                                        </ListingStyles.MapPlaceholder>
-                                    </ListingStyles.MapContainer>
-                                    <ListingStyles.Address>{previewListing.address}</ListingStyles.Address>
-                                    </ListingStyles.Section>
-                                </ListingStyles.MainContent>
-                                
-                                <ListingStyles.Sidebar>
-                                    <ListingStyles.SellerCard>
-                                    <ListingStyles.SellerHeader>
-                                        <ListingStyles.SellerAvatar src={previewListing.seller.profileImage} alt={previewListing.seller.name} />
-                                        <ListingStyles.SellerInfo>
-                                        <ListingStyles.SellerName>{previewListing.seller.name}</ListingStyles.SellerName>
-                                        <ListingStyles.SellerRating>
-                                            {'★'.repeat(Math.round(listing.seller.rating))} 
-                                            <ListingStyles.RatingValue>({previewListing.seller.rating})</ListingStyles.RatingValue>
-                                        </ListingStyles.SellerRating>
-                                        </ListingStyles.SellerInfo>
-                                    </ListingStyles.SellerHeader>
-                                    <ListingStyles.SellerStats>
-                                        <ListingStyles.StatItem>
-                                        <ListingStyles.StatValue>{previewListing.seller.listings}</ListingStyles.StatValue>
-                                        <ListingStyles.StatLabel>Listings</ListingStyles.StatLabel>
-                                        </ListingStyles.StatItem>
-                                        <ListingStyles.StatItem>
-                                        <ListingStyles.StatValue>
-                                            {new Date(listing.seller.memberSince).getFullYear()}
-                                        </ListingStyles.StatValue>
-                                        <ListingStyles.StatLabel>Member Since</ListingStyles.StatLabel>
-                                        </ListingStyles.StatItem>
-                                    </ListingStyles.SellerStats>
-                                    <ListingStyles.ContactButton onClick={handleContact}>
-                                        Contact Seller
-                                    </ListingStyles.ContactButton>
-                                    </ListingStyles.SellerCard>
-                                    
-                                    <ListingStyles.ActionCard>
-                                    <ListingStyles.ActionTitle>Actions</ListingStyles.ActionTitle>
-                                    <ListingStyles.ActionButtons>
-                                        <ListingStyles.ShareButton onClick={handleShare}>
-                                        Share Listing
-                                        </ListingStyles.ShareButton>
-                                        <ListingStyles.SaveButton onClick={handleSave}>
-                                        Save to Favorites
-                                        </ListingStyles.SaveButton>
-                                    </ListingStyles.ActionButtons>
-                                    </ListingStyles.ActionCard>
-                                    
-                                    <ListingStyles.StatsCard>
-                                    <ListingStyles.StatsTitle>Listing Activity</ListingStyles.StatsTitle>
-                                    <ListingStyles.StatsGrid>
-                                        <ListingStyles.StatBox>
-                                        <ListingStyles.StatNumber>{previewListing.views}</ListingStyles.StatNumber>
-                                        <ListingStyles.StatLabel>Views</ListingStyles.StatLabel>
-                                        </ListingStyles.StatBox>
-                                        <ListingStyles.StatBox>
-                                        <ListingStyles.StatNumber>{previewListing.saved}</ListingStyles.StatNumber>
-                                        <ListingStyles.StatLabel>Saved</ListingStyles.StatLabel>
-                                        </ListingStyles.StatBox>
-                                    </ListingStyles.StatsGrid>
-                                    </ListingStyles.StatsCard>
-                                </ListingStyles.Sidebar>
-                                </ListingStyles.ContentGrid>
-                            </ListingStyles.ListingContainer>
-                        </div>
-                        </ListingStyles.ModalContent>
-                    </ListingStyles.ModalOverlay>
+                                    ))}
+                                </PreviewModalStyles.ThumbnailsContainer>
+                            </PreviewModalStyles.ImageGallery>
+
+                            <PreviewModalStyles.MainContent>
+                                <PreviewModalStyles.ListingHeader>
+                                    <PreviewModalStyles.TitleSection>
+                                        <PreviewModalStyles.ListingTitle>{previewListing.title}</PreviewModalStyles.ListingTitle>
+                                        <PreviewModalStyles.ListingLocation>
+                                            <FaMapMarkerAlt size={14} style={{ marginRight: '5px' }} />
+                                            {previewListing.address}
+                                        </PreviewModalStyles.ListingLocation>
+                                    </PreviewModalStyles.TitleSection>
+                                    <PreviewModalStyles.PriceSection>
+                                        <PreviewModalStyles.ListingPrice>{formatPrice(previewListing.price)}</PreviewModalStyles.ListingPrice>
+                                        <PreviewModalStyles.PriceUnit>PHP</PreviewModalStyles.PriceUnit>
+                                        <PreviewModalStyles.PricePerUnit>{previewListing.pricePerHectare} per hectare</PreviewModalStyles.PricePerUnit>
+                                    </PreviewModalStyles.PriceSection>
+                                </PreviewModalStyles.ListingHeader>
+
+                                <PreviewModalStyles.ContentGrid>
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Property Overview</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.PropertySpecs>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Size</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.size}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Type</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.type}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Soil Type</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.soilType}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Zoning</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.zoning}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Water Source</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.waterSource}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Listed</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{formatDate(previewListing.listedDate)}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                        </PreviewModalStyles.PropertySpecs>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Description</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.Description>{previewListing.description}</PreviewModalStyles.Description>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Farm Details</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.PropertySpecs>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Previous Crops</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>
+                                                    {previewListing.previousCrops.length > 0 
+                                                        ? previewListing.previousCrops.join(', ') 
+                                                        : 'No previous crops recorded'}
+                                                </PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Average Yield</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.averageYield}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Topography</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.topography}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                        </PreviewModalStyles.PropertySpecs>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Amenities</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.AmenitiesList>
+                                            {previewListing.amenities.length > 0 ? (
+                                                previewListing.amenities.map((amenity, index) => (
+                                                    <PreviewModalStyles.AmenityItem key={index}>
+                                                        <FaCheck size={12} style={{ marginRight: '5px' }} />
+                                                        {amenity}
+                                                    </PreviewModalStyles.AmenityItem>
+                                                ))
+                                            ) : (
+                                                <PreviewModalStyles.EmptyMessage>No amenities listed</PreviewModalStyles.EmptyMessage>
+                                            )}
+                                        </PreviewModalStyles.AmenitiesList>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Restrictions</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.RestrictionsList>
+                                            {previewListing.restrictions.length > 0 ? (
+                                                previewListing.restrictions.map((restriction, index) => (
+                                                    <PreviewModalStyles.RestrictionItem key={index}>
+                                                        <FaExclamationTriangle size={12} style={{ marginRight: '5px' }} />
+                                                        {restriction}
+                                                    </PreviewModalStyles.RestrictionItem>
+                                                ))
+                                            ) : (
+                                                <PreviewModalStyles.EmptyMessage>No restrictions listed</PreviewModalStyles.EmptyMessage>
+                                            )}
+                                        </PreviewModalStyles.RestrictionsList>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Performance Metrics</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.MetricsGrid>
+                                            <PreviewModalStyles.MetricItem>
+                                                <PreviewModalStyles.MetricLabel>Views</PreviewModalStyles.MetricLabel>
+                                                <PreviewModalStyles.MetricValue>{previewListing.viewCount}</PreviewModalStyles.MetricValue>
+                                            </PreviewModalStyles.MetricItem>
+                                            <PreviewModalStyles.MetricItem>
+                                                <PreviewModalStyles.MetricLabel>Inquiries</PreviewModalStyles.MetricLabel>
+                                                <PreviewModalStyles.MetricValue>{previewListing.inquiries}</PreviewModalStyles.MetricValue>
+                                            </PreviewModalStyles.MetricItem>
+                                            <PreviewModalStyles.MetricItem>
+                                                <PreviewModalStyles.MetricLabel>Status</PreviewModalStyles.MetricLabel>
+                                                <PreviewModalStyles.MetricValue $status={previewListing.status}>
+                                                    {previewListing.status.charAt(0).toUpperCase() + previewListing.status.slice(1)}
+                                                </PreviewModalStyles.MetricValue>
+                                            </PreviewModalStyles.MetricItem>
+                                        </PreviewModalStyles.MetricsGrid>
+                                    </PreviewModalStyles.Section>
+                                </PreviewModalStyles.ContentGrid>
+                            </PreviewModalStyles.MainContent>
+                        </PreviewModalStyles.PreviewContent>
+                    </PreviewModalStyles.PreviewModal>
                     )}
             </DashboardStyles.DashboardContent>
         </DashboardStyles.DashboardContainer>

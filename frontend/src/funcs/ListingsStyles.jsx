@@ -2,12 +2,14 @@ import styled from 'styled-components';
 
 export const ListingStyles = {
     PageWrapper: styled.div`
-        width: 100%;
+        width: 100vw;
         min-height: 100vh;
         display: flex;
         margin-top: 80px;
         flex-direction: column;
         background-color: #2C3E50;
+        box-sizing: border-box;
+        overflow-x: hidden;
     `,
 
     NavContainer: styled.nav`
@@ -87,9 +89,10 @@ export const ListingStyles = {
     `,
 
     ListingContainer: styled.div`
-        margin: 0 auto;
+        width: 100vw;
         padding: 24px;
         flex: 1;
+        box-sizing: border-box;
         
         @media (max-width: 768px) {
             padding: 16px;
@@ -172,6 +175,9 @@ export const ListingStyles = {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 320px;
         gap: 24px;
+        width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
         
         @media (max-width: 768px) {
             grid-template-columns: 1fr;
@@ -202,175 +208,102 @@ export const ListingStyles = {
         }
     `,
 
-    GalleryControls: styled.div`
+    PrevButton: styled.button`
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 16px;
-        pointer-events: none;
-        
-        @media (max-width: 480px) {
-            padding: 0 8px;
-        }
-    `,
-
-    // Base button style
-    GalleryButtonBase: styled.button`
-        background-color: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        font-size: 20px;
-        pointer-events: auto;
-        transition: background-color 0.2s ease;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-
-        &:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-    `,
-    
-    // Left button positioned at left side
-    GalleryLeftButton: styled.button`
-        background-color: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        font-size: 20px;
-        pointer-events: auto;
-        transition: background-color 0.2s ease;
-        position: absolute;
-        top: 50%;
         left: 16px;
+        top: 50%;
         transform: translateY(-50%);
-
-        &:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-    `,
-    
-    // Right button positioned at right side
-    GalleryRightButton: styled.button`
-        background-color: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.5);
         color: white;
         border: none;
-        border-radius: 50%;
         width: 40px;
         height: 40px;
+        border-radius: 50%;
         display: flex;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         cursor: pointer;
         font-size: 20px;
-        pointer-events: auto;
-        transition: background-color 0.2s ease;
-        position: absolute;
-        top: 50%;
-        right: 45px;
-        transform: translateY(-50%);
-
+        
         &:hover {
-            background-color: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.7);
         }
     `,
 
-    ImageThumbnails: styled.div`
+    NextButton: styled.button`
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 20px;
+        
+        &:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+    `,
+
+    ThumbnailsContainer: styled.div`
         display: flex;
         gap: 8px;
         padding: 16px;
         overflow-x: auto;
-        
-        @media (max-width: 480px) {
-            padding: 8px;
-            gap: 4px;
-        }
-    `,
-
-    ThumbnailWrapper: styled.div`
-        border: 2px solid ${props => props.active ? '#3498db' : 'transparent'};
-        border-radius: 4px;
-        overflow: hidden;
-        width: 80px;
-        height: 60px;
-        flex-shrink: 0;
-        
-        @media (max-width: 480px) {
-            width: 60px;
-            height: 45px;
-        }
     `,
 
     Thumbnail: styled.img`
-        width: 100%;
-        height: 100%;
+        width: 80px;
+        height: 60px;
         object-fit: cover;
+        border-radius: 4px;
         cursor: pointer;
-        transition: opacity 0.2s ease;
-
+        border: 2px solid ${props => props.active ? '#3498db' : 'transparent'};
+        
         &:hover {
-        opacity: 0.8;
+            border-color: #3498db;
         }
     `,
 
-    Section: styled.section`
+    Section: styled.div`
         background-color: #34495E;
         border-radius: 8px;
         padding: 24px;
-        
-        @media (max-width: 768px) {
-            padding: 16px;
-        }
     `,
 
     SectionTitle: styled.h2`
-        font-size: 20px;
-        font-weight: 600;
+        font-size: 24px;
+        font-weight: bold;
         color: #ecf0f1;
         margin: 0 0 16px 0;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #2C3E50;
     `,
 
     PropertySpecs: styled.div`
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 16px;
-        
-        @media (max-width: 480px) {
-            grid-template-columns: 1fr 1fr;
-        }
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
     `,
 
-    SpecItem: styled.div``,
+    SpecItem: styled.div`
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    `,
 
     SpecLabel: styled.div`
         font-size: 14px;
         color: #bdc3c7;
-        margin-bottom: 4px;
     `,
 
     SpecValue: styled.div`
         font-size: 16px;
-        font-weight: 500;
         color: #ecf0f1;
     `,
 
@@ -382,16 +315,12 @@ export const ListingStyles = {
     `,
 
     AmenitiesList: styled.ul`
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 12px;
+        list-style: none;
         padding: 0;
         margin: 0;
-        list-style-type: none;
-        
-        @media (max-width: 480px) {
-            grid-template-columns: 1fr;
-        }
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
     `,
 
     AmenityItem: styled.li`
@@ -399,28 +328,33 @@ export const ListingStyles = {
         color: #ecf0f1;
         display: flex;
         align-items: center;
-
-        &::before {
-        content: "✓";
-        color: #2ecc71;
-        font-weight: bold;
-        margin-right: 8px;
+        gap: 8px;
+        
+        &:before {
+            content: "✓";
+            color: #2ecc71;
         }
     `,
 
     RestrictionsList: styled.ul`
-        padding: 0 0 0 20px;
+        list-style: none;
+        padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     `,
 
     RestrictionItem: styled.li`
         font-size: 16px;
         color: #ecf0f1;
-        margin-bottom: 8px;
-        line-height: 1.5;
-
-        &:last-child {
-        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        &:before {
+            content: "•";
+            color: #e74c3c;
         }
     `,
 
@@ -462,29 +396,31 @@ export const ListingStyles = {
     SellerHeader: styled.div`
         display: flex;
         align-items: center;
-        margin-bottom: 16px;
+        gap: 16px;
+        margin-bottom: 24px;
     `,
 
     SellerAvatar: styled.img`
         width: 64px;
         height: 64px;
         border-radius: 50%;
-        margin-right: 16px;
         object-fit: cover;
     `,
 
-    SellerInfo: styled.div``,
+    SellerInfo: styled.div`
+        flex: 1;
+    `,
 
     SellerName: styled.div`
         font-size: 18px;
-        font-weight: 600;
+        font-weight: bold;
         color: #ecf0f1;
         margin-bottom: 4px;
     `,
 
     SellerRating: styled.div`
+        font-size: 16px;
         color: #f1c40f;
-        font-size: 14px;
     `,
 
     RatingValue: styled.span`
@@ -493,9 +429,10 @@ export const ListingStyles = {
     `,
 
     SellerStats: styled.div`
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
     `,
 
     StatItem: styled.div`
@@ -503,30 +440,29 @@ export const ListingStyles = {
     `,
 
     StatValue: styled.div`
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 24px;
+        font-weight: bold;
         color: #ecf0f1;
     `,
 
     StatLabel: styled.div`
-        font-size: 12px;
+        font-size: 14px;
         color: #bdc3c7;
     `,
 
     ContactButton: styled.button`
-        background-color: #2ecc71;
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 12px 16px;
-        cursor: pointer;
         font-size: 16px;
         font-weight: 600;
-        width: 100%;
-        transition: background-color 0.2s ease;
-
+        cursor: pointer;
+        
         &:hover {
-        background-color: #27ae60;
+            background-color: #2980b9;
         }
     `,
 
@@ -538,7 +474,7 @@ export const ListingStyles = {
 
     ActionTitle: styled.h3`
         font-size: 18px;
-        font-weight: 600;
+        font-weight: bold;
         color: #ecf0f1;
         margin: 0 0 16px 0;
     `,
@@ -550,34 +486,34 @@ export const ListingStyles = {
     `,
 
     ShareButton: styled.button`
+        width: 100%;
+        padding: 12px;
         background-color: #3498db;
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 12px 16px;
-        cursor: pointer;
         font-size: 16px;
         font-weight: 600;
-        transition: background-color 0.2s ease;
-
+        cursor: pointer;
+        
         &:hover {
-        background-color: #2980b9;
+            background-color: #2980b9;
         }
     `,
 
     SaveButton: styled.button`
-        background-color: #9b59b6;
+        width: 100%;
+        padding: 12px;
+        background-color: #2ecc71;
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 12px 16px;
-        cursor: pointer;
         font-size: 16px;
         font-weight: 600;
-        transition: background-color 0.2s ease;
-
+        cursor: pointer;
+        
         &:hover {
-        background-color: #8e44ad;
+            background-color: #27ae60;
         }
     `,
 
@@ -589,7 +525,7 @@ export const ListingStyles = {
 
     StatsTitle: styled.h3`
         font-size: 18px;
-        font-weight: 600;
+        font-weight: bold;
         color: #ecf0f1;
         margin: 0 0 16px 0;
     `,
@@ -601,10 +537,10 @@ export const ListingStyles = {
     `,
 
     StatBox: styled.div`
-        background-color: #2C3E50;
-        padding: 16px;
-        border-radius: 4px;
         text-align: center;
+        padding: 16px;
+        background-color: #2C3E50;
+        border-radius: 4px;
     `,
 
     StatNumber: styled.div`
@@ -666,7 +602,7 @@ export const ListingStyles = {
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: rgba(0, 0, 0, 0.5);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -676,39 +612,37 @@ export const ListingStyles = {
     ModalContent: styled.div`
         background-color: #34495E;
         border-radius: 8px;
-        width: 500px;
-        max-width: 90%;
+        padding: 24px;
+        width: 100%;
+        max-width: 500px;
         max-height: 90vh;
         overflow-y: auto;
-        padding: 24px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        color: #ecf0f1;
-        
-        @media (max-width: 480px) {
-            padding: 16px;
-            width: 100%;
-        }
     `,
 
     ModalHeader: styled.div`
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 24px;
     `,
 
     ModalTitle: styled.h2`
-        font-size: 20px;
-        margin: 0;
+        font-size: 24px;
+        font-weight: bold;
         color: #ecf0f1;
+        margin: 0;
     `,
 
     CloseButton: styled.button`
         background: none;
         border: none;
+        color: #bdc3c7;
         font-size: 24px;
         cursor: pointer;
-        color: #ecf0f1;
+        
+        &:hover {
+            color: #ecf0f1;
+        }
     `,
 
     ContactForm: styled.form`
@@ -729,59 +663,46 @@ export const ListingStyles = {
     `,
 
     Input: styled.input`
-        width: 100%;
-        padding: 12px 16px;
-        border-radius: 4px;
-        border: 1px solid #2C3E50;
+        padding: 12px;
         background-color: #2C3E50;
+        border: 1px solid #34495E;
+        border-radius: 4px;
         color: #ecf0f1;
         font-size: 16px;
-        box-sizing: border-box;
-
-        &::placeholder {
-        color: #7f8c8d;
-        }
-
+        
         &:focus {
-        outline: none;
-        border-color: #3498db;
+            outline: none;
+            border-color: #3498db;
         }
     `,
 
     TextArea: styled.textarea`
-        width: 100%;
-        padding: 12px 16px;
-        border-radius: 4px;
-        border: 1px solid #2C3E50;
+        padding: 12px;
         background-color: #2C3E50;
+        border: 1px solid #34495E;
+        border-radius: 4px;
         color: #ecf0f1;
         font-size: 16px;
         resize: vertical;
-        box-sizing: border-box;
-
-        &::placeholder {
-        color: #7f8c8d;
-        }
-
+        
         &:focus {
-        outline: none;
-        border-color: #3498db;
+            outline: none;
+            border-color: #3498db;
         }
     `,
 
     SendButton: styled.button`
-        background-color: #2ecc71;
+        padding: 12px;
+        background-color: #3498db;
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 12px 16px;
-        cursor: pointer;
         font-size: 16px;
         font-weight: 600;
-        transition: background-color 0.2s ease;
-
+        cursor: pointer;
+        
         &:hover {
-        background-color: #27ae60;
+            background-color: #2980b9;
         }
     `,
 

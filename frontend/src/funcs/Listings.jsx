@@ -1,59 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ListingStyles } from './ListingsStyles';
+import { formatPrice, formatDate } from './formatUtils';
+import api from '../api';
+import { FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaStar, FaList, FaRegCalendarAlt } from 'react-icons/fa';
 
-// Mock data for agricultural land in Cabanatuan
-const mockListing = {
-    id: 'lot-456',
-    title: 'Prime Agricultural Land in Sangitan, Cabanatuan City',
-    description: 'This fertile agricultural lot offers excellent growing conditions for various crops and fruit trees. Located in Barangay Sangitan, Cabanatuan City, this 3-hectare property features rich loamy soil, ideal for rice, corn, vegetables, or fruit orchards. The land comes with water rights from a nearby irrigation canal and has been previously used for rice farming with consistent yields. The property has good road access for farm equipment and transportation of produce to local markets. Cabanatuan Public Market is just 15 minutes away, and the property is located near other successful farms in the area. This is an excellent opportunity for both experienced farmers and agricultural investors looking to capitalize on Nueva Ecija\'s reputation as the "Rice Granary of the Philippines."',
-    price: 2500000,
-    size: '3 hectares',
-    type: 'Agricultural',
-    address: 'Purok 3, Barangay Sangitan, Cabanatuan City, Nueva Ecija',
-    coordinates: { lat: 15.4875, lng: 120.9675 },
-    amenities: ['Irrigation Access', 'Farm-to-Market Road', 'Electric Power Lines Nearby', 'Potable Water Source'],
-    restrictions: ['Agricultural Use Only', 'No Residential Development Allowed', 'Must Follow Local Farming Regulations'],
-    zoning: 'A-1 Agricultural',
-    seller: {
-        id: 'user-789',
-        name: 'Ricardo Santos',
-        profileImage: '/api/placeholder/40/40',
-        rating: 4.7,
-        listings: 8,
-        memberSince: '2019-06-12'
-    },
-    images: [
-        '/api/placeholder/800/500',
-        '/api/placeholder/800/500',
-        '/api/placeholder/800/500',
-        '/api/placeholder/800/500'
-    ],
-    listedDate: '2024-04-15',
-    views: 284,
-    saved: 31,
-    soilType: 'Loamy',
-    previousCrops: ['Rice', 'Corn'],
-    averageYield: '5.2 tons per hectare (rice)',
-    waterSource: 'Irrigation canal + seasonal rainfall',
-    topography: 'Mostly flat with slight slope for drainage'
+const getSellerInfo = (sellerKey) => {
+  // Example mapping, you can expand this as needed
+  const sellerProfiles = {
+    'seller': {
+      name: 'Real Estate PH',
+      profileImage: '/api/placeholder/40/40',
+      rating: 4.5,
+      listings: 12,
+      memberSince: '2018-01-01',
+    }
+  };
+  return sellerProfiles[sellerKey] || {
+    name: 'Unknown Seller',
+    profileImage: '/api/placeholder/40/40',
+    rating: 0,
+    listings: 0,
+    memberSince: '2024-01-01',
+  };
 };
 
-const ListingPage = () => {
+const ListingPage = ({ property }) => {
     const { id } = useParams();
-    const listing = mockListing; // In a real app, you would fetch the listing using the ID
+    const [listing, setListing] = useState(property ? {
+        ...property,
+        images: property.images || [property.imageUrl || '/api/placeholder/800/500'],
+        seller: {
+            name: property.sellerName || 'Unknown Seller',
+            profileImage: property.sellerAvatar || '/api/placeholder/40/40',
+            rating: 0,
+            listings: 0,
+            memberSince: new Date().toISOString(),
+        },
+        amenities: property.amenities || [],
+        restrictions: property.restrictions || [],
+        views: property.views || 0,
+        saved: property.saved || 0
+    } : null);
+    const [loading, setLoading] = useState(!property);
+    const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [contactModalOpen, setContactModalOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchProperty = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get(`/api/properties/${id}`);
+                const propertyData = response.data;
+                
+                setListing({
+                    ...propertyData,
+                    images: propertyData.images || [propertyData.image || '/api/placeholder/800/500'],
+                    seller: {
+                        name: `${propertyData.seller?.firstName} ${propertyData.seller?.lastName}`,
+                        profileImage: propertyData.seller?.avatar || '/api/placeholder/40/40',
+                        rating: propertyData.seller?.rating || 0,
+                        listings: propertyData.seller?.listings || 0,
+                        memberSince: propertyData.seller?.memberSince || new Date().toISOString(),
+                    },
+                    amenities: propertyData.amenities || [],
+                    restrictions: propertyData.restrictions || [],
+                    views: propertyData.views || 0,
+                    saved: propertyData.saved || 0
+                });
+            } catch (err) {
+                console.error('Error fetching property:', err);
+                setError('Failed to load property details. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Only fetch if we don't have property data and we have an ID
+        if (!property && id) {
+            fetchProperty();
+        }
+    }, [id, property]);
     
     const handlePrevImage = () => {
         setActiveImageIndex(prev => 
-        prev === 0 ? listing.images.length - 1 : prev - 1
+            prev === 0 ? listing.images.length - 1 : prev - 1
         );
     };
     
     const handleNextImage = () => {
         setActiveImageIndex(prev => 
-        prev === listing.images.length - 1 ? 0 : prev + 1
+            prev === listing.images.length - 1 ? 0 : prev + 1
         );
     };
     
@@ -66,9 +104,33 @@ const ListingPage = () => {
         alert('Share functionality would be implemented here');
     };
     
-    const handleSave = () => {
-        // In a real app, implement save functionality
-        alert('Save functionality would be implemented here');
+    const handleSave = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please log in to save properties to favorites');
+            return;
+        }
+
+        try {
+            const response = await api.post(`/api/favorites/${listing.id}`);
+            if (response.status === 201) {
+                // Update the saved count in the UI
+                setListing(prev => ({
+                    ...prev,
+                    saved: prev.saved + 1
+                }));
+                alert('Property saved to favorites');
+            }
+        } catch (error) {
+            if (error.response?.status === 400) {
+                alert('Property is already in your favorites');
+            } else if (error.response?.status === 401) {
+                alert('Please log in to save properties to favorites');
+            } else {
+                console.error('Error saving property:', error);
+                alert('Failed to save property to favorites');
+            }
+        }
     };
     
     const handleContact = () => {
@@ -78,6 +140,18 @@ const ListingPage = () => {
     const closeContactModal = () => {
         setContactModalOpen(false);
     };
+
+    if (loading) {
+        return <div>Loading property details...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
+    if (!listing) {
+        return <div>Property not found</div>;
+    }
 
     return (
         <ListingStyles.PageWrapper>
@@ -91,10 +165,10 @@ const ListingPage = () => {
                 <ListingStyles.ListingHeader>
                     <ListingStyles.TitleSection>
                         <ListingStyles.ListingTitle>{listing.title}</ListingStyles.ListingTitle>
-                        <ListingStyles.ListingLocation>{listing.address}</ListingStyles.ListingLocation>
+                        <ListingStyles.ListingLocation>{listing.location}</ListingStyles.ListingLocation>
                     </ListingStyles.TitleSection>
                     <ListingStyles.PriceSection>
-                        <ListingStyles.ListingPrice>₱{listing.price.toLocaleString()}</ListingStyles.ListingPrice>
+                        <ListingStyles.ListingPrice>{formatPrice(listing.price)}</ListingStyles.ListingPrice>
                         <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
                     </ListingStyles.PriceSection>
                 </ListingStyles.ListingHeader>
@@ -102,22 +176,28 @@ const ListingPage = () => {
                 <ListingStyles.ContentGrid>
                 <ListingStyles.MainContent>
                     <ListingStyles.ImageGallery>
-                    <ListingStyles.MainImage src={listing.images[activeImageIndex]} alt={`Image ${activeImageIndex + 1} of agricultural property`} />
-                    <ListingStyles.GalleryControls>
-                        <ListingStyles.GalleryLeftButton onClick={handlePrevImage}>&lt;</ListingStyles.GalleryLeftButton>
-                        <ListingStyles.GalleryRightButton onClick={handleNextImage}>&gt;</ListingStyles.GalleryRightButton>
-                    </ListingStyles.GalleryControls>
-                    <ListingStyles.ImageThumbnails>
-                        {listing.images.map((img, index) => (
-                        <ListingStyles.ThumbnailWrapper key={index} active={index === activeImageIndex}>
-                            <ListingStyles.Thumbnail 
-                            src={img} 
-                            alt={`Thumbnail ${index + 1}`} 
+                    <ListingStyles.MainImage src={listing.images[activeImageIndex] || listing.image} alt={listing.title} />
+                    {listing.images.length > 1 && (
+                        <>
+                            <ListingStyles.PrevButton onClick={handlePrevImage}>
+                                <FaChevronLeft />
+                            </ListingStyles.PrevButton>
+                            <ListingStyles.NextButton onClick={handleNextImage}>
+                                <FaChevronRight />
+                            </ListingStyles.NextButton>
+                        </>
+                    )}
+                    <ListingStyles.ThumbnailsContainer>
+                        {listing.images.map((image, index) => (
+                        <ListingStyles.Thumbnail
+                            key={index}
+                            src={image}
+                            alt={`${listing.title} - Image ${index + 1}`}
+                            active={index === activeImageIndex}
                             onClick={() => handleThumbnailClick(index)}
-                            />
-                        </ListingStyles.ThumbnailWrapper>
+                        />
                         ))}
-                    </ListingStyles.ImageThumbnails>
+                    </ListingStyles.ThumbnailsContainer>
                     </ListingStyles.ImageGallery>
                     
                     <ListingStyles.Section>
@@ -125,29 +205,21 @@ const ListingPage = () => {
                     <ListingStyles.PropertySpecs>
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Size</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.size}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecValue>{listing.acres} hectares</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Type</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.type}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecValue>{listing.category}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Soil Type</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.soilType}</ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Zoning</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.zoning}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecLabel>Water Rights</ListingStyles.SpecLabel>
+                        <ListingStyles.SpecValue>{listing.waterRights}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
                         <ListingStyles.SpecValue>
-                            {new Date(listing.listedDate).toLocaleDateString()}
+                            {formatDate(listing.datePosted)}
                         </ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Water Source</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.waterSource}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                     </ListingStyles.PropertySpecs>
                     </ListingStyles.Section>
@@ -161,16 +233,8 @@ const ListingPage = () => {
                     <ListingStyles.SectionTitle>Farm Details</ListingStyles.SectionTitle>
                     <ListingStyles.PropertySpecs>
                         <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Previous Crops</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.previousCrops.join(', ')}</ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Average Yield</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.averageYield}</ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Topography</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.topography}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecLabel>Suitable Crops</ListingStyles.SpecLabel>
+                        <ListingStyles.SpecValue>{listing.suitableCrops}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                     </ListingStyles.PropertySpecs>
                     </ListingStyles.Section>
@@ -196,12 +260,11 @@ const ListingPage = () => {
                     <ListingStyles.Section>
                     <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
                     <ListingStyles.MapContainer>
-                        {/* In a real app, this would be replaced with a proper map component */}
                         <ListingStyles.MapPlaceholder>
-                        Map showing location at {listing.address}
+                        Map showing location at {listing.location}
                         </ListingStyles.MapPlaceholder>
                     </ListingStyles.MapContainer>
-                    <ListingStyles.Address>{listing.address}</ListingStyles.Address>
+                    <ListingStyles.Address>{listing.location}</ListingStyles.Address>
                     </ListingStyles.Section>
                 </ListingStyles.MainContent>
                 

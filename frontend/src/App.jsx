@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AuthProvider } from "./funcs/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import Navbar from "./funcs/Navbar";
 import MapView from "./funcs/MapView";
 import Admin from "./funcs/Admin";
@@ -9,13 +9,18 @@ import ListingPage from "./funcs/Listings";
 import BuyerDashboard from "./funcs/BuyerDashboard";
 import SellerDashboard from "./funcs/SellerDashboard";
 import Login from "./funcs/Login";
+import { BrowserRouter } from "react-router-dom";
 
 // Separate component for the main app content
 const AppContent = () => {
     const [currentPage, setCurrentPage] = useState("home");
+    const [selectedProperty, setSelectedProperty] = useState(null);
 
-    const navigateTo = (page) => {
+    const navigateTo = (page, data) => {
         setCurrentPage(page);
+        if (page === 'speclist' && data && data.property) {
+            setSelectedProperty(data.property);
+        }
     };
 
     const renderPage = () => {
@@ -23,13 +28,13 @@ const AppContent = () => {
             case "home":
                 return <HomePage />;
             case "buyer dashboard":
-                return <BuyerDashboard />;
+                return <BuyerDashboard navigateTo={navigateTo} />;
             case "seller dashboard":
-                return <SellerDashboard />;
+                return <SellerDashboard navigateTo={navigateTo} />;
             case "speclist":
-                return <ListingPage />;
+                return <ListingPage property={selectedProperty} />;
             case "listings":
-                return <ListingOverview />;
+                return <ListingOverview navigateTo={navigateTo} />;
             case "admin":
                 return <Admin />;
             case "map":
@@ -52,9 +57,11 @@ const AppContent = () => {
 // Main App component
 function App() {
     return (
-        <AuthProvider>
-            <AppContent />
-        </AuthProvider>
+        <BrowserRouter>
+            <AuthProvider>
+                <AppContent />
+            </AuthProvider>
+        </BrowserRouter>
     );
 }
 

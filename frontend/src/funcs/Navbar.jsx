@@ -1,11 +1,11 @@
-import { useState, useContext, useEffect, useRef } from "react";
-import AuthContext from "./AuthContext";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from '../contexts/AuthContext';
 import { NavContainer, Logo, Smartland, System, NavLinks, NavItem, LoginButton, MenuToggle, ProfileSection, DropdownItem, Dropdown } from "./NavbarStyles";
 import Login from "./Login";
 import { FaCircleUser } from "react-icons/fa6";
 
 const Navbar = ({ navigateTo, currentPage }) => {
-    const { user, logout } = useContext(AuthContext);
+    const { user, logout } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginOpen, setLoginOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,7 +33,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
 
         switch (user.role) {
             case 'buyer':
-                return ["Buyer Dashboard", "SpecList", "Listings", "Map"];
+                return ["Buyer Dashboard", "Listings", "Map"];
             case 'seller':
                 return ["Seller Dashboard", "Map"];
             case 'admin':

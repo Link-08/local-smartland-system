@@ -1,9 +1,10 @@
-import React, { useState, useContext } from "react";
-import AuthContext from "../funcs/AuthContext";
+import React, { useState } from "react";
+import { useAuth } from '../contexts/AuthContext';
 import { ModalOverlay, ModalContainer, Section, Title, Input, Button, CloseButton, Divider, RadioGroup, CheckboxGroup, CheckboxInput, ErrorText } from "./LoginStyles";
+import api from "../config/axios";
 
 const Login = ({ onClose, onLoginSuccess }) => {
-    const { login, fetchUser } = useContext(AuthContext);
+    const { login } = useAuth();
     const [loginData, setLoginData] = useState({ email: "", password: "", rememberMe: false });
     const [registerData, setRegisterData] = useState({ fullName: "", email: "", password: "", confirmPassword: "", phoneNumber: "", userType: "buyer", termsAccepted: false});
     
@@ -25,23 +26,20 @@ const Login = ({ onClose, onLoginSuccess }) => {
     
     const handleLogin = async (e) => {
         e.preventDefault();
+        setLoginError("");
+        
         try {
-            const response = await fetch("http://localhost:5000/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(loginData),
-            });
-    
-            const data = await response.json();
-            if (response.ok) {
-                login(data.user); // Save user data directly
-                if (onLoginSuccess) onLoginSuccess(data.user);
-                onClose();
-            } else {
-                console.error("Login failed:", data.message);
-            }
+            console.log('Attempting login with:', loginData.email);
+            
+            // Call login with email and password
+            const user = await login(loginData.email, loginData.password);
+            console.log('Login successful');
+            
+            if (onLoginSuccess) onLoginSuccess(user);
+            onClose();
         } catch (error) {
-            console.error("Error logging in:", error);
+            console.error("Error logging in:", error.response?.data || error);
+            setLoginError(error.response?.data?.message || 'An error occurred during login. Please try again.');
         }
     };               
     
@@ -64,18 +62,24 @@ const Login = ({ onClose, onLoginSuccess }) => {
         }
     
         try {
-            const response = await fetch("http://localhost:5000/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(registerData),
-            });
-    
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error);
-            alert("Registration successful!");
-            onClose();
+            console.log('Attempting registration with:', registerData.email);
+            
+            const response = await api.post("/api/auth/register", registerData);
+            const data = response.data;
+            console.log('Registration response:', data);
+            
+            if (data.token && data.user) {
+                await login(data.user, data.token);
+                console.log('Registration and login successful');
+                alert("Registration successful!");
+                onClose();
+            } else {
+                console.error('No token or user data received after registration');
+                setRegisterError('Registration successful but login failed. Please try logging in manually.');
+            }
         } catch (err) {
-            setRegisterError(err.message);
+            console.error('Registration error:', err.response?.data || err);
+            setRegisterError(err.response?.data?.message || err.message);
         }
     };    
 

@@ -340,8 +340,8 @@ export const ListingOverviewStyles = {
     `,
 
     ViewButton: styled.button`
-        background-color: ${props => props.active ? '#3498db' : 'transparent'};
-        color: ${props => props.active ? 'white' : '#7f8c8d'};
+        background-color: ${props => props.$active ? '#3498db' : 'transparent'};
+        color: ${props => props.$active ? 'white' : '#7f8c8d'};
         border: none;
         padding: 8px 16px;
         cursor: pointer;
@@ -352,7 +352,7 @@ export const ListingOverviewStyles = {
         transition: all 0.2s ease;
 
         &:hover {
-        background-color: ${props => props.active ? '#3498db' : '#e0e0e0'};
+            background-color: ${props => props.$active ? '#3498db' : '#e0e0e0'};
         }
     `,
 
@@ -690,14 +690,14 @@ export const ListingOverviewStyles = {
         font-weight: 500;
         border: none;
         cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-        background-color: ${props => props.active ? '#3498db' : '#fff'};
-        color: ${props => props.active ? '#fff' : props.disabled ? '#bdc3c7' : '#2C3E50'};
+        background-color: ${props => props.$active ? '#3498db' : '#fff'};
+        color: ${props => props.$active ? '#fff' : props.disabled ? '#bdc3c7' : '#2C3E50'};
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         opacity: ${props => props.disabled ? 0.6 : 1};
         transition: all 0.2s ease;
 
         &:hover:not(:disabled) {
-        background-color: ${props => props.active ? '#2980b9' : '#f8f9fa'};
+            background-color: ${props => props.$active ? '#2980b9' : '#f8f9fa'};
         }
     `,
 
@@ -1087,52 +1087,26 @@ export const ListingOverviewStyles = {
     `,
 
     CategoryItem: styled.button`
-        background: none;
+        background-color: ${props => props.$active ? '#3498db' : 'transparent'};
+        color: ${props => props.$active ? 'white' : '#7f8c8d'};
         border: none;
-        color: ${props => props.active ? '#3498db' : '#fff'};
-        font-weight: ${props => props.active ? '600' : '400'};
-        font-size: 16px;  // Adjust font size for better readability
-        padding: 12px 16px;  // Adjust padding for mobile
+        padding: 12px 24px;
         cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
         transition: all 0.2s ease;
-        position: relative;
-        white-space: nowrap;
-        width: 100%;  // Make buttons full width in the stacked layout
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: ${props => props.active ? '80%' : '0%'};
-            height: 3px;
-            background-color: #3498db;
-            transition: all 0.2s ease;
-        }
+        border-radius: 4px;
 
         &:hover {
-            color: #3498db;
-
-            &:after {
-                width: 80%;
-            }
+            background-color: ${props => props.$active ? '#2980b9' : 'rgba(52, 152, 219, 0.1)'};
+            color: ${props => props.$active ? 'white' : '#3498db'};
         }
 
         @media (max-width: 768px) {
-            font-size: 14px;  // Slightly smaller font size for mobile
-            padding: 10px;  // Adjust padding for mobile
-            margin-bottom: 10px;
-
-            &:hover {
-                &:after {
-                    width: 30%;
-                }
-            }
-
-            &:after {
-                width: ${props => props.active ? '30%' : '0%'};
-            }
+            padding: 8px 16px;
+            font-size: 13px;
         }
     `,
 };

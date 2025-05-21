@@ -401,7 +401,13 @@ const MapView = () => {
         roads: false,
         irrigation: false,
         showAllBarangays: false,
-        selectedBarangay: ''
+        selectedBarangay: '',
+        // Initialize all crop selection states
+        selectedCrop_Calamansi: false,
+        selectedCrop_Corn: false,
+        selectedCrop_Eggplant: false,
+        selectedCrop_Rice: false,
+        selectedCrop_Onion: false
     });
 
     const [highlightedAreas, setHighlightedAreas] = useState([]);
@@ -525,37 +531,30 @@ const MapView = () => {
         setBarangayInfo(null);
 
         setFilters(prev => {
-            // If the clicked filter is already active, turn it off
-            if (prev[filter]) {
-                return {
-                    ...prev,
-                    [filter]: false,
-                    showAllBarangays: false,
-                    selectedBarangay: '',
-                    // Clear any selected crop
-                    ...Object.keys(prev)
-                        .filter(key => key.startsWith('selectedCrop_'))
-                        .reduce((acc, key) => ({ ...acc, [key]: false }), {})
-                };
+            // Create a new state object with all existing properties
+            const newState = { ...prev };
+            
+            // Toggle the clicked filter
+            newState[filter] = !prev[filter];
+            newState.showAllBarangays = false;
+            newState.selectedBarangay = '';
+
+            // If we're turning on a filter, turn off all others
+            if (newState[filter]) {
+                newState.soilType = filter === 'soilType';
+                newState.fruits = filter === 'fruits';
+                newState.elevation = filter === 'elevation';
+                newState.temperature = filter === 'temperature';
+                newState.roads = filter === 'roads';
+                newState.irrigation = filter === 'irrigation';
             }
 
-            // Otherwise, turn off all filters and activate only the clicked one
-            const newState = {
-                ...prev,
-                soilType: false,
-                fruits: false,
-                elevation: false,
-                temperature: false,
-                roads: false,
-                irrigation: false,
-                showAllBarangays: false,
-                selectedBarangay: '',
-                // Clear any selected crop
-                ...Object.keys(prev)
-                    .filter(key => key.startsWith('selectedCrop_'))
-                    .reduce((acc, key) => ({ ...acc, [key]: false }), {}),
-                [filter]: true
-            };
+            // Reset all crop selections when toggling any filter
+            Object.keys(newState)
+                .filter(key => key.startsWith('selectedCrop_'))
+                .forEach(key => {
+                    newState[key] = false;
+                });
 
             return newState;
         });
@@ -701,20 +700,24 @@ const MapView = () => {
                 setHighlightedAreas(matchingBarangays);
             }
         } else if (filterType === 'fruits') {
-            // Clear any existing crop selections
-            setFilters(prev => ({
-                ...prev,
-                ...Object.keys(prev)
+            // Update filters state while preserving all other states
+            setFilters(prev => {
+                const newState = { ...prev };
+                // Reset all crop selections
+                Object.keys(prev)
                     .filter(key => key.startsWith('selectedCrop_'))
-                    .reduce((acc, key) => ({ ...acc, [key]: false }), {}),
-                [`selectedCrop_${category}`]: true
-            }));
+                    .forEach(key => {
+                        newState[key] = false;
+                    });
+                // Set the selected crop
+                newState[`selectedCrop_${category}`] = true;
+                return newState;
+            });
 
             // Find all barangays where the selected fruit has valid viability data
             const matchingBarangays = barangays
                 .filter(barangay => {
                     const viability = barangay.fruits?.[category];
-                    // Only include barangays with valid viability data
                     return viability && typeof viability === 'string' && 
                            Object.keys(viabilityLevels).includes(viability);
                 })
@@ -1093,17 +1096,27 @@ const MapView = () => {
                       cursor: 'pointer'
                     }}
                     onClick={() => {
+                      // Reset all states while maintaining controlled components
                       setFilters({
                         soilType: false,
                         fruits: false,
                         elevation: false,
                         temperature: false,
                         irrigation: false,
+                        roads: false,
                         showAllBarangays: false,
-                        selectedBarangay: ''
+                        selectedBarangay: '',
+                        // Reset all crop selection states
+                        selectedCrop_Calamansi: false,
+                        selectedCrop_Corn: false,
+                        selectedCrop_Eggplant: false,
+                        selectedCrop_Rice: false,
+                        selectedCrop_Onion: false
                       });
                       setBarangayInfo(null);
                       setHighlightedAreas([]);
+                      setSelectedRoadCategory('');
+                      setSelectedIrrigationCategory('');
                       setSelectedLocation({
                         lat: CabanatuanLatLng.lat,
                         lng: CabanatuanLatLng.lng,
@@ -1129,60 +1142,60 @@ const MapView = () => {
                   <FilterGrid>
                     <FilterItem>
                       <Checkbox 
-                        type="checkbox" 
                         id="soil-type"
                         checked={filters.soilType} 
-                        onChange={() => handleFilterChange('soilType')} 
+                        onChange={() => handleFilterChange('soilType')}
+                        inputProps={{ 'aria-label': 'Soil Type filter' }}
                       />
                       <Label htmlFor="soil-type">Soil Type</Label>
                     </FilterItem>
                     
                     <FilterItem>
                       <Checkbox 
-                        type="checkbox" 
                         id="fruits"
                         checked={filters.fruits} 
                         onChange={() => handleFilterChange('fruits')}
+                        inputProps={{ 'aria-label': 'Crops filter' }}
                       />
                       <Label htmlFor="fruits">Crops</Label>
                     </FilterItem>
                     
                     <FilterItem>
                       <Checkbox 
-                        type="checkbox" 
                         id="elevation"
                         checked={filters.elevation} 
-                        onChange={() => handleFilterChange('elevation')} 
+                        onChange={() => handleFilterChange('elevation')}
+                        inputProps={{ 'aria-label': 'Elevation filter' }}
                       />
                       <Label htmlFor="elevation">Elevation</Label>
                     </FilterItem>
                     
                     <FilterItem>
                       <Checkbox 
-                        type="checkbox" 
                         id="temperature"
                         checked={filters.temperature} 
                         onChange={() => handleFilterChange('temperature')}
+                        inputProps={{ 'aria-label': 'Temperature filter' }}
                       />
                       <Label htmlFor="temperature">Temperature</Label>
                     </FilterItem>
                     
                     <FilterItem>
                       <Checkbox 
-                        type="checkbox" 
                         id="irrigation"
                         checked={filters.irrigation}
                         onChange={() => handleFilterChange('irrigation')}
+                        inputProps={{ 'aria-label': 'Irrigation filter' }}
                       />
                       <Label htmlFor="irrigation">Irrigation</Label>
                     </FilterItem>
 
                     <FilterItem>
                       <Checkbox 
-                        type="checkbox" 
                         id="roads"
                         checked={filters.roads}
                         onChange={() => handleFilterChange('roads')}
+                        inputProps={{ 'aria-label': 'Roads filter' }}
                       />
                       <Label htmlFor="roads">Roads</Label>
                     </FilterItem>
@@ -1428,7 +1441,7 @@ const MapView = () => {
                                             name="irrigation-category"
                                             value={cat}
                                             checked={selectedIrrigationCategory === cat}
-                                            onChange={() => setSelectedIrrigationCategory(cat)}
+                                            onChange={(e) => setSelectedIrrigationCategory(e.target.value)}
                                             style={{ margin: 0 }}
                                         />
                                         <div style={{
