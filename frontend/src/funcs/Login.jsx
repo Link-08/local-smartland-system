@@ -1,9 +1,10 @@
-import React, { useState, useContext } from "react";
-import AuthContext from "../funcs/AuthContext";
+import React, { useState } from "react";
+import { useAuth } from '../contexts/AuthContext';
 import { ModalOverlay, ModalContainer, Section, Title, Input, Button, CloseButton, Divider, RadioGroup, CheckboxGroup, CheckboxInput, ErrorText } from "./LoginStyles";
+import api from "../config/axios";
 
 const Login = ({ onClose, onLoginSuccess }) => {
-    const { login, fetchUser } = useContext(AuthContext);
+    const { login } = useAuth();
     const [loginData, setLoginData] = useState({ email: "", password: "", rememberMe: false });
     const [registerData, setRegisterData] = useState({ fullName: "", email: "", password: "", confirmPassword: "", phoneNumber: "", userType: "buyer", termsAccepted: false});
     
@@ -28,43 +29,17 @@ const Login = ({ onClose, onLoginSuccess }) => {
         setLoginError("");
         
         try {
-            console.log('Attempting login with:', loginData.email); // Debug log
+            console.log('Attempting login with:', loginData.email);
             
-            const response = await fetch("http://localhost:5000/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(loginData),
-            });
-    
-            const data = await response.json();
-            console.log('Login response:', data); // Debug log
+            // Call login with email and password
+            const user = await login(loginData.email, loginData.password);
+            console.log('Login successful');
             
-            if (response.ok) {
-                // Store the token
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    console.log('Token stored in localStorage'); // Debug log
-                } else {
-                    console.error('No token received from server'); // Debug log
-                    setLoginError('Authentication failed: No token received');
-                    return;
-                }
-                
-                // Save user data
-                if (data.user) {
-                    login(data.user);
-                    console.log('User data saved to context'); // Debug log
-                }
-                
-                if (onLoginSuccess) onLoginSuccess(data.user);
-                onClose();
-            } else {
-                console.error("Login failed:", data.message); // Debug log
-                setLoginError(data.message || 'Login failed. Please try again.');
-            }
+            if (onLoginSuccess) onLoginSuccess(user);
+            onClose();
         } catch (error) {
-            console.error("Error logging in:", error); // Debug log
-            setLoginError('An error occurred during login. Please try again.');
+            console.error("Error logging in:", error.response?.data || error);
+            setLoginError(error.response?.data?.message || 'An error occurred during login. Please try again.');
         }
     };               
     
@@ -87,30 +62,24 @@ const Login = ({ onClose, onLoginSuccess }) => {
         }
     
         try {
-            console.log('Attempting registration with:', registerData.email); // Debug log
+            console.log('Attempting registration with:', registerData.email);
             
-            const response = await fetch("http://localhost:5000/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(registerData),
-            });
-    
-            const data = await response.json();
-            console.log('Registration response:', data); // Debug log
+            const response = await api.post("/api/auth/register", registerData);
+            const data = response.data;
+            console.log('Registration response:', data);
             
-            if (!response.ok) throw new Error(data.error);
-            
-            // Store the token if provided
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-                console.log('Token stored in localStorage after registration'); // Debug log
+            if (data.token && data.user) {
+                await login(data.user, data.token);
+                console.log('Registration and login successful');
+                alert("Registration successful!");
+                onClose();
+            } else {
+                console.error('No token or user data received after registration');
+                setRegisterError('Registration successful but login failed. Please try logging in manually.');
             }
-            
-            alert("Registration successful!");
-            onClose();
         } catch (err) {
-            console.error('Registration error:', err); // Debug log
-            setRegisterError(err.message);
+            console.error('Registration error:', err.response?.data || err);
+            setRegisterError(err.response?.data?.message || err.message);
         }
     };    
 

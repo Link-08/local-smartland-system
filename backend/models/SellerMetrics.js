@@ -1,36 +1,44 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
 
-const SellerMetrics = sequelize.define('SellerMetrics', {
+module.exports = (sequelize) => {
+  const SellerMetrics = sequelize.define('SellerMetrics', {
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
     sellerId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        references: {
-            model: 'Users',
-            key: 'id'
-        }
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
     },
     totalViews: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },
     totalInquiries: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },
     avgTimeToSale: {
-        type: DataTypes.INTEGER, // in days
-        defaultValue: 0
+      type: DataTypes.FLOAT,
+      defaultValue: 0
     },
     lastUpdated: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
     }
-});
+  });
 
-module.exports = SellerMetrics; 
+  SellerMetrics.associate = (models) => {
+    SellerMetrics.belongsTo(models.User, {
+      foreignKey: 'sellerId',
+      as: 'seller'
+    });
+  };
+
+  return SellerMetrics;
+}; 

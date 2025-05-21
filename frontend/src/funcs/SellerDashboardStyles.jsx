@@ -239,9 +239,9 @@ export const SellerDashboardStyles = {
     ProfileTab: styled.div`
     padding: 12px 24px;
     cursor: pointer;
-    font-weight: ${props => props.active ? '600' : '400'};
-    color: ${props => props.active ? '#3498db' : '#bdc3c7'};
-    border-bottom: 2px solid ${props => props.active ? '#3498db' : 'transparent'};
+    font-weight: ${props => props.$active ? '600' : '400'};
+    color: ${props => props.$active ? '#3498db' : '#bdc3c7'};
+    border-bottom: 2px solid ${props => props.$active ? '#3498db' : 'transparent'};
     transition: all 0.2s ease;
 
     &:hover {
@@ -250,7 +250,7 @@ export const SellerDashboardStyles = {
     `,
     
     ProfileTabContent: styled.div`
-        display: ${props => props.active ? 'block' : 'none'};
+        display: ${props => props.$active ? 'block' : 'none'};
     `,
     
     AvatarUploadSection: styled.div`
@@ -411,9 +411,29 @@ export const SellerDashboardStyles = {
     border-radius: 0 8px 8px 0;
     `,
 
+    InsightCard: styled.div`
+    background-color: ${props => props.$bgColor || 'rgba(52, 152, 219, 0.1)'};
+    border-left: 4px solid ${props => props.$accentColor || '#3498db'};
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 0 8px 8px 0;
+    `,
+
+    ActivityIcon: styled.div`
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: ${props => props.$bgColor || '#3498db'};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: ${props => props.$iconColor || 'white'};
+    margin-right: 12px;
+    `,
+
     TipCard: styled.div`
-    background-color: ${props => props.bgColor || 'rgba(52, 152, 219, 0.1)'};
-    border-left: 4px solid ${props => props.accentColor || '#3498db'};
+    background-color: ${props => props.$bgColor || 'rgba(52, 152, 219, 0.1)'};
+    border-left: 4px solid ${props => props.$accentColor || '#3498db'};
     padding: 16px;
     margin-bottom: 12px;
     border-radius: 0 8px 8px 0;
@@ -430,7 +450,7 @@ export const SellerDashboardStyles = {
     gap: 8px;
     `,
 
-    TipText: styled.p`
+    TipText: styled.div`
     font-size: 14px;
     color: #dddddd;
     margin: 0;

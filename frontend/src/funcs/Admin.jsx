@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { mockUsers } from '../data/mockUsers';
+import React, { useState, useEffect, useContext } from 'react';
+import api from '../config/axios';
+import { useAuth } from '../contexts/AuthContext';
 import { 
     GlobalStyle, AdminContainer, AdminHeader, AdminTitle, AdminStats,
     StatCard, StatNumber, StatLabel, TabContainer, Tab, SearchInput,
@@ -11,8 +11,10 @@ import {
     IDImage, ModalActions, NavContainer, Logo, Smartland, System, NavLinks,
     NavItem, ProfileSection, Avatar, AppWrapper
 } from './AdminStyles';
+import { mockUsers } from '../data/mockUsers';
 
 const Admin = () => {
+    const { user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState("pending");
     const [pendingUsers, setPendingUsers] = useState([]);
     const [approvedUsers, setApprovedUsers] = useState([]);
@@ -21,108 +23,131 @@ const Admin = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [accountLogs, setAccountLogs] = useState([]);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Load mock data
-    useEffect(() => {
-        setPendingUsers(mockUsers.pending);
-        setApprovedUsers(mockUsers.approved);
-        setRejectedUsers(mockUsers.rejected);
-    }, []);
-
-    // Fetch users data from backend
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    console.log('No authentication token found, using mock data');
-                    return; // Keep using mock data if not authenticated
-                }
-
-                const res = await axios.get('/admin/users', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                // Only update state if we got valid data back
-                if (res.data && Array.isArray(res.data.pending)) {
-                    setPendingUsers(res.data.pending);
-                    setApprovedUsers(res.data.approved);
-                    setRejectedUsers(res.data.rejected);
-                }
-            } catch (error) {
-                console.error('Failed to fetch users:', error);
-                // Keep using mock data on error
-            }
-        };
-        fetchUsers();
-    }, []);
-
-    // Fetch logs for admin section (example)
+    // Fetch logs for admin section
     useEffect(() => {
         const fetchLogs = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get('/admin/logs', {
-            headers: { Authorization: token ? `Bearer ${token}` : '' }
-            });
-            setAccountLogs(res.data || []);
-        } catch (error) {
-            console.error('Failed to fetch logs:', error);
-        }
+            try {
+                if (!user) {
+                    console.error('No user found in context');
+                    setError('Please log in to access this page');
+                    return;
+                }
+
+                if (user.role !== 'admin') {
+                    console.error('User is not an admin:', user.role);
+                    setError('Access denied: Admin privileges required');
+                    return;
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('No token found in localStorage');
+                    setError('Please log in to access this page');
+                    return;
+                }
+
+                console.log('Fetching logs for admin:', { 
+                    id: user.id, 
+                    email: user.email, 
+                    role: user.role,
+                    token: token.substring(0, 10) + '...' // Log only first 10 chars of token
+                });
+
+                const res = await api.get('/api/admin/logs');
+                console.log('Logs response:', res.data);
+                setAccountLogs(res.data || []);
+            } catch (error) {
+                console.error('Failed to fetch logs:', error.response?.data || error.message);
+                if (error.response?.status === 401) {
+                    setError('Session expired. Please log in again.');
+                    localStorage.removeItem('token'); // Clear invalid token
+                } else if (error.response?.status === 403) {
+                    setError('Access denied: Admin privileges required');
+                } else {
+                    setError(error.response?.data?.error || 'Failed to fetch logs');
+                }
+                setAccountLogs([]);
+            } finally {
+                setLoading(false);
+            }
         };
-        fetchLogs();
+
+        if (!authLoading && user) {
+            fetchLogs();
+        }
+    }, [user, authLoading]);
+
+    // Inject mock users for local development (only buyers and sellers)
+    useEffect(() => {
+        if (process.env.NODE_ENV === 'development') {
+            setPendingUsers(mockUsers.pending.filter(u => u.role === 'buyer' || u.role === 'seller'));
+            setApprovedUsers(mockUsers.approved.filter(u => u.role === 'buyer' || u.role === 'seller'));
+            setRejectedUsers(mockUsers.rejected.filter(u => u.role === 'buyer' || u.role === 'seller'));
+            setLoading(false);
+        }
     }, []);
 
     // Filter users based on search term
     const filterUsers = (users) => {
         if (!searchTerm) return users;
         return users.filter(user => 
-            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.role.toLowerCase().includes(searchTerm.toLowerCase())
+            user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.role?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     };
 
     // Get current users based on active tab
     const getCurrentUsers = () => {
         switch (activeTab) {
-        case "pending":
-            return filterUsers(pendingUsers);
-        case "approved":
-            return filterUsers(approvedUsers);
-        case "rejected":
-            return filterUsers(rejectedUsers);
-        default:
-            return [];
+            case "pending":
+                return filterUsers(pendingUsers);
+            case "approved":
+                return filterUsers(approvedUsers);
+            case "rejected":
+                return filterUsers(rejectedUsers);
+            default:
+                return [];
         }
     };
 
     // Approve user
     const handleApprove = async (userId) => {
         try {
-        const token = localStorage.getItem('token');
-        await axios.post(`/admin/users/${userId}/approve`, {}, {
-            headers: { Authorization: token ? `Bearer ${token}` : '' }
-        });
-        setPendingUsers(prev => prev.filter(u => u.id !== userId));
-        // Optionally, refetch users or move to approved
+            console.log('Approving user:', userId);
+            const res = await api.post(`/api/admin/users/${userId}/approve`);
+            console.log('Approve response:', res.data);
+            
+            // Update local state
+            setPendingUsers(prev => prev.filter(u => u.id !== userId));
+            setApprovedUsers(prev => [res.data.user, ...prev]);
+            
+            alert('User approved successfully');
         } catch (error) {
-        console.error('Failed to approve user:', error);
+            console.error('Failed to approve user:', error);
+            alert('Failed to approve user. Please try again.');
         }
     };
 
     // Reject user
     const handleReject = async (userId, reason = "Application did not meet requirements") => {
         try {
-        const token = localStorage.getItem('token');
-        await axios.post(`/admin/users/${userId}/reject`, { reason }, {
-            headers: { Authorization: token ? `Bearer ${token}` : '' }
-        });
-        setPendingUsers(prev => prev.filter(u => u.id !== userId));
-        // Optionally, refetch users or move to rejected
+            console.log('Rejecting user:', userId);
+            const res = await api.post(`/api/admin/users/${userId}/reject`, { reason });
+            console.log('Reject response:', res.data);
+            
+            // Update local state
+            setPendingUsers(prev => prev.filter(u => u.id !== userId));
+            setRejectedUsers(prev => [res.data.user, ...prev]);
+            
+            alert('User rejected successfully');
         } catch (error) {
-        console.error('Failed to reject user:', error);
+            console.error('Failed to reject user:', error);
+            alert('Failed to reject user. Please try again.');
         }
     };
 
@@ -229,6 +254,18 @@ const Admin = () => {
         </ModalOverlay>
         );
     };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
+
+    if (!user || user.role !== 'admin') {
+        return <div>Access denied: Admin privileges required</div>;
+    }
 
     return (
         <AppWrapper>

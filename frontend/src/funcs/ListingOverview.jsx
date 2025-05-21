@@ -3,6 +3,7 @@ import { ListingOverviewStyles as S } from './ListingOverviewStyles';
 import { FaList, FaThLarge, FaSearch, FaFilter, FaHome, FaEye, FaStar, FaTree, FaTint, FaSeedling, FaMapMarkerAlt, FaRulerCombined, FaChevronLeft, FaChevronRight, FaAngleDown, FaRegCalendarAlt, FaTimes } from 'react-icons/fa';
 import cabanatuanLots from './cabanatuanLots.json';
 import barangays from './barangays.json';
+import { formatPrice, formatDate } from './formatUtils';
 
 const ListingOverview = ({ navigateTo }) => {
     // State for filters and view
@@ -316,11 +317,11 @@ const ListingOverview = ({ navigateTo }) => {
             
             {[...Array(totalPages)].map((_, index) => (
                 <S.PaginationButton
-                key={index + 1}
-                active={currentPage === index + 1}
-                onClick={() => setCurrentPage(index + 1)}
+                    key={index + 1}
+                    $active={currentPage === index + 1}
+                    onClick={() => setCurrentPage(index + 1)}
                 >
-                {index + 1}
+                    {index + 1}
                 </S.PaginationButton>
             ))}
             
@@ -363,7 +364,7 @@ const ListingOverview = ({ navigateTo }) => {
                     {listing.location}
                     </S.ListingLocation>
                     
-                    <S.ListingPrice>{listing.price}</S.ListingPrice>
+                    <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
                     
                     <S.ListingSpecs>
                     <S.ListingSpecItem>
@@ -399,7 +400,7 @@ const ListingOverview = ({ navigateTo }) => {
                         <S.SellerAvatar src={listing.sellerAvatar} alt={listing.sellerName} />
                         <S.SellerName>{listing.sellerName}</S.SellerName>
                     </S.ListingSellerInfo>
-                    <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{listing.postedDate}</S.ListingDate>
+                    <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{formatDate(listing.postedDate)}</S.ListingDate>
                     </S.ListingFooter>
                 </S.ListingContent>
                 </S.ListingCard>
@@ -453,14 +454,14 @@ const ListingOverview = ({ navigateTo }) => {
                         </div>
                         
                         <div>
-                        <S.ListingPrice>{listing.price}</S.ListingPrice>
+                        <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
                         
                         <S.ListingFooter>
                             <S.ListingSellerInfo>
                             <S.SellerAvatar src={listing.sellerAvatar} alt={listing.sellerName} />
                             <S.SellerName>{listing.sellerName}</S.SellerName>
                             </S.ListingSellerInfo>
-                            <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{listing.postedDate}</S.ListingDate>
+                            <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{formatDate(listing.postedDate)}</S.ListingDate>
                         </S.ListingFooter>
                         </div>
 
@@ -508,23 +509,23 @@ const ListingOverview = ({ navigateTo }) => {
                 
                 {/* Categories navbar with updated styling */}
                 <S.CategoriesNav>
-                    <S.CategoryItem active={activeCategory === 'all'} onClick={() => setActiveCategory('all')}>
+                    <S.CategoryItem $active={activeCategory === 'all'} onClick={() => setActiveCategory('all')}>
                         <FaHome style={{ marginRight: 8 }} />
                         All Properties
                     </S.CategoryItem>
-                    <S.CategoryItem active={activeCategory === 'crops'} onClick={() => setActiveCategory('crops')}>
+                    <S.CategoryItem $active={activeCategory === 'crops'} onClick={() => setActiveCategory('crops')}>
                         <FaSeedling style={{ marginRight: 8 }} />
                         Best for Crops
                     </S.CategoryItem>
-                    <S.CategoryItem active={activeCategory === 'fruits'} onClick={() => setActiveCategory('fruits')}>
+                    <S.CategoryItem $active={activeCategory === 'fruits'} onClick={() => setActiveCategory('fruits')}>
                         <FaTree style={{ marginRight: 8 }} />
                         Fruit Orchards
                     </S.CategoryItem>
-                    <S.CategoryItem active={activeCategory === 'irrigated'} onClick={() => setActiveCategory('irrigated')}>
+                    <S.CategoryItem $active={activeCategory === 'irrigated'} onClick={() => setActiveCategory('irrigated')}>
                         <FaTint style={{ marginRight: 8 }} />
                         Irrigated Lands
                     </S.CategoryItem>
-                    <S.CategoryItem active={activeCategory === 'featured'} onClick={() => setActiveCategory('featured')}>
+                    <S.CategoryItem $active={activeCategory === 'featured'} onClick={() => setActiveCategory('featured')}>
                         <FaStar style={{ marginRight: 8 }} />
                         Featured
                     </S.CategoryItem>
@@ -709,14 +710,14 @@ const ListingOverview = ({ navigateTo }) => {
                         
                         <S.ViewToggle>
                             <S.ViewButton
-                                active={viewMode === 'grid'}
+                                $active={viewMode === 'grid'}
                                 onClick={() => setViewMode('grid')}
                             >
                                 <FaThLarge style={{ marginRight: viewMode === 'grid' ? 4 : 0 }} />
                                 {viewMode === 'grid' && 'Grid'}
                             </S.ViewButton>
                             <S.ViewButton
-                                active={viewMode === 'list'}
+                                $active={viewMode === 'list'}
                                 onClick={() => setViewMode('list')}
                             >
                                 <FaList style={{ marginRight: viewMode === 'list' ? 4 : 0 }} />

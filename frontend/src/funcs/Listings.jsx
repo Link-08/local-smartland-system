@@ -2,98 +2,33 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ListingStyles } from './ListingsStyles';
 import cabanatuanLots from './cabanatuanLots.json';
-
-// Mock data for agricultural land in Cabanatuan
-const mockListing = {
-    id: 'lot-456',
-    title: 'Prime Agricultural Land in Sangitan, Cabanatuan City',
-    description: 'This fertile agricultural lot offers excellent growing conditions for various crops and fruit trees. Located in Barangay Sangitan, Cabanatuan City, this 3-hectare property features rich loamy soil, ideal for rice, corn, vegetables, or fruit orchards. The land comes with water rights from a nearby irrigation canal and has been previously used for rice farming with consistent yields. The property has good road access for farm equipment and transportation of produce to local markets. Cabanatuan Public Market is just 15 minutes away, and the property is located near other successful farms in the area. This is an excellent opportunity for both experienced farmers and agricultural investors looking to capitalize on Nueva Ecija\'s reputation as the "Rice Granary of the Philippines."',
-    price: 2500000,
-    size: '3 hectares',
-    type: 'Agricultural',
-    address: 'Purok 3, Barangay Sangitan, Cabanatuan City, Nueva Ecija',
-    coordinates: { lat: 15.4875, lng: 120.9675 },
-    amenities: ['Irrigation Access', 'Farm-to-Market Road', 'Electric Power Lines Nearby', 'Potable Water Source'],
-    restrictions: ['Agricultural Use Only', 'No Residential Development Allowed', 'Must Follow Local Farming Regulations'],
-    zoning: 'A-1 Agricultural',
-    seller: {
-        id: 'user-789',
-        name: 'Ricardo Santos',
-        profileImage: '/api/placeholder/40/40',
-        rating: 4.7,
-        listings: 8,
-        memberSince: '2019-06-12'
-    },
-    images: [
-        '/api/placeholder/800/500',
-        '/api/placeholder/800/500',
-        '/api/placeholder/800/500',
-        '/api/placeholder/800/500'
-    ],
-    listedDate: '2024-04-15',
-    views: 284,
-    saved: 31,
-    soilType: 'Loamy',
-    previousCrops: ['Rice', 'Corn'],
-    averageYield: '5.2 tons per hectare (rice)',
-    waterSource: 'Irrigation canal + seasonal rainfall',
-    topography: 'Mostly flat with slight slope for drainage'
-};
+import { formatPrice, formatDate } from './formatUtils';
 
 const getSellerInfo = (sellerKey) => {
   // Example mapping, you can expand this as needed
   const sellerProfiles = {
-    'real-estate.ph': {
+    'seller': {
       name: 'Real Estate PH',
       profileImage: '/api/placeholder/40/40',
       rating: 4.5,
       listings: 12,
       memberSince: '2018-01-01',
-    },
-    'dotproperty.com.ph': {
-      name: 'Dot Property',
-      profileImage: '/api/placeholder/40/40',
-      rating: 4.2,
-      listings: 7,
-      memberSince: '2019-03-15',
-    },
-    'arealtyco.net': {
-      name: 'A Realty Co.',
-      profileImage: '/api/placeholder/40/40',
-      rating: 4.0,
-      listings: 5,
-      memberSince: '2020-07-10',
-    },
-    'myproperty.ph': {
-      name: 'MyProperty',
-      profileImage: '/api/placeholder/40/40',
-      rating: 4.3,
-      listings: 9,
-      memberSince: '2017-11-20',
-    },
-    'lamudi.com.ph': {
-      name: 'Lamudi',
-      profileImage: '/api/placeholder/40/40',
-      rating: 4.6,
-      listings: 15,
-      memberSince: '2016-05-05',
-    },
+    }
   };
   return sellerProfiles[sellerKey] || {
-    name: sellerKey,
+    name: 'Unknown Seller',
     profileImage: '/api/placeholder/40/40',
-    rating: 4.0,
-    listings: 1,
-    memberSince: '2021-01-01',
+    rating: 0,
+    listings: 0,
+    memberSince: '2024-01-01',
   };
 };
 
 const ListingPage = ({ property }) => {
     const { id } = useParams();
-    const lot = cabanatuanLots.find(l => l.name === (property?.title || mockListing.title));
-    const sellerInfo = lot ? getSellerInfo(lot.seller) : mockListing.seller;
+    const lot = cabanatuanLots.find(l => l.name === (property?.title || ''));
+    const sellerInfo = lot ? getSellerInfo(lot.seller) : null;
     const listing = {
-        ...mockListing,
         ...property,
         ...(lot ? {
             title: lot.name,
@@ -103,7 +38,7 @@ const ListingPage = ({ property }) => {
         } : {}),
         images: (property && property.images && property.images.length > 0)
             ? property.images
-            : mockListing.images
+            : []
     };
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -157,7 +92,7 @@ const ListingPage = ({ property }) => {
                         <ListingStyles.ListingLocation>{listing.address}</ListingStyles.ListingLocation>
                     </ListingStyles.TitleSection>
                     <ListingStyles.PriceSection>
-                        <ListingStyles.ListingPrice>₱{listing.price && typeof listing.price === 'number' ? listing.price.toLocaleString() : ''}</ListingStyles.ListingPrice>
+                        <ListingStyles.ListingPrice>{formatPrice(listing.price)}</ListingStyles.ListingPrice>
                         <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
                     </ListingStyles.PriceSection>
                 </ListingStyles.ListingHeader>
@@ -205,7 +140,7 @@ const ListingPage = ({ property }) => {
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
                         <ListingStyles.SpecValue>
-                            {new Date(listing.listedDate).toLocaleDateString()}
+                            {formatDate(listing.listedDate)}
                         </ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>

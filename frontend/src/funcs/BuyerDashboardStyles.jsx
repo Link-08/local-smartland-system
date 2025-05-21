@@ -296,8 +296,8 @@ export const DashboardStyles = {
         padding: 8px 16px;
         cursor: pointer;
         position: relative;
-        color: ${props => props.active ? 'white' : 'rgba(255, 255, 255, 0.6)'};
-        font-weight: ${props => props.active ? '600' : '400'};
+        color: ${props => props.$active ? 'white' : 'rgba(255, 255, 255, 0.6)'};
+        font-weight: ${props => props.$active ? '600' : '400'};
         
         &::after {
         content: '';
@@ -306,7 +306,7 @@ export const DashboardStyles = {
         left: 0;
         width: 100%;
         height: 3px;
-        background-color: ${props => props.active ? '#3498db' : 'transparent'};
+        background-color: ${props => props.$active ? '#3498db' : 'transparent'};
         border-radius: 3px 3px 0 0;
         transition: all 0.2s ease;
         }

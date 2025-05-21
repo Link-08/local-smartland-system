@@ -7,7 +7,7 @@
         "features": "Commercial lot with improvements, 20% downpayment, 80% loanable balance",
         "category": "Residential",
         "isFeatured": true,
-        "seller": "real-estate.ph"
+        "seller": "seller"
     },
     {
         "name": "Kalikid Sur Shophouse",
@@ -16,7 +16,7 @@
         "price_php": 4620001,
         "features": "Residential/commercial property with 120 sqm floor area",
         "category": "Residential",
-        "seller": "real-estate.ph"
+        "seller": "seller"
     },
     {
         "name": "Hermogenes C. Concepcion Sr. Corner Lot",
@@ -25,7 +25,7 @@
         "price_php": 2108000,
         "features": "Corner lot with clean title, updated tax",
         "category": "Residential",
-        "seller": "real-estate.ph"
+        "seller": "seller"
     },
     {
         "name": "Brgy. Sta. Arcadio Agricultural Lot",
@@ -34,7 +34,7 @@
         "price_php": 26000000,
         "features": "Along secondary road, 40-meter frontage, clean title",
         "category": "Agricultural",
-        "seller": "dotproperty.com.ph"
+        "seller": "seller"
     },
     {
         "name": "Kalikid Farmhouse with Amenities",
@@ -43,7 +43,7 @@
         "price_php": 12000000,
         "features": "Farmhouse with 5 rooms, swimming pool, piggery, fish pond, fruit-bearing trees",
         "category": "Agricultural",
-        "seller": "arealtyco.net"
+        "seller": "seller"
     },
     {
         "name": "Santa Arcadia Agricultural Lot",
@@ -52,7 +52,7 @@
         "price_php": 15537000,
         "features": "Along main road, suitable for agricultural use",
         "category": "Agricultural",
-        "seller": "dotproperty.com.ph"
+        "seller": "seller"
     },
     {
         "name": "Undeveloped Subdivision",
@@ -61,7 +61,7 @@
         "price_php": 45000000,
         "features": "Residential property with clean title",
         "category": "Commercial",
-        "seller": "myproperty.ph"
+        "seller": "seller"
     },
     {
         "name": "Corner Commercial Lot Near SM Megacenter",
@@ -70,7 +70,7 @@
         "price_php": 7500000,
         "features": "Corner lot with 22.89 meters frontage, clean title",
         "category": "Commercial",
-        "seller": "myproperty.ph"
+        "seller": "seller"
     },
     {
         "name": "Camella Nueva Ecija Residential Lots",
@@ -79,6 +79,6 @@
         "price_php": 4145000,
         "features": "Bank financing available, located in a developed subdivision",
         "category": "Residential",
-        "seller": "lamudi.com.ph"
+        "seller": "seller"
     }
 ]

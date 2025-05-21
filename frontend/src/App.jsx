@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AuthProvider } from "./funcs/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import Navbar from "./funcs/Navbar";
 import MapView from "./funcs/MapView";
 import Admin from "./funcs/Admin";

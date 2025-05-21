@@ -7,15 +7,11 @@ import {
     FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse
   } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles"
-import axios from 'axios';
-import AuthContext from './AuthContext';
-
-// Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:5000';
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+import api from '../config/axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const BuyerDashboard = ({ navigateTo }) => {
-    const { user: authUser, logout } = useContext(AuthContext);
+    const { user: authUser, logout } = useAuth();
     
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -27,119 +23,21 @@ const BuyerDashboard = ({ navigateTo }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    // Fetch user data on component mount
+    // Update user state when authUser changes
     useEffect(() => {
-        const fetchUserData = async () => {
-            const token = localStorage.getItem('token');
-            console.log('Current token:', token); // Debug log
-            
-            if (!token) {
-                console.log('No token found in localStorage'); // Debug log
-                setError('No authentication token found. Please log in.');
-                setLoading(false);
-                navigateTo('/login');
-                return;
-            }
-
-            try {
-                console.log('Making request to /auth/me with token:', token); // Debug log
-                const response = await axios.get('/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                console.log('Response from /auth/me:', response.data); // Debug log
-                
-                if (response.data && response.data.user) {
-                    setUser(response.data.user);
-                    setError(null);
-                } else {
-                    console.log('Invalid response format:', response.data); // Debug log
-                    throw new Error('Invalid response format from server');
-                }
-            } catch (err) {
-                console.log('Error details:', {
-                    status: err.response?.status,
-                    data: err.response?.data,
-                    message: err.message
-                }); // Debug log
-                
-                let errorMessage = 'Failed to load user data. ';
-                
-                if (err.response) {
-                    switch (err.response.status) {
-                        case 401:
-                            errorMessage += 'Your session has expired. Please log in again.';
-                            console.log('Session expired, logging out...'); // Debug log
-                            logout();
-                            navigateTo('/login');
-                            break;
-                        case 404:
-                            errorMessage += 'User profile not found.';
-                            break;
-                        default:
-                            errorMessage += 'Please try again later.';
-                    }
-                } else if (err.request) {
-                    errorMessage += 'No response from server. Please check your connection.';
-                } else {
-                    errorMessage += err.message;
-                }
-                
-                setError(errorMessage);
-                console.error('Error fetching user data:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUserData();
-    }, [navigateTo, logout]);
+        if (authUser) {
+            setUser(authUser);
+            setLoading(false);
+            setError(null);
+        } else {
+            setError('No authentication token found. Please log in.');
+            setLoading(false);
+            navigateTo('/login');
+        }
+    }, [authUser, navigateTo]);
 
     // Mock saved properties
-    const savedProperties = [
-        {
-        id: 1,
-        title: 'Prime Rice Farm with Irrigation',
-        location: 'Barangay Imelda, Cabanatuan, Nueva Ecija',
-        price: '₱8,750,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 5.2, // In hectares
-        waterRights: 'NIA Irrigation',
-        suitableCrops: 'Rice, Corn, Vegetables'
-        },
-        {
-        id: 2,
-        title: 'Fertile Farmland for Root Crops',
-        location: 'Barangay Bantug, Cabanatuan, Nueva Ecija',
-        price: '₱6,800,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 3.5, // In hectares
-        waterRights: 'Deep Well',
-        suitableCrops: 'Onions, Garlic, Sweet Potato'
-        },
-        {
-        id: 3,
-        title: 'Orchard Land with Established Trees',
-        location: 'Barangay San Josef, Cabanatuan, Nueva Ecija',
-        price: '₱12,500,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 7.8, // In hectares
-        waterRights: 'Deep Well + Rainwater Collection',
-        suitableCrops: 'Mango, Guava, Calamansi, Banana'
-        },
-        {
-        id: 4,
-        title: 'Lowland Farm with Rich Soil',
-        location: 'Barangay Pamaldan, Cabanatuan, Nueva Ecija',
-        price: '₱4,950,000',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef',
-        acres: 2.3, // In hectares
-        waterRights: 'Creek Access',
-        suitableCrops: 'Eggplant, Okra, String Beans, Bitter Gourd'
-        }
-    ];
+    const savedProperties = [];
     
     // Mock recent activities
     const recentActivities = [
@@ -489,13 +387,13 @@ const BuyerDashboard = ({ navigateTo }) => {
                         </div>
                         
                         <DashboardStyles.TabsContainer>
-                            <DashboardStyles.Tab active={activeTab === 'saved'} onClick={() => setActiveTab('saved')}>
+                            <DashboardStyles.Tab $active={activeTab === 'saved'} onClick={() => setActiveTab('saved')}>
                             Saved Properties
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'recent'} onClick={() => setActiveTab('recent')}>
+                            <DashboardStyles.Tab $active={activeTab === 'recent'} onClick={() => setActiveTab('recent')}>
                             Recently Viewed
                             </DashboardStyles.Tab>
-                            <DashboardStyles.Tab active={activeTab === 'recommended'} onClick={() => setActiveTab('recommended')}>
+                            <DashboardStyles.Tab $active={activeTab === 'recommended'} onClick={() => setActiveTab('recommended')}>
                             Recommended Farms
                             </DashboardStyles.Tab>
                         </DashboardStyles.TabsContainer>

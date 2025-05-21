@@ -2,11 +2,10 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const sharp = require('sharp');
-const sequelize = require('./config/database');
-const User = require('./models/User');
-const SellerMetrics = require('./models/SellerMetrics');
-const Property = require('./models/Property');
+const { sequelize, User, SellerMetrics, Property } = require('./models');
 const maintenanceMode = require('./middleware/maintenance');
+const path = require('path');
+const fs = require('fs');
 
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
@@ -15,17 +14,30 @@ const sellerRoutes = require("./routes/seller");
 const propertyRoutes = require("./routes/property");
 const marketRoutes = require("./routes/market");
 const systemRoutes = require("./routes/system");
-const pool = require("./config/db");
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+const avatarsDir = path.join(uploadsDir, 'avatars');
+
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+if (!fs.existsSync(avatarsDir)) {
+    fs.mkdirSync(avatarsDir);
+}
 
 app.use(cors());
 app.use(express.json());
 app.use(maintenanceMode);
 
-app.use("/auth", authRoutes);
-app.use("/admin", adminRoutes);
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/elevations", elevationRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/properties", propertyRoutes);
@@ -61,83 +73,109 @@ app.get("/api/placeholder/:width/:height", async (req, res) => {
   }
 });
 
-app.get("/", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT NOW()");
-        res.json({ message: "Database connected successfully!", time: result.rows[0].now });
-    } catch (err) {
-        res.status(500).json({ error: "Database connection failed", details: err.message });
-    }
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
 // Initialize database and create mock data
 const initializeDatabase = async () => {
   try {
-    await sequelize.sync({ force: true }); // This will recreate tables on each restart
+    // Sync all models with the database without creating backup tables
+    await sequelize.sync({ force: false, logging: false });
     
-    // Create mock admin user
-    await User.create({
-      id: 'admin',
-      username: 'admin',
-      email: 'admin@example.com',
-      password: 'admin123',
-      role: 'admin'
-    });
+    // Check if admin user exists before creating
+    const adminExists = await User.findOne({ where: { email: 'admin@example.com' } });
+    if (!adminExists) {
+      // Create mock admin user
+      await User.create({
+        username: 'admin',
+        email: 'admin@example.com',
+        password: 'admin123',
+        role: 'admin'
+      });
+    }
 
-    // Create mock buyer
-    await User.create({
-      id: 'buyer',
-      username: 'buyer',
-      email: 'buyer@example.com',
-      password: 'buyer123',
-      role: 'buyer'
-    });
+    // Check if buyer exists before creating
+    const buyerExists = await User.findOne({ where: { email: 'buyer@example.com' } });
+    if (!buyerExists) {
+      // Create mock buyer
+      await User.create({
+        username: 'buyer',
+        email: 'buyer@example.com',
+        password: 'buyer123',
+        role: 'buyer',
+        firstName: 'John',
+        lastName: 'Smith',
+        phone: '0912 345 6789',
+        avatar: 'JS',
+        memberSince: '2024-03-15'
+      });
+    }
 
-    // Create mock seller
-    const seller = await User.create({
-      id: 'real-estate.ph',
-      username: 'seller',
-      email: 'seller@example.com',
-      password: 'seller123',
-      role: 'seller',
-      firstName: 'Real',
-      lastName: 'Estate PH',
-      phone: '0917 111 1111',
-      avatar: 'RE',
-      memberSince: '2018-01-01'
-    });
+    // Check if seller exists before creating
+    const sellerExists = await User.findOne({ where: { email: 'seller@example.com' } });
+    if (!sellerExists) {
+      // Create mock seller
+      const seller = await User.create({
+        username: 'seller',
+        email: 'seller@example.com',
+        password: 'seller123',
+        role: 'seller',
+        firstName: 'Real',
+        lastName: 'Estate PH',
+        phone: '0923 456 7890',
+        avatar: 'RE',
+        memberSince: '2018-01-01'
+      });
 
-    // Create default metrics for the mock seller
-    await SellerMetrics.create({
-      sellerId: seller.id,
-      totalViews: 0,
-      totalInquiries: 0,
-      avgTimeToSale: 0
-    });
+      // Create default metrics for the mock seller
+      await SellerMetrics.create({
+        sellerId: seller.id,
+        totalViews: 0,
+        totalInquiries: 0,
+        avgTimeToSale: 0
+      });
 
-    // Create some mock properties
-    await Property.create({
-      id: 'real-estate.ph-lot-1',
-      sellerId: seller.id,
-      title: 'Prime Rice Farm with Irrigation',
-      location: 'Barangay Imelda, Cabanatuan, Nueva Ecija',
-      price: 8750000,
-      acres: 5.2,
-      waterRights: 'NIA Irrigation',
-      suitableCrops: 'Rice, Corn, Vegetables',
-      status: 'active',
-      viewCount: 0,
-      inquiries: 0,
-      datePosted: new Date()
-    });
+      // Create some sample properties for the mock seller
+      await Property.create({
+        id: 'PROP-001',
+        sellerId: seller.id,
+        title: 'Prime Rice Farm with Irrigation',
+        location: 'Nueva Ecija',
+        price: 2500000.00,
+        acres: 5.5,
+        waterRights: 'NIA Irrigation',
+        suitableCrops: 'Rice, Corn',
+        status: 'active'
+      });
+
+      await Property.create({
+        id: 'PROP-002',
+        sellerId: seller.id,
+        title: 'Fertile Farmland for Root Crops',
+        location: 'Benguet',
+        price: 1800000.00,
+        acres: 3.2,
+        waterRights: 'Natural Spring',
+        suitableCrops: 'Potatoes, Carrots',
+        status: 'active'
+      });
+    }
 
     console.log('Database initialized with mock data');
   } catch (error) {
     console.error('Error initializing database:', error);
+    // Don't throw the error, just log it and continue
   }
 };
 
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
   await initializeDatabase();
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong!", error: err.message });
 });

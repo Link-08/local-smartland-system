@@ -1,71 +1,82 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const User = require('./User');
 
-const Property = sequelize.define('Property', {
-  id: {
-    type: DataTypes.STRING,
-    primaryKey: true
-  },
-  sellerId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    references: {
-      model: 'Users',
-      key: 'id'
+module.exports = (sequelize) => {
+  const Property = sequelize.define('Property', {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true
+    },
+    sellerId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    price: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false
+    },
+    acres: {
+      type: DataTypes.FLOAT,
+      allowNull: false
+    },
+    waterRights: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    suitableCrops: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: []
+    },
+    images: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: []
+    },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'sold', 'pending'),
+      defaultValue: 'active'
+    },
+    viewCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    inquiries: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    datePosted: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
     }
-  },
-  title: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  location: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  price: {
-    type: DataTypes.DECIMAL(12, 2),
-    allowNull: false
-  },
-  acres: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
-  },
-  waterRights: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  suitableCrops: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  image: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    defaultValue: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
-  },
-  status: {
-    type: DataTypes.ENUM('active', 'pending', 'sold'),
-    defaultValue: 'active'
-  },
-  viewCount: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
-  inquiries: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
-  datePosted: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
-}, {
-  timestamps: true
-});
+  });
 
-// Define association
-Property.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
-User.hasMany(Property, { foreignKey: 'sellerId' });
+  Property.associate = (models) => {
+    Property.belongsTo(models.User, {
+      foreignKey: 'sellerId',
+      as: 'seller'
+    });
+  };
 
-module.exports = Property; 
+  return Property;
+}; 

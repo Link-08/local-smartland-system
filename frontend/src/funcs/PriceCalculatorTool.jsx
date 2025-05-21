@@ -61,12 +61,34 @@ const PriceCalculatorTool = () => {
       {result && (
         <S.ToolResultBox>
           <div style={{ marginBottom: "12px" }}>
-            <p style={{ fontSize: "14px", color: "#dddddd", margin: "0 0 8px 0" }}>Estimated price range based on current market conditions:</p>
-            <S.ToolCardValue large bold color="#2980b9">
-              {result.count > 0
-                ? `₱${result.min.toLocaleString()} - ₱${result.max.toLocaleString()} per hectare (based on ${result.count} comparables)`
-                : "No comparable data found."}
-            </S.ToolCardValue>
+            <p style={{ fontSize: "14px", color: "#dddddd", margin: "0 0 8px 0" }}>
+              {result.message}
+            </p>
+            {result.count > 0 ? (
+              <>
+                <S.ToolCardValue large bold color="#2980b9" style={{ marginBottom: "8px" }}>
+                  ₱{result.min.toLocaleString()} - ₱{result.max.toLocaleString()} per hectare
+                </S.ToolCardValue>
+                <div style={{ 
+                  fontSize: "14px", 
+                  color: "#7f8c8d",
+                  marginBottom: "12px"
+                }}>
+                  Weighted average: ₱{result.weightedAverage.toLocaleString()} per hectare
+                </div>
+                <div style={{ 
+                  fontSize: "13px", 
+                  color: "#95a5a6",
+                  fontStyle: "italic"
+                }}>
+                  Price range excludes outliers and is weighted towards recent sales
+                </div>
+              </>
+            ) : (
+              <S.ToolCardValue large bold color="#e74c3c">
+                No comparable data found
+              </S.ToolCardValue>
+            )}
           </div>
         </S.ToolResultBox>
       )}
