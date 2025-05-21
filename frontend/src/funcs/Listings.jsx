@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ListingStyles } from './ListingsStyles';
-import cabanatuanLots from './cabanatuanLots.json';
 import { formatPrice, formatDate } from './formatUtils';
+import api from '../api';
+import { FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaStar, FaList, FaRegCalendarAlt } from 'react-icons/fa';
 
 const getSellerInfo = (sellerKey) => {
   // Example mapping, you can expand this as needed
@@ -26,32 +27,71 @@ const getSellerInfo = (sellerKey) => {
 
 const ListingPage = ({ property }) => {
     const { id } = useParams();
-    const lot = cabanatuanLots.find(l => l.name === (property?.title || ''));
-    const sellerInfo = lot ? getSellerInfo(lot.seller) : null;
-    const listing = {
+    const [listing, setListing] = useState(property ? {
         ...property,
-        ...(lot ? {
-            title: lot.name,
-            address: lot.location,
-            price: lot.price_php,
-            seller: sellerInfo,
-        } : {}),
-        images: (property && property.images && property.images.length > 0)
-            ? property.images
-            : []
-    };
+        images: property.images || [property.imageUrl || '/api/placeholder/800/500'],
+        seller: {
+            name: property.sellerName || 'Unknown Seller',
+            profileImage: property.sellerAvatar || '/api/placeholder/40/40',
+            rating: 0,
+            listings: 0,
+            memberSince: new Date().toISOString(),
+        },
+        amenities: property.amenities || [],
+        restrictions: property.restrictions || [],
+        views: property.views || 0,
+        saved: property.saved || 0
+    } : null);
+    const [loading, setLoading] = useState(!property);
+    const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [contactModalOpen, setContactModalOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchProperty = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get(`/api/properties/${id}`);
+                const propertyData = response.data;
+                
+                setListing({
+                    ...propertyData,
+                    images: propertyData.images || [propertyData.image || '/api/placeholder/800/500'],
+                    seller: {
+                        name: `${propertyData.seller?.firstName} ${propertyData.seller?.lastName}`,
+                        profileImage: propertyData.seller?.avatar || '/api/placeholder/40/40',
+                        rating: propertyData.seller?.rating || 0,
+                        listings: propertyData.seller?.listings || 0,
+                        memberSince: propertyData.seller?.memberSince || new Date().toISOString(),
+                    },
+                    amenities: propertyData.amenities || [],
+                    restrictions: propertyData.restrictions || [],
+                    views: propertyData.views || 0,
+                    saved: propertyData.saved || 0
+                });
+            } catch (err) {
+                console.error('Error fetching property:', err);
+                setError('Failed to load property details. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Only fetch if we don't have property data and we have an ID
+        if (!property && id) {
+            fetchProperty();
+        }
+    }, [id, property]);
     
     const handlePrevImage = () => {
         setActiveImageIndex(prev => 
-        prev === 0 ? listing.images.length - 1 : prev - 1
+            prev === 0 ? listing.images.length - 1 : prev - 1
         );
     };
     
     const handleNextImage = () => {
         setActiveImageIndex(prev => 
-        prev === listing.images.length - 1 ? 0 : prev + 1
+            prev === listing.images.length - 1 ? 0 : prev + 1
         );
     };
     
@@ -64,9 +104,33 @@ const ListingPage = ({ property }) => {
         alert('Share functionality would be implemented here');
     };
     
-    const handleSave = () => {
-        // In a real app, implement save functionality
-        alert('Save functionality would be implemented here');
+    const handleSave = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please log in to save properties to favorites');
+            return;
+        }
+
+        try {
+            const response = await api.post(`/api/favorites/${listing.id}`);
+            if (response.status === 201) {
+                // Update the saved count in the UI
+                setListing(prev => ({
+                    ...prev,
+                    saved: prev.saved + 1
+                }));
+                alert('Property saved to favorites');
+            }
+        } catch (error) {
+            if (error.response?.status === 400) {
+                alert('Property is already in your favorites');
+            } else if (error.response?.status === 401) {
+                alert('Please log in to save properties to favorites');
+            } else {
+                console.error('Error saving property:', error);
+                alert('Failed to save property to favorites');
+            }
+        }
     };
     
     const handleContact = () => {
@@ -76,6 +140,18 @@ const ListingPage = ({ property }) => {
     const closeContactModal = () => {
         setContactModalOpen(false);
     };
+
+    if (loading) {
+        return <div>Loading property details...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
+    if (!listing) {
+        return <div>Property not found</div>;
+    }
 
     return (
         <ListingStyles.PageWrapper>
@@ -89,7 +165,7 @@ const ListingPage = ({ property }) => {
                 <ListingStyles.ListingHeader>
                     <ListingStyles.TitleSection>
                         <ListingStyles.ListingTitle>{listing.title}</ListingStyles.ListingTitle>
-                        <ListingStyles.ListingLocation>{listing.address}</ListingStyles.ListingLocation>
+                        <ListingStyles.ListingLocation>{listing.location}</ListingStyles.ListingLocation>
                     </ListingStyles.TitleSection>
                     <ListingStyles.PriceSection>
                         <ListingStyles.ListingPrice>{formatPrice(listing.price)}</ListingStyles.ListingPrice>
@@ -100,22 +176,28 @@ const ListingPage = ({ property }) => {
                 <ListingStyles.ContentGrid>
                 <ListingStyles.MainContent>
                     <ListingStyles.ImageGallery>
-                    <ListingStyles.MainImage src={listing.images[activeImageIndex]} alt={`Image ${activeImageIndex + 1} of agricultural property`} />
-                    <ListingStyles.GalleryControls>
-                        <ListingStyles.GalleryLeftButton onClick={handlePrevImage}>&lt;</ListingStyles.GalleryLeftButton>
-                        <ListingStyles.GalleryRightButton onClick={handleNextImage}>&gt;</ListingStyles.GalleryRightButton>
-                    </ListingStyles.GalleryControls>
-                    <ListingStyles.ImageThumbnails>
-                        {listing.images.map((img, index) => (
-                        <ListingStyles.ThumbnailWrapper key={index} active={index === activeImageIndex}>
-                            <ListingStyles.Thumbnail 
-                            src={img} 
-                            alt={`Thumbnail ${index + 1}`} 
+                    <ListingStyles.MainImage src={listing.images[activeImageIndex] || listing.image} alt={listing.title} />
+                    {listing.images.length > 1 && (
+                        <>
+                            <ListingStyles.PrevButton onClick={handlePrevImage}>
+                                <FaChevronLeft />
+                            </ListingStyles.PrevButton>
+                            <ListingStyles.NextButton onClick={handleNextImage}>
+                                <FaChevronRight />
+                            </ListingStyles.NextButton>
+                        </>
+                    )}
+                    <ListingStyles.ThumbnailsContainer>
+                        {listing.images.map((image, index) => (
+                        <ListingStyles.Thumbnail
+                            key={index}
+                            src={image}
+                            alt={`${listing.title} - Image ${index + 1}`}
+                            active={index === activeImageIndex}
                             onClick={() => handleThumbnailClick(index)}
-                            />
-                        </ListingStyles.ThumbnailWrapper>
+                        />
                         ))}
-                    </ListingStyles.ImageThumbnails>
+                    </ListingStyles.ThumbnailsContainer>
                     </ListingStyles.ImageGallery>
                     
                     <ListingStyles.Section>
@@ -123,29 +205,21 @@ const ListingPage = ({ property }) => {
                     <ListingStyles.PropertySpecs>
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Size</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.size}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecValue>{listing.acres} hectares</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Type</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.type}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecValue>{listing.category}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Soil Type</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.soilType}</ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Zoning</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.zoning}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecLabel>Water Rights</ListingStyles.SpecLabel>
+                        <ListingStyles.SpecValue>{listing.waterRights}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
                         <ListingStyles.SpecValue>
-                            {formatDate(listing.listedDate)}
+                            {formatDate(listing.datePosted)}
                         </ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Water Source</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.waterSource}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                     </ListingStyles.PropertySpecs>
                     </ListingStyles.Section>
@@ -159,16 +233,8 @@ const ListingPage = ({ property }) => {
                     <ListingStyles.SectionTitle>Farm Details</ListingStyles.SectionTitle>
                     <ListingStyles.PropertySpecs>
                         <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Previous Crops</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.previousCrops.join(', ')}</ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Average Yield</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.averageYield}</ListingStyles.SpecValue>
-                        </ListingStyles.SpecItem>
-                        <ListingStyles.SpecItem>
-                        <ListingStyles.SpecLabel>Topography</ListingStyles.SpecLabel>
-                        <ListingStyles.SpecValue>{listing.topography}</ListingStyles.SpecValue>
+                        <ListingStyles.SpecLabel>Suitable Crops</ListingStyles.SpecLabel>
+                        <ListingStyles.SpecValue>{listing.suitableCrops}</ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
                     </ListingStyles.PropertySpecs>
                     </ListingStyles.Section>
@@ -194,12 +260,11 @@ const ListingPage = ({ property }) => {
                     <ListingStyles.Section>
                     <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
                     <ListingStyles.MapContainer>
-                        {/* In a real app, this would be replaced with a proper map component */}
                         <ListingStyles.MapPlaceholder>
-                        Map showing location at {listing.address}
+                        Map showing location at {listing.location}
                         </ListingStyles.MapPlaceholder>
                     </ListingStyles.MapContainer>
-                    <ListingStyles.Address>{listing.address}</ListingStyles.Address>
+                    <ListingStyles.Address>{listing.location}</ListingStyles.Address>
                     </ListingStyles.Section>
                 </ListingStyles.MainContent>
                 

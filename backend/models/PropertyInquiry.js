@@ -3,31 +3,23 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   const PropertyInquiry = sequelize.define('PropertyInquiry', {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: () => `INQ-${Date.now()}`
+    },
+    userId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
     },
     propertyId: {
       type: DataTypes.STRING,
       allowNull: false,
       references: {
         model: 'Properties',
-        key: 'id'
-      }
-    },
-    sellerId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id'
-      }
-    },
-    buyerId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: 'Users',
         key: 'id'
       }
     },
@@ -39,24 +31,24 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('pending', 'responded', 'closed'),
       defaultValue: 'pending'
     },
-    response: {
-      type: DataTypes.TEXT,
-      allowNull: true
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
     }
   });
 
   PropertyInquiry.associate = (models) => {
+    PropertyInquiry.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user'
+    });
     PropertyInquiry.belongsTo(models.Property, {
       foreignKey: 'propertyId',
       as: 'property'
-    });
-    PropertyInquiry.belongsTo(models.User, {
-      foreignKey: 'sellerId',
-      as: 'seller'
-    });
-    PropertyInquiry.belongsTo(models.User, {
-      foreignKey: 'buyerId',
-      as: 'buyer'
     });
   };
 

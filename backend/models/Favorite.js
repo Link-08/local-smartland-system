@@ -1,11 +1,11 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const PropertyView = sequelize.define('PropertyView', {
+  const Favorite = sequelize.define('Favorite', {
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
-      defaultValue: () => `VIEW-${Date.now()}`
+      defaultValue: () => `FAV-${Date.now()}`
     },
     userId: {
       type: DataTypes.STRING,
@@ -23,22 +23,22 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
-    viewedAt: {
+    dateAdded: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
     }
   });
 
-  PropertyView.associate = (models) => {
-    PropertyView.belongsTo(models.User, {
+  Favorite.associate = (models) => {
+    Favorite.belongsTo(models.User, {
       foreignKey: 'userId',
       as: 'user'
     });
-    PropertyView.belongsTo(models.Property, {
+    Favorite.belongsTo(models.Property, {
       foreignKey: 'propertyId',
       as: 'property'
     });
   };
 
-  return PropertyView;
+  return Favorite;
 }; 

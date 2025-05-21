@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { Property, SellerMetrics } = require('../models');
+const { Property, SellerMetrics, User } = require('../models');
 
 // Get all properties
 router.get('/', async (req, res) => {
     try {
-        const properties = await Property.findAll();
+        const properties = await Property.findAll({
+            include: [{
+                model: User,
+                as: 'seller',
+                attributes: ['id', 'firstName', 'lastName', 'avatar', 'memberSince']
+            }]
+        });
         res.json(properties);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -16,7 +22,12 @@ router.get('/', async (req, res) => {
 router.get('/seller/:sellerId', async (req, res) => {
     try {
         const properties = await Property.findAll({
-            where: { sellerId: req.params.sellerId }
+            where: { sellerId: req.params.sellerId },
+            include: [{
+                model: User,
+                as: 'seller',
+                attributes: ['id', 'firstName', 'lastName', 'avatar', 'memberSince']
+            }]
         });
         res.json(properties);
     } catch (error) {
@@ -27,7 +38,13 @@ router.get('/seller/:sellerId', async (req, res) => {
 // Get single property by ID
 router.get('/:id', async (req, res) => {
     try {
-        const property = await Property.findByPk(req.params.id);
+        const property = await Property.findByPk(req.params.id, {
+            include: [{
+                model: User,
+                as: 'seller',
+                attributes: ['id', 'firstName', 'lastName', 'avatar', 'memberSince']
+            }]
+        });
         if (!property) {
             return res.status(404).json({ error: 'Property not found' });
         }

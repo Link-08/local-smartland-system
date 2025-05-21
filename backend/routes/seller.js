@@ -104,8 +104,14 @@ router.get('/metrics/:sellerId', auth, async (req, res) => {
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
         const recentViews = await PropertyView.count({
+            include: [{
+                model: Property,
+                as: 'property',
+                where: {
+                    sellerId
+                }
+            }],
             where: {
-                sellerId,
                 createdAt: {
                     [Op.gte]: thirtyDaysAgo
                 }
@@ -113,8 +119,14 @@ router.get('/metrics/:sellerId', auth, async (req, res) => {
         });
 
         const previousViews = await PropertyView.count({
+            include: [{
+                model: Property,
+                as: 'property',
+                where: {
+                    sellerId
+                }
+            }],
             where: {
-                sellerId,
                 createdAt: {
                     [Op.gte]: sixtyDaysAgo,
                     [Op.lt]: thirtyDaysAgo
@@ -123,8 +135,14 @@ router.get('/metrics/:sellerId', auth, async (req, res) => {
         });
 
         const recentInquiries = await PropertyInquiry.count({
+            include: [{
+                model: Property,
+                as: 'property',
+                where: {
+                    sellerId
+                }
+            }],
             where: {
-                sellerId,
                 createdAt: {
                     [Op.gte]: thirtyDaysAgo
                 }
@@ -132,8 +150,14 @@ router.get('/metrics/:sellerId', auth, async (req, res) => {
         });
 
         const previousInquiries = await PropertyInquiry.count({
+            include: [{
+                model: Property,
+                as: 'property',
+                where: {
+                    sellerId
+                }
+            }],
             where: {
-                sellerId,
                 createdAt: {
                     [Op.gte]: sixtyDaysAgo,
                     [Op.lt]: thirtyDaysAgo

@@ -1,12 +1,26 @@
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const fs = require('fs');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
 
+// Get the database file path
+const dbPath = path.join(__dirname, '../database.sqlite');
+
+// If we're not in test mode and the database exists, make a backup
+if (!isTest && fs.existsSync(dbPath)) {
+    const backupPath = `${dbPath}.backup`;
+    if (fs.existsSync(backupPath)) {
+        fs.unlinkSync(backupPath);
+    }
+    fs.copyFileSync(dbPath, backupPath);
+    console.log('Database backup created');
+}
+
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: isTest ? ':memory:' : path.join(__dirname, '../database.sqlite'),
+    storage: isTest ? ':memory:' : dbPath,
     logging: false
 });
 
@@ -18,34 +32,131 @@ const Property = require('./Property')(sequelize);
 const PropertyView = require('./PropertyView')(sequelize);
 const PropertyInquiry = require('./PropertyInquiry')(sequelize);
 const PropertySale = require('./PropertySale')(sequelize);
+const Favorite = require('./Favorite')(sequelize);
 
 // Set up associations
 const models = {
-  User,
-  Log,
-  SellerMetrics,
-  Property,
-  PropertyView,
-  PropertyInquiry,
-  PropertySale
+    User,
+    Log,
+    SellerMetrics,
+    Property,
+    PropertyView,
+    PropertyInquiry,
+    PropertySale,
+    Favorite
 };
 
 Object.keys(models).forEach(modelName => {
-  if (models[modelName].associate) {
-    models[modelName].associate(models);
-  }
+    if (models[modelName].associate) {
+        models[modelName].associate(models);
+    }
 });
 
-// Test the connection
-sequelize.authenticate()
-  .then(() => {
-    console.log('Database connection has been established successfully.');
-  })
-  .catch(err => {
-    console.error('Unable to connect to the database:', err);
-  });
+// Initialize data function
+const initializeData = async () => {
+    try {
+        // Create mock admin user
+        await User.create({
+            username: 'admin',
+            email: 'admin@example.com',
+            password: 'admin123',
+            role: 'admin'
+        });
+
+        // Create mock buyer
+        await User.create({
+            username: 'buyer',
+            email: 'buyer@example.com',
+            password: 'buyer123',
+            role: 'buyer',
+            firstName: 'John',
+            lastName: 'Smith',
+            phone: '0912 345 6789',
+            avatar: 'JS',
+            memberSince: '2024-03-15'
+        });
+
+        // Create mock seller
+        const seller = await User.create({
+            username: 'seller',
+            email: 'seller@example.com',
+            password: 'seller123',
+            role: 'seller',
+            firstName: 'Real',
+            lastName: 'Estate PH',
+            phone: '0923 456 7890',
+            avatar: 'RE',
+            memberSince: '2018-01-01'
+        });
+
+        // Create default metrics for the mock seller
+        await SellerMetrics.create({
+            sellerId: seller.id,
+            totalViews: 0,
+            totalInquiries: 0,
+            avgTimeToSale: 0
+        });
+
+        // Create some sample properties for the mock seller
+        await Property.create({
+            id: 'PROP-001',
+            sellerId: seller.id,
+            title: 'Prime Rice Farm with Irrigation',
+            location: 'Nueva Ecija',
+            price: 2500000.00,
+            acres: 5.5,
+            waterRights: 'NIA Irrigation',
+            suitableCrops: 'Rice, Corn',
+            status: 'active'
+        });
+
+        await Property.create({
+            id: 'PROP-002',
+            sellerId: seller.id,
+            title: 'Fertile Farmland for Root Crops',
+            location: 'Benguet',
+            price: 1800000.00,
+            acres: 3.2,
+            waterRights: 'Natural Spring',
+            suitableCrops: 'Potatoes, Carrots',
+            status: 'active'
+        });
+
+        console.log('Initial data created successfully');
+    } catch (error) {
+        console.error('Error creating initial data:', error);
+        throw error;
+    }
+};
+
+// Sync database
+const syncDatabase = async () => {
+    try {
+        // Force sync to ensure all tables are created
+        await sequelize.sync({ force: true });
+        console.log('Database tables created successfully');
+        
+        // Initialize data after tables are created
+        await initializeData();
+    } catch (error) {
+        console.error('Error syncing database:', error);
+        // If there's an error, try to restore from backup
+        if (!isTest && fs.existsSync(`${dbPath}.backup`)) {
+            try {
+                fs.copyFileSync(`${dbPath}.backup`, dbPath);
+                console.log('Database restored from backup');
+            } catch (restoreError) {
+                console.error('Error restoring from backup:', restoreError);
+            }
+        }
+        process.exit(1);
+    }
+};
+
+// Start the sync process
+syncDatabase();
 
 module.exports = {
-  sequelize,
-  ...models
+    sequelize,
+    ...models
 }; 

@@ -6,17 +6,17 @@ import {
   FaArrowRight, FaChevronRight, FaArrowUp, FaArrowDown,
   FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse,
   FaEdit, FaTrash, FaPlus, FaMoneyBillWave, FaChartBar,
-  FaExclamationTriangle, FaCheck, FaEye
+  FaExclamationTriangle, FaCheck, FaEye, FaList, FaThLarge, FaFilter, FaHome, FaStar, FaTint, FaAngleDown, FaRegCalendarAlt, FaTimes, FaChevronLeft
 } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles";
 import { SellerDashboardStyles } from "./SellerDashboardStyles";
-import { ListingStyles } from "./ListingsStyles";
-import cabanatuanLots from './cabanatuanLots.json';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../config/axios';
 import PriceCalculatorTool from "./PriceCalculatorTool";
 import MarketAnalysisTool from "./MarketAnalysisTool";
 import { formatPrice, formatDate } from './formatUtils';
+import styled from 'styled-components';
+import * as PreviewModalStyles from './PreviewModalStyles';
 
 const iconMap = {
     FaExclamationTriangle: <FaExclamationTriangle />,
@@ -547,12 +547,32 @@ const SellerDashboard = ({ navigateTo }) => {
         
         const previewData = {
             ...listing,
+            images: listing.images || [listing.image || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'],
+            amenities: listing.amenities || [],
+            restrictions: listing.restrictions || [],
+            previousCrops: listing.previousCrops || [],
             seller: {
                 name: `${user.firstName} ${user.lastName}`,
                 rating: 4.5,
                 listings: sellerListings.length,
-                memberSince: user.memberSince
-            }
+                memberSince: user.memberSince,
+                profileImage: user.avatar || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
+            },
+            // Add additional property details
+            size: `${listing.acres} hectares`,
+            type: 'Agricultural Land',
+            soilType: listing.soilType || 'Not specified',
+            zoning: listing.zoning || 'Agricultural',
+            waterSource: listing.waterRights || 'Not specified',
+            averageYield: listing.averageYield || 'Not specified',
+            topography: listing.topography || 'Not specified',
+            description: listing.description || 'No description available',
+            address: listing.location,
+            listedDate: listing.datePosted || new Date().toISOString(),
+            pricePerHectare: `₱${Math.round(listing.price / listing.acres).toLocaleString()}`,
+            status: listing.status || 'active',
+            viewCount: listing.viewCount || 0,
+            inquiries: listing.inquiries || 0
         };
         
         setPreviewListing(previewData);
@@ -754,7 +774,7 @@ const SellerDashboard = ({ navigateTo }) => {
     };
 
     const handleNextImage = () => {
-        setActiveImageIndex(prev => (prev < previewListing.images.images.length - 1 ? prev + 1 : 0));
+        setActiveImageIndex(prev => (prev < previewListing.images.length - 1 ? prev + 1 : 0));
     };
 
     const handleThumbnailClick = (index) => {
@@ -1680,196 +1700,164 @@ const SellerDashboard = ({ navigateTo }) => {
                 )}
 
                 {previewModalOpen && previewListing && (
-                    <ListingStyles.ModalOverlay>
-                        <ListingStyles.ModalContent style={{ width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflow: 'auto' }}>
-                        <ListingStyles.ModalHeader>
-                            <ListingStyles.ModalTitle>Listing Preview</ListingStyles.ModalTitle>
-                            <ListingStyles.CloseButton onClick={closePreviewModal}>×</ListingStyles.CloseButton>
-                        </ListingStyles.ModalHeader>
-                        <div style={{ padding: '20px' }}>
-                            <ListingStyles.ListingContainer>
-                                <ListingStyles.BreadcrumbNav>
-                                    <ListingStyles.BreadcrumbLink href="/">Home</ListingStyles.BreadcrumbLink> &gt; 
-                                    <ListingStyles.BreadcrumbLink href="/listings">Agricultural Lots</ListingStyles.BreadcrumbLink> &gt; 
-                                    <ListingStyles.BreadcrumbCurrent>{previewListing.title}</ListingStyles.BreadcrumbCurrent>
-                                </ListingStyles.BreadcrumbNav>
-                                
-                                <ListingStyles.ListingHeader>
-                                    <ListingStyles.TitleSection>
-                                        <ListingStyles.ListingTitle>{previewListing.title}</ListingStyles.ListingTitle>
-                                        <ListingStyles.ListingLocation>{previewListing.address}</ListingStyles.ListingLocation>
-                                    </ListingStyles.TitleSection>
-                                    <ListingStyles.PriceSection>
-                                        <ListingStyles.ListingPrice>{formatPrice(previewListing.price)}</ListingStyles.ListingPrice>
-                                        <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
-                                    </ListingStyles.PriceSection>
-                                </ListingStyles.ListingHeader>
-                                
-                                <ListingStyles.ContentGrid>
-                                <ListingStyles.MainContent>
-                                    <ListingStyles.ImageGallery>
-                                    <ListingStyles.MainImage src={previewListing.images[activeImageIndex]} alt={`Image ${activeImageIndex + 1} of agricultural property`} />
-                                    <ListingStyles.GalleryControls>
-                                        <ListingStyles.GalleryLeftButton onClick={handlePrevImage}>&lt;</ListingStyles.GalleryLeftButton>
-                                        <ListingStyles.GalleryRightButton onClick={handleNextImage}>&gt;</ListingStyles.GalleryRightButton>
-                                    </ListingStyles.GalleryControls>
-                                    <ListingStyles.ImageThumbnails>
-                                        {previewListing.images.map((img, index) => (
-                                        <ListingStyles.ThumbnailWrapper key={index} active={index === activeImageIndex}>
-                                            <ListingStyles.Thumbnail 
-                                            src={img} 
-                                            alt={`Thumbnail ${index + 1}`} 
+                    <PreviewModalStyles.PreviewModal>
+                        <PreviewModalStyles.PreviewContent>
+                            <PreviewModalStyles.CloseButton onClick={closePreviewModal}>
+                                <FaTimes size={20} />
+                            </PreviewModalStyles.CloseButton>
+                            
+                            <PreviewModalStyles.ImageGallery>
+                                <PreviewModalStyles.MainImage src={previewListing.images[activeImageIndex]} alt={previewListing.title} />
+                                <PreviewModalStyles.ImageNavigation>
+                                    <PreviewModalStyles.NavButton onClick={handlePrevImage}>
+                                        <FaChevronLeft size={20} />
+                                    </PreviewModalStyles.NavButton>
+                                    <PreviewModalStyles.NavButton onClick={handleNextImage}>
+                                        <FaChevronRight size={20} />
+                                    </PreviewModalStyles.NavButton>
+                                </PreviewModalStyles.ImageNavigation>
+                                <PreviewModalStyles.ThumbnailsContainer>
+                                    {previewListing.images.map((image, index) => (
+                                        <PreviewModalStyles.Thumbnail
+                                            key={index}
+                                            src={image}
+                                            alt={`${previewListing.title} - Image ${index + 1}`}
+                                            active={index === activeImageIndex}
                                             onClick={() => handleThumbnailClick(index)}
                                             />
-                                        </ListingStyles.ThumbnailWrapper>
-                                        ))}
-                                    </ListingStyles.ImageThumbnails>
-                                    </ListingStyles.ImageGallery>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Overview</ListingStyles.SectionTitle>
-                                    <ListingStyles.PropertySpecs>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Size</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.size}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Type</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.type}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Soil Type</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.soilType}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Zoning</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.zoning}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>
-                                            {formatDate(previewListing.listedDate)}
-                                        </ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Water Source</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.waterSource}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                    </ListingStyles.PropertySpecs>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Description</ListingStyles.SectionTitle>
-                                    <ListingStyles.Description>{previewListing.description}</ListingStyles.Description>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Farm Details</ListingStyles.SectionTitle>
-                                    <ListingStyles.PropertySpecs>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Previous Crops</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.previousCrops.join(', ')}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Average Yield</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.averageYield}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                        <ListingStyles.SpecItem>
-                                        <ListingStyles.SpecLabel>Topography</ListingStyles.SpecLabel>
-                                        <ListingStyles.SpecValue>{previewListing.topography}</ListingStyles.SpecValue>
-                                        </ListingStyles.SpecItem>
-                                    </ListingStyles.PropertySpecs>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Amenities</ListingStyles.SectionTitle>
-                                    <ListingStyles.AmenitiesList>
-                                        {previewListing.amenities.map((amenity, index) => (
-                                        <ListingStyles.AmenityItem key={index}>{amenity}</ListingStyles.AmenityItem>
-                                        ))}
-                                    </ListingStyles.AmenitiesList>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Restrictions</ListingStyles.SectionTitle>
-                                    <ListingStyles.RestrictionsList>
-                                        {previewListing.restrictions.map((restriction, index) => (
-                                        <ListingStyles.RestrictionItem key={index}>{restriction}</ListingStyles.RestrictionItem>
-                                        ))}
-                                    </ListingStyles.RestrictionsList>
-                                    </ListingStyles.Section>
-                                    
-                                    <ListingStyles.Section>
-                                    <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
-                                    <ListingStyles.MapContainer>
-                                        <ListingStyles.MapPlaceholder>
-                                        Map showing location at {previewListing.address}
-                                        </ListingStyles.MapPlaceholder>
-                                    </ListingStyles.MapContainer>
-                                    <ListingStyles.Address>{previewListing.address}</ListingStyles.Address>
-                                    </ListingStyles.Section>
-                                </ListingStyles.MainContent>
-                                
-                                <ListingStyles.Sidebar>
-                                    <ListingStyles.SellerCard>
-                                    <ListingStyles.SellerHeader>
-                                        <ListingStyles.SellerAvatar src={previewListing.seller.profileImage} alt={previewListing.seller.name} />
-                                        <ListingStyles.SellerInfo>
-                                        <ListingStyles.SellerName>{previewListing.seller.name}</ListingStyles.SellerName>
-                                        <ListingStyles.SellerRating>
-                                            {'★'.repeat(Math.round(previewListing.seller.rating))} 
-                                            <ListingStyles.RatingValue>({previewListing.seller.rating})</ListingStyles.RatingValue>
-                                        </ListingStyles.SellerRating>
-                                        </ListingStyles.SellerInfo>
-                                    </ListingStyles.SellerHeader>
-                                    <ListingStyles.SellerStats>
-                                        <ListingStyles.StatItem>
-                                        <ListingStyles.StatValue>{previewListing.seller.listings}</ListingStyles.StatValue>
-                                        <ListingStyles.StatLabel>Listings</ListingStyles.StatLabel>
-                                        </ListingStyles.StatItem>
-                                        <ListingStyles.StatItem>
-                                        <ListingStyles.StatValue>
-                                            {new Date(previewListing.seller.memberSince).getFullYear()}
-                                        </ListingStyles.StatValue>
-                                        <ListingStyles.StatLabel>Member Since</ListingStyles.StatLabel>
-                                        </ListingStyles.StatItem>
-                                    </ListingStyles.SellerStats>
-                                    <ListingStyles.ContactButton onClick={handleContact}>
-                                        Contact Seller
-                                    </ListingStyles.ContactButton>
-                                    </ListingStyles.SellerCard>
-                                    
-                                    <ListingStyles.ActionCard>
-                                    <ListingStyles.ActionTitle>Actions</ListingStyles.ActionTitle>
-                                    <ListingStyles.ActionButtons>
-                                        <ListingStyles.ShareButton onClick={handleShare}>
-                                        Share Listing
-                                        </ListingStyles.ShareButton>
-                                        <ListingStyles.SaveButton onClick={handleSave}>
-                                        Save to Favorites
-                                        </ListingStyles.SaveButton>
-                                    </ListingStyles.ActionButtons>
-                                    </ListingStyles.ActionCard>
-                                    
-                                    <ListingStyles.StatsCard>
-                                    <ListingStyles.StatsTitle>Listing Activity</ListingStyles.StatsTitle>
-                                    <ListingStyles.StatsGrid>
-                                        <ListingStyles.StatBox>
-                                        <ListingStyles.StatNumber>{previewListing.views}</ListingStyles.StatNumber>
-                                        <ListingStyles.StatLabel>Views</ListingStyles.StatLabel>
-                                        </ListingStyles.StatBox>
-                                        <ListingStyles.StatBox>
-                                        <ListingStyles.StatNumber>{previewListing.saved}</ListingStyles.StatNumber>
-                                        <ListingStyles.StatLabel>Saved</ListingStyles.StatLabel>
-                                        </ListingStyles.StatBox>
-                                    </ListingStyles.StatsGrid>
-                                    </ListingStyles.StatsCard>
-                                </ListingStyles.Sidebar>
-                                </ListingStyles.ContentGrid>
-                            </ListingStyles.ListingContainer>
-                        </div>
-                        </ListingStyles.ModalContent>
-                    </ListingStyles.ModalOverlay>
+                                    ))}
+                                </PreviewModalStyles.ThumbnailsContainer>
+                            </PreviewModalStyles.ImageGallery>
+
+                            <PreviewModalStyles.MainContent>
+                                <PreviewModalStyles.ListingHeader>
+                                    <PreviewModalStyles.TitleSection>
+                                        <PreviewModalStyles.ListingTitle>{previewListing.title}</PreviewModalStyles.ListingTitle>
+                                        <PreviewModalStyles.ListingLocation>
+                                            <FaMapMarkerAlt size={14} style={{ marginRight: '5px' }} />
+                                            {previewListing.address}
+                                        </PreviewModalStyles.ListingLocation>
+                                    </PreviewModalStyles.TitleSection>
+                                    <PreviewModalStyles.PriceSection>
+                                        <PreviewModalStyles.ListingPrice>{formatPrice(previewListing.price)}</PreviewModalStyles.ListingPrice>
+                                        <PreviewModalStyles.PriceUnit>PHP</PreviewModalStyles.PriceUnit>
+                                        <PreviewModalStyles.PricePerUnit>{previewListing.pricePerHectare} per hectare</PreviewModalStyles.PricePerUnit>
+                                    </PreviewModalStyles.PriceSection>
+                                </PreviewModalStyles.ListingHeader>
+
+                                <PreviewModalStyles.ContentGrid>
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Property Overview</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.PropertySpecs>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Size</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.size}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Type</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.type}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Soil Type</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.soilType}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Zoning</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.zoning}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Water Source</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.waterSource}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Listed</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{formatDate(previewListing.listedDate)}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                        </PreviewModalStyles.PropertySpecs>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Description</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.Description>{previewListing.description}</PreviewModalStyles.Description>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Farm Details</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.PropertySpecs>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Previous Crops</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>
+                                                    {previewListing.previousCrops.length > 0 
+                                                        ? previewListing.previousCrops.join(', ') 
+                                                        : 'No previous crops recorded'}
+                                                </PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Average Yield</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.averageYield}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Topography</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.topography}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
+                                        </PreviewModalStyles.PropertySpecs>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Amenities</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.AmenitiesList>
+                                            {previewListing.amenities.length > 0 ? (
+                                                previewListing.amenities.map((amenity, index) => (
+                                                    <PreviewModalStyles.AmenityItem key={index}>
+                                                        <FaCheck size={12} style={{ marginRight: '5px' }} />
+                                                        {amenity}
+                                                    </PreviewModalStyles.AmenityItem>
+                                                ))
+                                            ) : (
+                                                <PreviewModalStyles.EmptyMessage>No amenities listed</PreviewModalStyles.EmptyMessage>
+                                            )}
+                                        </PreviewModalStyles.AmenitiesList>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Restrictions</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.RestrictionsList>
+                                            {previewListing.restrictions.length > 0 ? (
+                                                previewListing.restrictions.map((restriction, index) => (
+                                                    <PreviewModalStyles.RestrictionItem key={index}>
+                                                        <FaExclamationTriangle size={12} style={{ marginRight: '5px' }} />
+                                                        {restriction}
+                                                    </PreviewModalStyles.RestrictionItem>
+                                                ))
+                                            ) : (
+                                                <PreviewModalStyles.EmptyMessage>No restrictions listed</PreviewModalStyles.EmptyMessage>
+                                            )}
+                                        </PreviewModalStyles.RestrictionsList>
+                                    </PreviewModalStyles.Section>
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Performance Metrics</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.MetricsGrid>
+                                            <PreviewModalStyles.MetricItem>
+                                                <PreviewModalStyles.MetricLabel>Views</PreviewModalStyles.MetricLabel>
+                                                <PreviewModalStyles.MetricValue>{previewListing.viewCount}</PreviewModalStyles.MetricValue>
+                                            </PreviewModalStyles.MetricItem>
+                                            <PreviewModalStyles.MetricItem>
+                                                <PreviewModalStyles.MetricLabel>Inquiries</PreviewModalStyles.MetricLabel>
+                                                <PreviewModalStyles.MetricValue>{previewListing.inquiries}</PreviewModalStyles.MetricValue>
+                                            </PreviewModalStyles.MetricItem>
+                                            <PreviewModalStyles.MetricItem>
+                                                <PreviewModalStyles.MetricLabel>Status</PreviewModalStyles.MetricLabel>
+                                                <PreviewModalStyles.MetricValue $status={previewListing.status}>
+                                                    {previewListing.status.charAt(0).toUpperCase() + previewListing.status.slice(1)}
+                                                </PreviewModalStyles.MetricValue>
+                                            </PreviewModalStyles.MetricItem>
+                                        </PreviewModalStyles.MetricsGrid>
+                                    </PreviewModalStyles.Section>
+                                </PreviewModalStyles.ContentGrid>
+                            </PreviewModalStyles.MainContent>
+                        </PreviewModalStyles.PreviewContent>
+                    </PreviewModalStyles.PreviewModal>
                     )}
             </DashboardStyles.DashboardContent>
         </DashboardStyles.DashboardContainer>

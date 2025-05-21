@@ -199,22 +199,21 @@ export const DashboardStyles = {
         gap: 12px;
         
         &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
     `,
     
     QuickActionIcon: styled.div`
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
         border-radius: 12px;
-        background-color: ${props => props.bgColor || '#3498db'};
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
         font-size: 24px;
-        margin-bottom: 8px;
+        color: ${props => props.$accentColor || '#3498db'};
+        background-color: ${props => props.$bgColor || 'rgba(52, 152, 219, 0.1)'};
     `,
     
     QuickActionTitle: styled.h3`
@@ -224,7 +223,7 @@ export const DashboardStyles = {
         margin: 0;
     `,
     
-    QuickActionText: styled.p`
+    QuickActionDescription: styled.p`
         font-size: 14px;
         color: #7f8c8d;
         margin: 0;
@@ -380,11 +379,11 @@ export const DashboardStyles = {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background-color: ${props => props.bgColor || 'rgba(52, 152, 219, 0.1)'};
+        background-color: ${props => props.$bgColor || 'rgba(52, 152, 219, 0.1)'};
         display: flex;
         align-items: center;
         justify-content: center;
-        color: ${props => props.iconColor || '#3498db'};
+        color: ${props => props.$iconColor || '#3498db'};
         flex-shrink: 0;
     `,
     
@@ -577,26 +576,20 @@ export const DashboardStyles = {
     `,
     
     ProfileButton: styled.button`
-        flex: 1;
-        padding: 12px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 600;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background-color: ${props => props.primary ? '#0a69a8' : '#f0f0f0'};
+        color: ${props => props.primary ? 'white' : '#333'};
         cursor: pointer;
-        transition: all 0.2s ease;
         display: flex;
         align-items: center;
-        justify-content: center;
         gap: 8px;
-        
-        background-color: ${props => props.primary ? '#3498db' : '#f8f9fa'};
-        color: ${props => props.primary ? 'white' : '#2C3E50'};
-        border: ${props => props.primary ? 'none' : '1px solid #e0e0e0'};
+        font-size: 14px;
+        transition: all 0.2s ease;
         
         &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background-color: ${props => props.primary ? '#2980b9' : '#f1f1f1'};
+            background-color: ${props => props.primary ? '#095a8f' : '#e0e0e0'};
         }
     `,
     
@@ -620,7 +613,7 @@ export const DashboardStyles = {
         border-radius: 8px;
         background-color: #f8f9fa;
         margin-bottom: 12px;
-        border-left: 4px solid ${props => props.accentColor || '#3498db'};
+        border-left: 4px solid ${props => props.$accentColor || '#3498db'};
     `,
     
     InsightTitle: styled.h4`
@@ -897,6 +890,215 @@ export const DashboardStyles = {
         display: flex;
         align-items: center;
         line-height: 1.4;
+    `,
+
+    // Edit Profile Modal Styles
+    ModalOverlay: styled.div`
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `,
+
+    ModalContainer: styled.div`
+        background-color: #34495E;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow: auto;
+        padding: 24px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        color: #ecf0f1;
+    `,
+
+    ModalHeader: styled.div`
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    `,
+
+    ModalTitle: styled.h2`
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #ecf0f1;
+    `,
+
+    ModalCloseButton: styled.button`
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #ecf0f1;
+        
+        &:hover {
+            color: #e74c3c;
+        }
+    `,
+
+    ProfileTabsContainer: styled.div`
+        display: flex;
+        border-bottom: 1px solid rgba(236, 240, 241, 0.1);
+        padding: 0 24px;
+    `,
+
+    ProfileTab: styled.button`
+        padding: 12px 24px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid ${props => props.$active ? '#3498db' : 'transparent'};
+        color: ${props => props.$active ? '#3498db' : 'rgba(236, 240, 241, 0.6)'};
+        font-weight: ${props => props.$active ? '600' : '400'};
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            color: #3498db;
+        }
+    `,
+
+    ProfileTabContent: styled.div`
+        padding: 24px;
+        display: ${props => props.$active ? 'block' : 'none'};
+    `,
+
+    FormRow: styled.div`
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    `,
+
+    FormGroup: styled.div`
+        margin-bottom: 20px;
+        width: 100%;
+    `,
+
+    FormLabel: styled.label`
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #ecf0f1;
+    `,
+
+    FormInput: styled.input`
+        width: calc(100% - 2px);
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #2C3E50;
+        background-color: #34495E;
+        color: #ecf0f1;
+        font-size: 16px;
+        transition: border 0.2s ease;
+        box-sizing: border-box;
+        margin: 0;
+
+        &:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        &::placeholder {
+            color: #7f8c8d;
+        }
+    `,
+
+    FormActions: styled.div`
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 16px 24px;
+        border-top: 1px solid rgba(236, 240, 241, 0.1);
+    `,
+
+    FormCancelButton: styled.button`
+        padding: 8px 16px;
+        border: 1px solid #2C3E50;
+        border-radius: 4px;
+        background-color: transparent;
+        color: #ecf0f1;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            background-color: rgba(236, 240, 241, 0.1);
+        }
+    `,
+
+    FormSubmitButton: styled.button`
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background-color: #3498db;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            background-color: #2980b9;
+        }
+    `,
+
+    AvatarUploadSection: styled.div`
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 24px;
+    `,
+
+    AvatarPreview: styled.div`
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #2C3E50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ecf0f1;
+        font-size: 36px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        border: 4px solid rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    `,
+
+    AvatarImage: styled.img`
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    `,
+
+    AvatarUploadButton: styled.label`
+        padding: 8px 16px;
+        border-radius: 6px;
+        background-color: #2C3E50;
+        border: 1px solid #34495E;
+        color: #ecf0f1;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        margin-bottom: 16px;
+        &:hover {
+            background-color: #34495E;
+        }
+        input {
+            display: none;
+        }
     `,
 };
 

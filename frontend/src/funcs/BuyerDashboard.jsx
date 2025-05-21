@@ -4,14 +4,15 @@ import {
     FaSearch, FaBuilding, FaChartLine, FaMapMarkerAlt, 
     FaBed, FaBath, FaRulerCombined, FaRegClock,
     FaArrowRight, FaChevronRight, FaArrowUp, FaArrowDown,
-    FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse
+    FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse, FaCamera,
+    FaExclamationTriangle, FaCheck
   } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles"
 import api from '../config/axios';
 import { useAuth } from '../contexts/AuthContext';
 
 const BuyerDashboard = ({ navigateTo }) => {
-    const { user: authUser, logout } = useAuth();
+    const { user: authUser, logout, updateUser } = useAuth();
     
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -22,6 +23,30 @@ const BuyerDashboard = ({ navigateTo }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // State for market insights and recent activities
+    const [marketInsights, setMarketInsights] = useState([]);
+    const [recentActivities, setRecentActivities] = useState([]);
+    const [loadingInsights, setLoadingInsights] = useState(true);
+    const [loadingActivities, setLoadingActivities] = useState(true);
+    
+    // State for edit profile
+    const [editProfileOpen, setEditProfileOpen] = useState(false);
+    const [activeProfileTab, setActiveProfileTab] = useState('personal');
+    const [userProfile, setUserProfile] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+        avatar: 'NA'
+    });
+    
+    // State for saved properties
+    const [savedProperties, setSavedProperties] = useState([]);
+    const [loadingSavedProperties, setLoadingSavedProperties] = useState(true);
     
     // Update user state when authUser changes
     useEffect(() => {
@@ -36,40 +61,107 @@ const BuyerDashboard = ({ navigateTo }) => {
         }
     }, [authUser, navigateTo]);
 
-    // Mock saved properties
-    const savedProperties = [];
-    
-    // Mock recent activities
-    const recentActivities = [
-        {
-        id: 1,
-        type: 'view',
-        title: 'You viewed "Productive Farmland with Irrigation"',
-        time: '2 hours ago',
-        icon: <FaSearch />,
-        iconColor: '#3498db',
-        bgColor: 'rgba(52, 152, 219, 0.1)'
-        },
-        {
-        id: 2,
-        type: 'favorite',
-        title: 'You saved "Vineyard with Production Facility" to favorites',
-        time: '1 day ago',
-        icon: <FaHeart />,
-        iconColor: '#e74c3c',
-        bgColor: 'rgba(231, 76, 60, 0.1)'
-        },
-        {
-        id: 3,
-        type: 'alert',
-        title: 'Price drop alert for properties in Wine Valley',
-        time: '2 days ago',
-        icon: <FaArrowDown />,
-        iconColor: '#2ecc71',
-        bgColor: 'rgba(46, 204, 113, 0.1)'
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setLoadingSavedProperties(true);
+
+                // Fetch user data
+                const userResponse = await api.get(`/api/users/${authUser.id}`);
+                setUser(userResponse.data);
+
+                // Fetch saved properties
+                const favoritesResponse = await api.get('/api/favorites');
+                const favorites = favoritesResponse.data.map(fav => ({
+                    id: fav.property.id,
+                    title: fav.property.title,
+                    location: fav.property.location,
+                    price: fav.property.price,
+                    acres: fav.property.acres,
+                    waterRights: fav.property.waterRights,
+                    suitableCrops: fav.property.suitableCrops,
+                    image: fav.property.image || fav.property.images?.[0] || '/api/placeholder/800/500',
+                    seller: fav.property.seller
+                }));
+                setSavedProperties(favorites);
+
+                // Fetch market insights
+                try {
+                    const insightsResponse = await api.get('/api/market-insights');
+                    setMarketInsights(insightsResponse.data);
+                } catch (insightsError) {
+                    // If the endpoint doesn't exist, use mock data
+                    setMarketInsights([
+                        {
+                            id: 1,
+                            title: 'Rice Farm Prices',
+                            text: 'Average rice farm prices in Nueva Ecija have increased by 15% in the last quarter.',
+                            accentColor: '#3498db'
+                        },
+                        {
+                            id: 2,
+                            title: 'Water Rights',
+                            text: 'Properties with established water rights are selling 20% faster than those without.',
+                            accentColor: '#2ecc71'
+                        }
+                    ]);
+                }
+                setLoadingInsights(false);
+
+                // Fetch recent activities
+                try {
+                    const activitiesResponse = await api.get('/api/user-activities');
+                    setRecentActivities(activitiesResponse.data);
+                } catch (activityError) {
+                    // If the endpoint doesn't exist, use mock data
+                    setRecentActivities([
+                        {
+                            id: 1,
+                            type: 'view',
+                            message: 'Viewed property "Prime Rice Farm"',
+                            timestamp: new Date().toISOString()
+                        },
+                        {
+                            id: 2,
+                            type: 'favorite',
+                            message: 'Saved property "Fertile Farmland"',
+                            timestamp: new Date(Date.now() - 86400000).toISOString()
+                        }
+                    ]);
+                }
+                setLoadingActivities(false);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                setLoadingInsights(false);
+                setLoadingActivities(false);
+            } finally {
+                setLoading(false);
+                setLoadingSavedProperties(false);
+            }
+        };
+
+        fetchData();
+    }, [authUser.id]);
+
+    // Helper function to get activity icon
+    const getActivityIcon = (type) => {
+        switch (type) {
+            case 'view':
+                return <FaSearch />;
+            case 'favorite':
+                return <FaHeart />;
+            case 'alert':
+                return <FaArrowDown />;
+            case 'inquiry':
+                return <FaExclamationTriangle />;
+            case 'sale':
+                return <FaCheck />;
+            default:
+                return <FaBell />;
         }
-    ];
-    
+    };
+
     // Mock notifications
     const notifications = [
         {
@@ -101,28 +193,6 @@ const BuyerDashboard = ({ navigateTo }) => {
         }
     ];
     
-    // Mock market insights
-    const marketInsights = [
-        {
-        id: 1,
-        title: 'Rice Production Outlook',
-        text: 'Nueva Ecija remains the top rice producer with yields increasing by 12% this year. Farms with reliable irrigation systems are seeing the highest return on investment.',
-        accentColor: '#3498db'
-        },
-        {
-        id: 2,
-        title: 'High-Value Crop Market',
-        text: 'Onion and garlic farms in Cabanatuan are experiencing increasing demand, with prices up 15% compared to last year due to export opportunities.',
-        accentColor: '#2ecc71'
-        },
-        {
-        id: 3,
-        title: 'Fruit Cultivation Trend',
-        text: 'Mango and calamansi orchards are becoming increasingly profitable in the region with new processing facilities opening in nearby municipalities.',
-        accentColor: '#e67e22'
-        }
-    ];
-    
     // Handle profile dropdown toggle
     const toggleProfileDropdown = () => {
         setProfileDropdownOpen(!profileDropdownOpen);
@@ -149,6 +219,185 @@ const BuyerDashboard = ({ navigateTo }) => {
     // Function to redirect to property listings
     const goToPropertyListings = () => {
         navigateTo('listings');
+    };
+
+    const handleEditProfile = () => {
+        setUserProfile({
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            username: user.username || '',
+            password: '',
+            confirmPassword: '',
+            avatar: user.avatar || 'NA'
+        });
+        setEditProfileOpen(true);
+    };
+
+    const handleProfileChange = (e) => {
+        const { name, value } = e.target;
+        setUserProfile(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleProfileSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const { firstName, lastName, email, phone, username, password, confirmPassword, currentPassword } = userProfile;
+            
+            // Handle password change if any password field is filled
+            if (password || confirmPassword || currentPassword) {
+                // Check if all password fields are filled
+                if (!currentPassword) {
+                    alert("Current password is required!");
+                    return;
+                }
+                if (!password) {
+                    alert("New password is required!");
+                    return;
+                }
+                if (!confirmPassword) {
+                    alert("Please confirm your new password!");
+                    return;
+                }
+
+                // Validate password length
+                if (password.length < 8) {
+                    alert("Password must be at least 8 characters long!");
+                    return;
+                }
+
+                // Validate password complexity
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasLowerCase = /[a-z]/.test(password);
+                const hasNumbers = /\d/.test(password);
+                const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+                if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+                    alert("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character!");
+                    return;
+                }
+
+                // Validate password match
+                if (password !== confirmPassword) {
+                    alert("New passwords don't match!");
+                    return;
+                }
+                
+                try {
+                    const response = await api.patch("/api/auth/password", {
+                        currentPassword,
+                        newPassword: password
+                    });
+
+                    if (response.data.success) {
+                        alert("Password updated successfully! You will be logged out for security.");
+                        // Log out the user after successful password change
+                        if (logout) {
+                            await logout();
+                            if (navigateTo) {
+                                navigateTo('login');
+                            }
+                        }
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Password update error:', error);
+                    alert("Failed to update password: " + (error.response?.data?.error || error.message));
+                    return;
+                }
+            }
+            
+            // Handle profile update
+            console.log('Submitting profile update with data:', { firstName, lastName, email, phone, username });
+            
+            const response = await api.patch("/api/auth/profile", {
+                firstName,
+                lastName,
+                email,
+                phone,
+                username
+            });
+            
+            console.log('Profile update response:', response.data);
+            
+            if (response.data && response.data.user) {
+                // Update the user in AuthContext
+                if (updateUser) {
+                    await updateUser();
+                }
+                
+                // Update local state with the complete user data
+                setUserProfile(prev => ({
+                    ...prev,
+                    ...response.data.user,
+                    password: '', // Clear password fields
+                    confirmPassword: '',
+                    currentPassword: ''
+                }));
+                
+                setEditProfileOpen(false);
+                alert("Profile updated successfully!");
+            } else {
+                throw new Error('Invalid response format from server');
+            }
+        } catch (error) {
+            console.error('Profile update error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            alert("Failed to update profile: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.match(/^image\/(jpg|jpeg|png|gif)$/)) {
+            alert('Please select a valid image file (JPG, JPEG, PNG, or GIF)');
+            return;
+        }
+
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            const response = await api.post('/api/auth/profile/image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data && response.data.user) {
+                if (updateUser) {
+                    await updateUser();
+                }
+                setUserProfile(prev => ({
+                    ...prev,
+                    ...response.data.user,
+                    password: '',
+                    confirmPassword: '',
+                    currentPassword: ''
+                }));
+                alert('Profile image updated successfully!');
+            }
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            alert('Failed to upload profile image: ' + (error.response?.data?.error || error.message));
+        }
     };
 
     if (loading) {
@@ -204,7 +453,6 @@ const BuyerDashboard = ({ navigateTo }) => {
 
     return (
         <DashboardStyles.DashboardContainer>
-            {/* Main Content */}
             <DashboardStyles.DashboardContent>
                 {/* Welcome Section */}
                 <DashboardStyles.WelcomeSection>
@@ -216,57 +464,38 @@ const BuyerDashboard = ({ navigateTo }) => {
                         Your ideal agricultural property is waiting in Nueva Ecija, the Rice Granary of the Philippines. Discover farms perfect for growing rice, vegetables, fruits, and other high-value crops.
                         </DashboardStyles.WelcomeText>
                         
-                        <DashboardStyles.ActionButton primary onClick={goToPropertyListings} style={{ backgroundColor: "#0a69a8" }}>
+                        <DashboardStyles.ActionButton $primary onClick={goToPropertyListings} style={{ backgroundColor: "#0a69a8" }}>
                             Browse Agricultural Properties <FaArrowRight style={{ marginLeft: 8 }} />
                         </DashboardStyles.ActionButton>
                     </DashboardStyles.WelcomeContent>
                 </DashboardStyles.WelcomeSection>
                 
                 {/* Quick Actions */}
-                {/* <DashboardStyles.SectionTitle>
-                    <FaChartLine size={20} style={{ marginRight: 8 }} /> Quick Actions
-                </DashboardStyles.SectionTitle>
-                
                 <DashboardStyles.QuickActionsContainer>
                     <DashboardStyles.QuickActionCard onClick={goToPropertyListings}>
-                        <DashboardStyles.QuickActionIcon bgColor="#3498db">
-                        <FaSearch />
+                        <DashboardStyles.QuickActionIcon $bgColor="#3498db" $accentColor="white">
+                            <FaSearch />
                         </DashboardStyles.QuickActionIcon>
-                        <DashboardStyles.QuickActionTitle>Find Properties</DashboardStyles.QuickActionTitle>
-                        <DashboardStyles.QuickActionText>
-                        Search properties based on your preferences
-                        </DashboardStyles.QuickActionText>
-                        <DashboardStyles.ActionLink>
-                        Start Searching <FaChevronRight size={12} />
-                        </DashboardStyles.ActionLink>
+                        <DashboardStyles.QuickActionTitle>Browse Properties</DashboardStyles.QuickActionTitle>
+                        <DashboardStyles.QuickActionDescription>Find your perfect agricultural property</DashboardStyles.QuickActionDescription>
                     </DashboardStyles.QuickActionCard>
                     
-                    <DashboardStyles.QuickActionCard>
-                        <DashboardStyles.QuickActionIcon bgColor="#e74c3c">
+                    <DashboardStyles.QuickActionCard onClick={() => setActiveTab('saved')}>
+                        <DashboardStyles.QuickActionIcon $bgColor="#e74c3c" $accentColor="white">
                             <FaHeart />
-                            </DashboardStyles.QuickActionIcon>
-                            <DashboardStyles.QuickActionTitle>Saved Properties</DashboardStyles.QuickActionTitle>
-                        <DashboardStyles.QuickActionText>
-                            View and manage your favorite properties
-                        </DashboardStyles.QuickActionText>
-                        <DashboardStyles.ActionLink>
-                            View Favorites <FaChevronRight size={12} />
-                        </DashboardStyles.ActionLink>
+                        </DashboardStyles.QuickActionIcon>
+                        <DashboardStyles.QuickActionTitle>Saved Properties</DashboardStyles.QuickActionTitle>
+                        <DashboardStyles.QuickActionDescription>View your favorite listings</DashboardStyles.QuickActionDescription>
                     </DashboardStyles.QuickActionCard>
                     
-                    <DashboardStyles.QuickActionCard>
-                        <DashboardStyles.QuickActionIcon bgColor="#2ecc71">
-                        <FaUser />
+                    <DashboardStyles.QuickActionCard onClick={() => setActiveTab('alerts')}>
+                        <DashboardStyles.QuickActionIcon $bgColor="#2ecc71" $accentColor="white">
+                            <FaBell />
                         </DashboardStyles.QuickActionIcon>
-                        <DashboardStyles.QuickActionTitle>Update Profile</DashboardStyles.QuickActionTitle>
-                        <DashboardStyles.QuickActionText>
-                        Manage your account and preferences
-                        </DashboardStyles.QuickActionText>
-                        <DashboardStyles.ActionLink>
-                        Go to Profile <FaChevronRight size={12} />
-                        </DashboardStyles.ActionLink>
+                        <DashboardStyles.QuickActionTitle>Price Alerts</DashboardStyles.QuickActionTitle>
+                        <DashboardStyles.QuickActionDescription>Get notified of price changes</DashboardStyles.QuickActionDescription>
                     </DashboardStyles.QuickActionCard>
-                </DashboardStyles.QuickActionsContainer> */}
+                </DashboardStyles.QuickActionsContainer>
                 
                 {/* Main Grid Content */}
                 <DashboardStyles.GridContainer>
@@ -276,7 +505,18 @@ const BuyerDashboard = ({ navigateTo }) => {
                         <DashboardStyles.ProfileSection>
                         <DashboardStyles.ProfileHeader>
                             <DashboardStyles.ProfileAvatarLarge>
-                            {user.avatar || user.username.charAt(0).toUpperCase()}
+                                {user.avatar && user.avatar !== 'NA' ? (
+                                    <img
+                                        src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                                        alt="Profile"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                    />
+                                ) : (
+                                    <>
+                                        {user.firstName?.[0] || user.username?.[0]}
+                                        {user.lastName?.[0]}
+                                    </>
+                                )}
                             </DashboardStyles.ProfileAvatarLarge>
                             <DashboardStyles.ProfileName>
                             {user.firstName} {user.lastName}
@@ -340,11 +580,11 @@ const BuyerDashboard = ({ navigateTo }) => {
                         </DashboardStyles.ProfileDetails>
                         
                         <DashboardStyles.ProfileActions>
-                            <DashboardStyles.ProfileButton>
-                            <FaUser size={14} /> Edit Profile
+                            <DashboardStyles.ProfileButton onClick={handleEditProfile}>
+                                <FaUser size={14} /> Edit Profile
                             </DashboardStyles.ProfileButton>
-                            <DashboardStyles.ProfileButton primary onClick={handleLogout}>
-                            <FaSignOutAlt size={14} /> Logout
+                            <DashboardStyles.ProfileButton $primary onClick={handleLogout}>
+                                <FaSignOutAlt size={14} /> Logout
                             </DashboardStyles.ProfileButton>
                         </DashboardStyles.ProfileActions>
                         </DashboardStyles.ProfileSection>
@@ -353,23 +593,31 @@ const BuyerDashboard = ({ navigateTo }) => {
                         <DashboardStyles.RecentActivitySection>
                         <DashboardStyles.RecentActivityTitle>Recent Activity</DashboardStyles.RecentActivityTitle>
                         
-                        <DashboardStyles.ActivityList>
-                            {recentActivities.map(activity => (
-                            <DashboardStyles.ActivityItem key={activity.id}>
-                                <DashboardStyles.ActivityIcon 
-                                bgColor={activity.bgColor}
-                                iconColor={activity.iconColor}
-                                >
-                                {activity.icon}
-                                </DashboardStyles.ActivityIcon>
-                                
-                                <DashboardStyles.ActivityContent>
-                                <DashboardStyles.ActivityTitle>{activity.title}</DashboardStyles.ActivityTitle>
-                                <DashboardStyles.ActivityTime>{activity.time}</DashboardStyles.ActivityTime>
-                                </DashboardStyles.ActivityContent>
-                            </DashboardStyles.ActivityItem>
-                            ))}
-                        </DashboardStyles.ActivityList>
+                        {loadingActivities ? (
+                            <div style={{ textAlign: 'center', padding: '1rem' }}>Loading activities...</div>
+                        ) : recentActivities.length > 0 ? (
+                            <DashboardStyles.ActivityList>
+                                {recentActivities.map(activity => (
+                                    <DashboardStyles.ActivityItem key={activity.id}>
+                                        <DashboardStyles.ActivityIcon 
+                                            $bgColor={activity.type === 'view' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(231, 76, 60, 0.1)'}
+                                            $iconColor={activity.type === 'view' ? '#3498db' : '#e74c3c'}
+                                        >
+                                            {getActivityIcon(activity.type)}
+                                        </DashboardStyles.ActivityIcon>
+                                        
+                                        <DashboardStyles.ActivityContent>
+                                            <DashboardStyles.ActivityTitle>{activity.message}</DashboardStyles.ActivityTitle>
+                                            <DashboardStyles.ActivityTime>
+                                                {new Date(activity.timestamp).toLocaleDateString()}
+                                            </DashboardStyles.ActivityTime>
+                                        </DashboardStyles.ActivityContent>
+                                    </DashboardStyles.ActivityItem>
+                                ))}
+                            </DashboardStyles.ActivityList>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '1rem' }}>No recent activities</div>
+                        )}
                         </DashboardStyles.RecentActivitySection>
                     </div>
 
@@ -398,54 +646,241 @@ const BuyerDashboard = ({ navigateTo }) => {
                             </DashboardStyles.Tab>
                         </DashboardStyles.TabsContainer>
                         
-                        {savedProperties.map(property => (
-                            <DashboardStyles.PropertyCard key={property.id}>
-                            <DashboardStyles.PropertyImageContainer>
-                                <DashboardStyles.PropertyImage src={property.image} alt={property.title} />
-                            </DashboardStyles.PropertyImageContainer>
-                            
-                            <DashboardStyles.PropertyContent>
-                                <DashboardStyles.PropertyTitle>{property.title}</DashboardStyles.PropertyTitle>
-                                <DashboardStyles.PropertyLocation>
-                                <FaMapMarkerAlt size={12} /> {property.location}
-                                </DashboardStyles.PropertyLocation>
-                                <DashboardStyles.PropertyPrice>{property.price}</DashboardStyles.PropertyPrice>
+                        {loadingSavedProperties ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading saved properties...</div>
+                        ) : savedProperties.length > 0 ? (
+                            savedProperties.map(property => (
+                                <DashboardStyles.PropertyCard key={property.id}>
+                                <DashboardStyles.PropertyImageContainer>
+                                    <DashboardStyles.PropertyImage src={property.image} alt={property.title} />
+                                </DashboardStyles.PropertyImageContainer>
                                 
-                                <DashboardStyles.PropertySpecs>
-                                <DashboardStyles.PropertySpec>
-                                    <FaRulerCombined size={14} /> {property.acres} Hectares
-                                </DashboardStyles.PropertySpec>
-                                <DashboardStyles.PropertySpec>
-                                    <FaWater size={14} /> {property.waterRights}
-                                </DashboardStyles.PropertySpec>
-                                </DashboardStyles.PropertySpecs>
-                                
-                                <DashboardStyles.SuitableCrops>
-                                    <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {property.suitableCrops}
-                                </DashboardStyles.SuitableCrops>
-                                
-                                <DashboardStyles.PropertyActions>
-                                <DashboardStyles.ActionButton small>View Details</DashboardStyles.ActionButton>
-                                </DashboardStyles.PropertyActions>
-                            </DashboardStyles.PropertyContent>
-                            </DashboardStyles.PropertyCard>
-                        ))}
+                                <DashboardStyles.PropertyContent>
+                                    <DashboardStyles.PropertyTitle>{property.title}</DashboardStyles.PropertyTitle>
+                                    <DashboardStyles.PropertyLocation>
+                                    <FaMapMarkerAlt size={12} /> {property.location}
+                                    </DashboardStyles.PropertyLocation>
+                                    <DashboardStyles.PropertyPrice>{formatPrice(property.price)}</DashboardStyles.PropertyPrice>
+                                    
+                                    <DashboardStyles.PropertySpecs>
+                                    <DashboardStyles.PropertySpec>
+                                        <FaRulerCombined size={14} /> {property.acres} Hectares
+                                    </DashboardStyles.PropertySpec>
+                                    <DashboardStyles.PropertySpec>
+                                        <FaWater size={14} /> {property.waterRights}
+                                    </DashboardStyles.PropertySpec>
+                                    </DashboardStyles.PropertySpecs>
+                                    
+                                    <DashboardStyles.SuitableCrops>
+                                        <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {property.suitableCrops}
+                                    </DashboardStyles.SuitableCrops>
+                                    
+                                    <DashboardStyles.PropertyActions>
+                                    <DashboardStyles.ActionButton $small onClick={() => navigateTo(`/listings/${property.id}`)}>
+                                        View Details
+                                    </DashboardStyles.ActionButton>
+                                    </DashboardStyles.PropertyActions>
+                                </DashboardStyles.PropertyContent>
+                                </DashboardStyles.PropertyCard>
+                            ))
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                No saved properties yet. Browse our listings to find your perfect agricultural property.
+                            </div>
+                        )}
                         </DashboardStyles.SavedPropertiesSection>
                         
                         {/* Market Insights Section */}
                         <DashboardStyles.MarketInsightsSection>
                         <DashboardStyles.InsightsTitle>Agricultural Market Insights</DashboardStyles.InsightsTitle>
                         
-                        {marketInsights.map(insight => (
-                            <DashboardStyles.InsightCard key={insight.id} accentColor={insight.accentColor}>
-                            <DashboardStyles.InsightTitle>{insight.title}</DashboardStyles.InsightTitle>
-                            <DashboardStyles.InsightText>{insight.text}</DashboardStyles.InsightText>
-                            </DashboardStyles.InsightCard>
-                        ))}
+                        {loadingInsights ? (
+                            <div style={{ textAlign: 'center', padding: '1rem' }}>Loading market insights...</div>
+                        ) : marketInsights.length > 0 ? (
+                            marketInsights.map(insight => (
+                                <DashboardStyles.InsightCard key={insight.id} $accentColor={insight.accentColor}>
+                                    <DashboardStyles.InsightTitle>{insight.title}</DashboardStyles.InsightTitle>
+                                    <DashboardStyles.InsightText>{insight.text}</DashboardStyles.InsightText>
+                                </DashboardStyles.InsightCard>
+                            ))
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '1rem' }}>No market insights available</div>
+                        )}
                         </DashboardStyles.MarketInsightsSection>
                     </div>
                     </DashboardStyles.GridContainer>
             </DashboardStyles.DashboardContent>
+            {editProfileOpen && (
+                <DashboardStyles.ModalOverlay>
+                    <DashboardStyles.ModalContainer>
+                        <DashboardStyles.ModalHeader>
+                            <DashboardStyles.ModalTitle>
+                                Edit Profile
+                            </DashboardStyles.ModalTitle>
+                            <DashboardStyles.ModalCloseButton onClick={() => setEditProfileOpen(false)}>
+                                ×
+                            </DashboardStyles.ModalCloseButton>
+                        </DashboardStyles.ModalHeader>
+                        
+                        <DashboardStyles.ProfileTabsContainer>
+                            <DashboardStyles.ProfileTab 
+                                $active={activeProfileTab === 'personal'} 
+                                onClick={() => setActiveProfileTab('personal')}
+                            >
+                                Personal Info
+                            </DashboardStyles.ProfileTab>
+                            <DashboardStyles.ProfileTab 
+                                $active={activeProfileTab === 'security'} 
+                                onClick={() => setActiveProfileTab('security')}
+                            >
+                                Security
+                            </DashboardStyles.ProfileTab>
+                        </DashboardStyles.ProfileTabsContainer>
+                        
+                        <form onSubmit={handleProfileSubmit}>
+                            <DashboardStyles.ProfileTabContent $active={activeProfileTab === 'personal'}>
+                                <DashboardStyles.AvatarUploadSection>
+                                    <DashboardStyles.AvatarPreview>
+                                        {userProfile.avatar && userProfile.avatar !== 'NA' ? (
+                                            <img
+                                                src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `http://localhost:5000${userProfile.avatar}`}
+                                                alt="Profile"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                backgroundColor: '#f0f0f0',
+                                                borderRadius: '50%',
+                                                fontSize: '24px',
+                                                color: '#666'
+                                            }}>
+                                                {userProfile.firstName?.[0]}{userProfile.lastName?.[0]}
+                                            </div>
+                                        )}
+                                    </DashboardStyles.AvatarPreview>
+                                    <DashboardStyles.AvatarUploadButton>
+                                        <FaCamera size={14} /> Change Photo
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleAvatarUpload}
+                                        />
+                                    </DashboardStyles.AvatarUploadButton>
+                                </DashboardStyles.AvatarUploadSection>
+                                <DashboardStyles.FormRow>
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>First Name*</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
+                                            type="text"
+                                            name="firstName"
+                                            value={userProfile.firstName}
+                                            onChange={handleProfileChange}
+                                            required
+                                        />
+                                    </DashboardStyles.FormGroup>
+                                    
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>Last Name*</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
+                                            type="text"
+                                            name="lastName"
+                                            value={userProfile.lastName}
+                                            onChange={handleProfileChange}
+                                            required
+                                        />
+                                    </DashboardStyles.FormGroup>
+                                </DashboardStyles.FormRow>
+                                
+                                <DashboardStyles.FormGroup>
+                                    <DashboardStyles.FormLabel>Email Address*</DashboardStyles.FormLabel>
+                                    <DashboardStyles.FormInput
+                                        type="email"
+                                        name="email"
+                                        value={userProfile.email}
+                                        onChange={handleProfileChange}
+                                        required
+                                    />
+                                </DashboardStyles.FormGroup>
+                                
+                                <DashboardStyles.FormGroup>
+                                    <DashboardStyles.FormLabel>Phone Number*</DashboardStyles.FormLabel>
+                                    <DashboardStyles.FormInput
+                                        type="tel"
+                                        name="phone"
+                                        value={userProfile.phone}
+                                        onChange={handleProfileChange}
+                                        required
+                                    />
+                                </DashboardStyles.FormGroup>
+                                
+                                <DashboardStyles.FormGroup>
+                                    <DashboardStyles.FormLabel>Username*</DashboardStyles.FormLabel>
+                                    <DashboardStyles.FormInput
+                                        type="text"
+                                        name="username"
+                                        value={userProfile.username}
+                                        onChange={handleProfileChange}
+                                        required
+                                    />
+                                </DashboardStyles.FormGroup>
+                            </DashboardStyles.ProfileTabContent>
+                            
+                            <DashboardStyles.ProfileTabContent $active={activeProfileTab === 'security'}>
+                                <DashboardStyles.FormGroup>
+                                    <DashboardStyles.FormLabel>Current Password</DashboardStyles.FormLabel>
+                                    <DashboardStyles.FormInput
+                                        type="password"
+                                        name="currentPassword"
+                                        value={userProfile.currentPassword || ''}
+                                        onChange={handleProfileChange}
+                                        placeholder="Enter your current password"
+                                    />
+                                </DashboardStyles.FormGroup>
+                                
+                                <DashboardStyles.FormGroup>
+                                    <DashboardStyles.FormLabel>New Password</DashboardStyles.FormLabel>
+                                    <DashboardStyles.FormInput
+                                        type="password"
+                                        name="password"
+                                        value={userProfile.password || ''}
+                                        onChange={handleProfileChange}
+                                        placeholder="Enter new password"
+                                    />
+                                </DashboardStyles.FormGroup>
+                                
+                                <DashboardStyles.FormGroup>
+                                    <DashboardStyles.FormLabel>Confirm New Password</DashboardStyles.FormLabel>
+                                    <DashboardStyles.FormInput
+                                        type="password"
+                                        name="confirmPassword"
+                                        value={userProfile.confirmPassword || ''}
+                                        onChange={handleProfileChange}
+                                        placeholder="Confirm new password"
+                                    />
+                                </DashboardStyles.FormGroup>
+                            </DashboardStyles.ProfileTabContent>
+                            
+                            <DashboardStyles.FormActions>
+                                <DashboardStyles.FormCancelButton
+                                    type="button"
+                                    onClick={() => setEditProfileOpen(false)}
+                                >
+                                    Cancel
+                                </DashboardStyles.FormCancelButton>
+                                
+                                <DashboardStyles.FormSubmitButton type="submit">
+                                    Save Changes
+                                </DashboardStyles.FormSubmitButton>
+                            </DashboardStyles.FormActions>
+                        </form>
+                    </DashboardStyles.ModalContainer>
+                </DashboardStyles.ModalOverlay>
+            )}
         </DashboardStyles.DashboardContainer>
     );
 };

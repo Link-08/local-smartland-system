@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ListingOverviewStyles as S } from './ListingOverviewStyles';
 import { FaList, FaThLarge, FaSearch, FaFilter, FaHome, FaEye, FaStar, FaTree, FaTint, FaSeedling, FaMapMarkerAlt, FaRulerCombined, FaChevronLeft, FaChevronRight, FaAngleDown, FaRegCalendarAlt, FaTimes } from 'react-icons/fa';
-import cabanatuanLots from './cabanatuanLots.json';
-import barangays from './barangays.json';
 import { formatPrice, formatDate } from './formatUtils';
+import api from '../api';
 
 const ListingOverview = ({ navigateTo }) => {
     // State for filters and view
@@ -24,67 +23,69 @@ const ListingOverview = ({ navigateTo }) => {
     
     // Transform and enhance the property data
     const [listingsData, setListingsData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [barangayOptions, setBarangayOptions] = useState(['All Barangays']);
+    const [cropTypes, setCropTypes] = useState([]);
+    const [fruitTypes, setFruitTypes] = useState([]);
 
     useEffect(() => {
-        const enhancedListings = cabanatuanLots.map(lot => {
-            // Find matching barangay data
-            const barangayData = barangays.find(b => 
-                lot.location.toLowerCase().includes(b.name.toLowerCase())
-            );
+        const fetchProperties = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get('/api/properties');
+                const properties = response.data;
+                
+                // Extract unique barangays from properties
+                const uniqueBarangays = ['All Barangays', ...new Set(properties.map(prop => prop.location.split(',')[0].trim()))];
+                setBarangayOptions(uniqueBarangays);
 
-            // Calculate price per sqm
-            const pricePerSqm = Array.isArray(lot.price_php) 
-                ? lot.price_php.map(price => Math.round(price / (Array.isArray(lot.lot_area_sqm) ? lot.lot_area_sqm[0] : lot.lot_area_sqm)))
-                : Math.round(lot.price_php / lot.lot_area_sqm);
+                // Extract unique crops and fruits
+                const allCrops = properties.flatMap(prop => 
+                    prop.suitableCrops ? prop.suitableCrops.split(',').map(crop => crop.trim()) : []
+                );
+                setCropTypes([...new Set(allCrops)]);
+                setFruitTypes([...new Set(allCrops)]); // Using same data for now, can be separated if needed
+                
+                const enhancedListings = properties.map(property => ({
+                    ...property,
+                    id: property.id,
+                    title: property.title,
+                    location: property.location,
+                    price: `₱${property.price.toLocaleString()}`,
+                    pricePerSqm: `₱${Math.round(property.price / property.acres).toLocaleString()}`,
+                    size: `${property.acres.toLocaleString()} hectares`,
+                    category: property.category || 'Agricultural',
+                    features: property.features || '',
+                    crops: property.suitableCrops ? property.suitableCrops.split(',').map(crop => crop.trim()) : [],
+                    fruits: property.suitableCrops ? property.suitableCrops.split(',').map(crop => crop.trim()) : [],
+                    hasIrrigation: property.waterRights?.toLowerCase().includes('irrigation') || false,
+                    isFeatured: property.isFeatured || false,
+                    imageUrl: property.image || "/api/placeholder/400/320",
+                    images: property.images || [
+                        "/api/placeholder/800/500",
+                        "/api/placeholder/800/500",
+                        "/api/placeholder/800/500",
+                        "/api/placeholder/800/500"
+                    ],
+                    sellerName: property.seller && (property.seller.firstName || property.seller.lastName)
+                        ? [property.seller.firstName, property.seller.lastName].filter(Boolean).join(' ')
+                        : "Unknown Seller",
+                    sellerAvatar: property.seller?.avatar || "/api/placeholder/50/50",
+                    postedDate: new Date(property.datePosted).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                }));
+                
+                setListingsData(enhancedListings);
+            } catch (err) {
+                console.error('Error fetching properties:', err);
+                setError('Failed to load properties. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            return {
-                id: Math.random().toString(36).substr(2, 9),
-                title: lot.name,
-                location: lot.location,
-                price: `₱${lot.price_php.toLocaleString()}`,
-                pricePerSqm: `₱${pricePerSqm.toLocaleString()}`,
-                size: `${lot.lot_area_sqm.toLocaleString()} sqm`,
-                category: lot.category,
-                features: lot.features,
-                crops: barangayData?.fruits ? Object.entries(barangayData.fruits)
-                    .filter(([_, value]) => value === "High" || value === "Moderate")
-                    .map(([key]) => key) : [],
-                fruits: barangayData?.fruits ? Object.entries(barangayData.fruits)
-                    .filter(([_, value]) => value === "High" || value === "Moderate")
-                    .map(([key]) => key) : [],
-                hasIrrigation: lot.features?.toLowerCase().includes('irrigation') || false,
-                isFeatured: lot.isFeatured || false,
-                imageUrl: "/api/placeholder/400/320",
-                images: [
-                    "/api/placeholder/800/500",
-                    "/api/placeholder/800/500",
-                    "/api/placeholder/800/500",
-                    "/api/placeholder/800/500"
-                ],
-                sellerName: "SmartLand System",
-                sellerAvatar: "/api/placeholder/50/50",
-                postedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-            };
-        });
-
-        setListingsData(enhancedListings);
+        fetchProperties();
     }, []);
-
-    // Get unique barangay names for filter
-    const barangayOptions = ['All Barangays', ...new Set(barangays.map(b => b.name))];
-
-    // Get unique crop and fruit types from barangay data
-    const cropTypes = [...new Set(barangays.flatMap(b => 
-        Object.entries(b.fruits)
-            .filter(([_, value]) => value === "High" || value === "Moderate")
-            .map(([key]) => key)
-    ))];
-
-    const fruitTypes = [...new Set(barangays.flatMap(b => 
-        Object.entries(b.fruits)
-            .filter(([_, value]) => value === "High" || value === "Moderate")
-            .map(([key]) => key)
-    ))];
 
     // Handle crop checkbox changes
     const handleCropChange = (crop) => {
@@ -191,45 +192,7 @@ const ListingOverview = ({ navigateTo }) => {
         setActiveCategory('all');
         
         // Reset listings to original data
-        const enhancedListings = cabanatuanLots.map(lot => {
-            const barangayData = barangays.find(b => 
-                lot.location.toLowerCase().includes(b.name.toLowerCase())
-            );
-            const pricePerSqm = Array.isArray(lot.price_php) 
-                ? lot.price_php.map(price => Math.round(price / (Array.isArray(lot.lot_area_sqm) ? lot.lot_area_sqm[0] : lot.lot_area_sqm)))
-                : Math.round(lot.price_php / lot.lot_area_sqm);
-
-            return {
-                id: Math.random().toString(36).substr(2, 9),
-                title: lot.name,
-                location: lot.location,
-                price: `₱${lot.price_php.toLocaleString()}`,
-                pricePerSqm: `₱${pricePerSqm.toLocaleString()}`,
-                size: `${lot.lot_area_sqm.toLocaleString()} sqm`,
-                category: lot.category,
-                features: lot.features,
-                crops: barangayData?.fruits ? Object.entries(barangayData.fruits)
-                    .filter(([_, value]) => value === "High" || value === "Moderate")
-                    .map(([key]) => key) : [],
-                fruits: barangayData?.fruits ? Object.entries(barangayData.fruits)
-                    .filter(([_, value]) => value === "High" || value === "Moderate")
-                    .map(([key]) => key) : [],
-                hasIrrigation: lot.features?.toLowerCase().includes('irrigation') || false,
-                isFeatured: lot.isFeatured || false,
-                imageUrl: "/api/placeholder/400/320",
-                images: [
-                    "/api/placeholder/800/500",
-                    "/api/placeholder/800/500",
-                    "/api/placeholder/800/500",
-                    "/api/placeholder/800/500"
-                ],
-                sellerName: "SmartLand System",
-                sellerAvatar: "/api/placeholder/50/50",
-                postedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-            };
-        });
-
-        setListingsData(enhancedListings);
+        fetchProperties();
     };
 
     const filterListingsByCategory = (listings) => {
@@ -306,33 +269,33 @@ const ListingOverview = ({ navigateTo }) => {
         const totalPages = Math.ceil(sortedListings.length / listingsPerPage);
         
         return (
-        <S.PaginationContainer>
-            <S.PaginationControls>
-            <S.PaginationButton 
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            >
-                <FaChevronLeft />
-            </S.PaginationButton>
-            
-            {[...Array(totalPages)].map((_, index) => (
-                <S.PaginationButton
-                    key={index + 1}
-                    $active={currentPage === index + 1}
-                    onClick={() => setCurrentPage(index + 1)}
-                >
-                    {index + 1}
-                </S.PaginationButton>
-            ))}
-            
-            <S.PaginationButton 
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            >
-                <FaChevronRight />
-            </S.PaginationButton>
-            </S.PaginationControls>
-        </S.PaginationContainer>
+            <S.PaginationContainer>
+                <S.PaginationControls>
+                    <S.PaginationButton 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    >
+                        <FaChevronLeft />
+                    </S.PaginationButton>
+                    
+                    {[...Array(totalPages)].map((_, index) => (
+                        <S.PaginationButton
+                            key={index + 1}
+                            $active={currentPage === index + 1}
+                            onClick={() => setCurrentPage(index + 1)}
+                        >
+                            {index + 1}
+                        </S.PaginationButton>
+                    ))}
+                    
+                    <S.PaginationButton 
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    >
+                        <FaChevronRight />
+                    </S.PaginationButton>
+                </S.PaginationControls>
+            </S.PaginationContainer>
         );
     };
 
@@ -348,65 +311,66 @@ const ListingOverview = ({ navigateTo }) => {
                 console.log(`Navigating to: /properties/${slug}`);
             }
         }
+
         if (viewMode === 'grid') {
             return (
                 <S.ListingCard key={listing.id} onClick={navigateToListing} style={{ cursor: 'pointer' }}>
-                <S.ListingImageContainer>
-                    <S.ListingImage src={listing.imageUrl} alt={listing.title} />
-                    {listing.isFeatured && <S.ListingBadge type="featured">Featured</S.ListingBadge>}
-                    {listing.hasIrrigation && <S.ListingBadge style={{ right: 12, left: 'auto' }}>Irrigated</S.ListingBadge>}
-                </S.ListingImageContainer>
-                
-                <S.ListingContent>
-                    <S.ListingTitle>{listing.title}</S.ListingTitle>
-                    <S.ListingLocation>
-                    <FaMapMarkerAlt style={{ marginRight: 4 }} />
-                    {listing.location}
-                    </S.ListingLocation>
+                    <S.ListingImageContainer>
+                        <S.ListingImage src={listing.imageUrl} alt={listing.title} />
+                        {listing.isFeatured && <S.ListingBadge type="featured">Featured</S.ListingBadge>}
+                        {listing.hasIrrigation && <S.ListingBadge style={{ right: 12, left: 'auto' }}>Irrigated</S.ListingBadge>}
+                    </S.ListingImageContainer>
                     
-                    <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
-                    
-                    <S.ListingSpecs>
-                    <S.ListingSpecItem>
-                        <S.SpecValue>
-                        <FaRulerCombined style={{ marginRight: 4 }} />
-                        {listing.size}
-                        </S.SpecValue>
-                        <S.SpecLabel>Area</S.SpecLabel>
-                    </S.ListingSpecItem>
-                    <S.ListingSpecItem>
-                        <S.SpecValue>{listing.pricePerSqm}</S.SpecValue>
-                        <S.SpecLabel>Per sqm</S.SpecLabel>
-                    </S.ListingSpecItem>
-                    </S.ListingSpecs>
-                    
-                    <S.ListingTags>
-                    {listing.crops.map((crop, idx) => (
-                        <S.ListingTag key={`crop-${idx}`}>
-                        <FaSeedling style={{ marginRight: 4 }} />
-                        {crop}
-                        </S.ListingTag>
-                    ))}
-                    {listing.fruits.map((fruit, idx) => (
-                        <S.ListingTag key={`fruit-${idx}`}>
-                        <FaTree style={{ marginRight: 4 }} />
-                        {fruit}
-                        </S.ListingTag>
-                    ))}
-                    </S.ListingTags>
-                    
-                    <S.ListingFooter>
-                    <S.ListingSellerInfo>
-                        <S.SellerAvatar src={listing.sellerAvatar} alt={listing.sellerName} />
-                        <S.SellerName>{listing.sellerName}</S.SellerName>
-                    </S.ListingSellerInfo>
-                    <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{formatDate(listing.postedDate)}</S.ListingDate>
-                    </S.ListingFooter>
-                </S.ListingContent>
+                    <S.ListingContent>
+                        <S.ListingTitle>{listing.title}</S.ListingTitle>
+                        <S.ListingLocation>
+                            <FaMapMarkerAlt style={{ marginRight: 4 }} />
+                            {listing.location}
+                        </S.ListingLocation>
+                        
+                        <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
+                        
+                        <S.ListingSpecs>
+                            <S.ListingSpecItem>
+                                <S.SpecValue>
+                                    <FaRulerCombined style={{ marginRight: 4 }} />
+                                    {listing.size}
+                                </S.SpecValue>
+                                <S.SpecLabel>Area</S.SpecLabel>
+                            </S.ListingSpecItem>
+                            <S.ListingSpecItem>
+                                <S.SpecValue>{listing.pricePerSqm}</S.SpecValue>
+                                <S.SpecLabel>Per sqm</S.SpecLabel>
+                            </S.ListingSpecItem>
+                        </S.ListingSpecs>
+                        
+                        <S.ListingTags>
+                            {listing.crops.map((crop, idx) => (
+                                <S.ListingTag key={`crop-${idx}`}>
+                                    <FaSeedling style={{ marginRight: 4 }} />
+                                    {crop}
+                                </S.ListingTag>
+                            ))}
+                            {listing.fruits.map((fruit, idx) => (
+                                <S.ListingTag key={`fruit-${idx}`}>
+                                    <FaTree style={{ marginRight: 4 }} />
+                                    {fruit}
+                                </S.ListingTag>
+                            ))}
+                        </S.ListingTags>
+                        
+                        <S.ListingFooter>
+                            <S.ListingSellerInfo>
+                                <S.SellerAvatar src={listing.sellerAvatar} alt={listing.sellerName} />
+                                <S.SellerName>{listing.sellerName}</S.SellerName>
+                            </S.ListingSellerInfo>
+                            <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{formatDate(listing.postedDate)}</S.ListingDate>
+                        </S.ListingFooter>
+                    </S.ListingContent>
                 </S.ListingCard>
             );
         } else {
-        // List view rendering
+            // List view rendering
             return (
                 <S.ListingCardHorizontal key={listing.id} onClick={navigateToListing} style={{ cursor: 'pointer' }}>
                     <S.ListingImageContainerHorizontal style={{ width: '280px', height: '220px' }}>
@@ -417,54 +381,53 @@ const ListingOverview = ({ navigateTo }) => {
                     
                     <S.ListingContentHorizontal>
                         <div>
-                        <S.ListingTitle>{listing.title}</S.ListingTitle>
-                        <S.ListingLocation>
-                            <FaMapMarkerAlt style={{ marginRight: 4 }} />
-                            {listing.location}
-                        </S.ListingLocation>
-                        
-                        <S.ListingSpecs>
-                            <S.ListingSpecItem>
-                            <S.SpecValue>
-                                <FaRulerCombined style={{ marginRight: 4 }} />
-                                {listing.size}
-                            </S.SpecValue>
-                            <S.SpecLabel>Area</S.SpecLabel>
-                            </S.ListingSpecItem>
-                            <S.ListingSpecItem>
-                            <S.SpecValue>{listing.pricePerSqm}</S.SpecValue>
-                            <S.SpecLabel>Per sqm</S.SpecLabel>
-                            </S.ListingSpecItem>
-                        </S.ListingSpecs>
-                        
-                        <S.ListingTags>
-                            {listing.crops.map((crop, idx) => (
-                            <S.ListingTag key={`crop-${idx}`}>
-                                <FaSeedling style={{ marginRight: 4 }} />
-                                {crop}
-                            </S.ListingTag>
-                            ))}
-                            {listing.fruits.map((fruit, idx) => (
-                            <S.ListingTag key={`fruit-${idx}`}>
-                                <FaTree style={{ marginRight: 4 }} />
-                                {fruit}
-                            </S.ListingTag>
-                            ))}
-                        </S.ListingTags>
+                            <S.ListingTitle>{listing.title}</S.ListingTitle>
+                            <S.ListingLocation>
+                                <FaMapMarkerAlt style={{ marginRight: 4 }} />
+                                {listing.location}
+                            </S.ListingLocation>
+                            
+                            <S.ListingSpecs>
+                                <S.ListingSpecItem>
+                                    <S.SpecValue>
+                                        <FaRulerCombined style={{ marginRight: 4 }} />
+                                        {listing.size}
+                                    </S.SpecValue>
+                                    <S.SpecLabel>Area</S.SpecLabel>
+                                </S.ListingSpecItem>
+                                <S.ListingSpecItem>
+                                    <S.SpecValue>{listing.pricePerSqm}</S.SpecValue>
+                                    <S.SpecLabel>Per sqm</S.SpecLabel>
+                                </S.ListingSpecItem>
+                            </S.ListingSpecs>
+                            
+                            <S.ListingTags>
+                                {listing.crops.map((crop, idx) => (
+                                    <S.ListingTag key={`crop-${idx}`}>
+                                        <FaSeedling style={{ marginRight: 4 }} />
+                                        {crop}
+                                    </S.ListingTag>
+                                ))}
+                                {listing.fruits.map((fruit, idx) => (
+                                    <S.ListingTag key={`fruit-${idx}`}>
+                                        <FaTree style={{ marginRight: 4 }} />
+                                        {fruit}
+                                    </S.ListingTag>
+                                ))}
+                            </S.ListingTags>
                         </div>
                         
                         <div>
-                        <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
-                        
-                        <S.ListingFooter>
-                            <S.ListingSellerInfo>
-                            <S.SellerAvatar src={listing.sellerAvatar} alt={listing.sellerName} />
-                            <S.SellerName>{listing.sellerName}</S.SellerName>
-                            </S.ListingSellerInfo>
-                            <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{formatDate(listing.postedDate)}</S.ListingDate>
-                        </S.ListingFooter>
+                            <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
+                            
+                            <S.ListingFooter>
+                                <S.ListingSellerInfo>
+                                    <S.SellerAvatar src={listing.sellerAvatar} alt={listing.sellerName} />
+                                    <S.SellerName>{listing.sellerName}</S.SellerName>
+                                </S.ListingSellerInfo>
+                                <S.ListingDate><FaRegCalendarAlt style={{ marginRight: 4 }} />{formatDate(listing.postedDate)}</S.ListingDate>
+                            </S.ListingFooter>
                         </div>
-
                     </S.ListingContentHorizontal>
                 </S.ListingCardHorizontal>
             );
@@ -481,6 +444,14 @@ const ListingOverview = ({ navigateTo }) => {
     };
 
     const filteredListings = filterListingsByCategory(filterListingsBySearch(listingsData));
+
+    if (loading) {
+        return <div>Loading properties...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
 
     return (
         <S.PageWrapper>
@@ -530,6 +501,7 @@ const ListingOverview = ({ navigateTo }) => {
                         Featured
                     </S.CategoryItem>
                 </S.CategoriesNav>
+
                 {/* Filters Section - Fixed layout */}
                 {showFilters && (
                     <S.FiltersContainer>
@@ -583,7 +555,7 @@ const ListingOverview = ({ navigateTo }) => {
                             
                             {/* Size Range Filter */}
                             <S.FilterGroup>
-                                <S.FilterLabel>Land Size (sqm)</S.FilterLabel>
+                                <S.FilterLabel>Land Size (hectares)</S.FilterLabel>
                                 <S.RangeContainer>
                                     <S.RangeInput 
                                         type="number" 
