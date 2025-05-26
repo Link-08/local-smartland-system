@@ -24,8 +24,6 @@
     "react-router-dom": "^7.6.0",
     "sequelize": "^6.37.7",
     "sharp": "^0.34.1",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
     "styled-components": "^6.1.18",
     "ws": "^8.18.2"
   },
