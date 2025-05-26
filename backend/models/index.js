@@ -1,28 +1,4 @@
-const { Sequelize } = require('sequelize');
-const path = require('path');
-const fs = require('fs');
-
-const isProduction = process.env.NODE_ENV === 'production';
-const isTest = process.env.NODE_ENV === 'test';
-
-// Get the database file path
-const dbPath = path.join(__dirname, '../database.sqlite');
-
-// If we're not in test mode and the database exists, make a backup
-if (!isTest && fs.existsSync(dbPath)) {
-    const backupPath = `${dbPath}.backup`;
-    if (fs.existsSync(backupPath)) {
-        fs.unlinkSync(backupPath);
-    }
-    fs.copyFileSync(dbPath, backupPath);
-    console.log('Database backup created');
-}
-
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: isTest ? ':memory:' : dbPath,
-    logging: false
-});
+const sequelize = require('../config/database');
 
 // Import models
 const User = require('./User')(sequelize);
@@ -124,8 +100,7 @@ const initializeData = async () => {
 
         console.log('Initial data created successfully');
     } catch (error) {
-        console.error('Error creating initial data:', error);
-        throw error;
+        console.error('Error initializing data:', error);
     }
 };
 
@@ -140,15 +115,6 @@ const syncDatabase = async () => {
         await initializeData();
     } catch (error) {
         console.error('Error syncing database:', error);
-        // If there's an error, try to restore from backup
-        if (!isTest && fs.existsSync(`${dbPath}.backup`)) {
-            try {
-                fs.copyFileSync(`${dbPath}.backup`, dbPath);
-                console.log('Database restored from backup');
-            } catch (restoreError) {
-                console.error('Error restoring from backup:', restoreError);
-            }
-        }
         process.exit(1);
     }
 };
