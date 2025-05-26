@@ -507,7 +507,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                             <DashboardStyles.ProfileAvatarLarge>
                                 {user.avatar && user.avatar !== 'NA' ? (
                                     <img
-                                        src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                                        src={user.avatar.startsWith('http') ? user.avatar : `https://smartland-backend.thetwlight.xyz${user.avatar}`}
                                         alt="Profile"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                     />
@@ -743,7 +743,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                                     <DashboardStyles.AvatarPreview>
                                         {userProfile.avatar && userProfile.avatar !== 'NA' ? (
                                             <img
-                                                src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `http://localhost:5000${userProfile.avatar}`}
+                                                src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `https://smartland-backend.thetwlight.xyz${userProfile.avatar}`}
                                                 alt="Profile"
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                             />

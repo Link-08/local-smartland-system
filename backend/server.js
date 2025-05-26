@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const sharp = require('sharp');
-const { sequelize } = require('./models');
+const sequelize = require("./config/database");
 const maintenanceMode = require('./middleware/maintenance');
 const path = require('path');
 const fs = require('fs');
@@ -19,7 +19,7 @@ const userActivityRoutes = require("./routes/userActivities");
 const marketInsightRoutes = require("./routes/marketInsights");
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = 26443;
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -49,6 +49,16 @@ app.use("/api/system", systemRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/user-activities", userActivityRoutes);
 app.use("/api/market-insights", marketInsightRoutes);
+
+app.get("/", async (req, res) => {
+  try {
+    const [result] = await sequelize.query("SELECT NOW()");
+    res.json({ message: "Database Connected", time: result[0].now });
+  } catch (error) {
+    console.error("Database Connection Error:", error);
+    res.status(500).json({ error: "Database Connection Failed" });
+  }
+});
 
 // Placeholder image endpoint
 app.get("/api/placeholder/:width/:height", async (req, res) => {

@@ -138,7 +138,7 @@ const SellerDashboard = ({ navigateTo }) => {
             try {
                 // Fetch seller listings
                 const listingsResponse = await fetch(
-                    `http://localhost:5000/api/properties?sellerId=${user.id}`,
+                    `https://smartland-backend.thetwlight.xyz/api/properties?sellerId=${user.id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -151,7 +151,7 @@ const SellerDashboard = ({ navigateTo }) => {
 
                 // Fetch market insights
                 const insightsResponse = await fetch(
-                    `http://localhost:5000/api/seller/metrics/${user.id}`,
+                    `https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -193,7 +193,7 @@ const SellerDashboard = ({ navigateTo }) => {
             }
 
             try {
-                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -692,14 +692,14 @@ const SellerDashboard = ({ navigateTo }) => {
     const recordPropertyView = async (listingId) => {
         try {
             if (user && user.id) {
-                await fetch(`http://localhost:5000/api/seller/metrics/${user.id}/view`, {
+                await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}/view`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 // Refresh metrics after recording view
-                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -718,14 +718,14 @@ const SellerDashboard = ({ navigateTo }) => {
     const recordPropertyInquiry = async (listingId) => {
         try {
             if (user && user.id) {
-                await fetch(`http://localhost:5000/api/seller/metrics/${user.id}/inquiry`, {
+                await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}/inquiry`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 // Refresh metrics after recording inquiry
-                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -744,7 +744,7 @@ const SellerDashboard = ({ navigateTo }) => {
     const recordPropertySale = async (listingId, daysToSale) => {
         try {
             if (user && user.id) {
-                await fetch(`http://localhost:5000/api/seller/metrics/${user.id}/sale`, {
+                await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}/sale`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -753,7 +753,7 @@ const SellerDashboard = ({ navigateTo }) => {
                     body: JSON.stringify({ daysToSale })
                 });
                 // Refresh metrics after recording sale
-                const response = await fetch(`http://localhost:5000/api/seller/metrics/${user.id}`, {
+                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -980,7 +980,7 @@ const SellerDashboard = ({ navigateTo }) => {
                             <DashboardStyles.ProfileAvatarLarge>
                                 {user.avatar && user.avatar !== 'NA' ? (
                                     <img
-                                        src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                                        src={user.avatar.startsWith('http') ? user.avatar : `https://smartland-backend.thetwlight.xyz${user.avatar}`}
                                         alt="Profile"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                     />
@@ -1460,7 +1460,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                         <SellerDashboardStyles.AvatarPreview>
                                             {userProfile.avatar ? (
                                                 <img 
-                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `http://localhost:5000${userProfile.avatar}`} 
+                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `https://smartland-backend.thetwlight.xyz${userProfile.avatar}`} 
                                                     alt="Profile" 
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                                 />
