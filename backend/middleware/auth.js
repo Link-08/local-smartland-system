@@ -3,6 +3,7 @@ const { User } = require('../models');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
 
 const auth = async (req, res, next) => {
   try {
@@ -106,17 +107,23 @@ const refreshTokenAuth = async (req, res, next) => {
     }
 
     try {
-      // Only decode the token without verifying
-      const decoded = jwt.decode(token);
+      // VERIFY the token instead of just decoding
+      const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET); // ✅ This checks expiration
       if (!decoded || !decoded.id) {
         return res.status(401).json({ error: 'Invalid token format' });
       }
 
-      // Store the decoded token for later use
       req.decodedToken = decoded;
       next();
     } catch (error) {
-      return res.status(401).json({ error: 'Invalid token format' });
+      // This will catch expired tokens
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Refresh token expired' });
+      }
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ error: 'Invalid refresh token' });
+      }
+      return res.status(401).json({ error: 'Token verification failed' });
     }
   } catch (error) {
     console.error('Refresh token auth middleware error:', error);

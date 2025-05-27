@@ -68,6 +68,9 @@ module.exports = (sequelize) => {
     }
   }, {
     timestamps: true,
+    tableName: 'Users',
+    schema: 'public',
+    freezeTableName: true,
     hooks: {
       beforeValidate: async (user) => {
         if (!user.id) {

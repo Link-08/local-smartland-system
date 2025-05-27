@@ -80,9 +80,9 @@ router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         console.log('Login request body:', req.body);
-        console.log('Login attempt for:', email);
+        console.log('Login attempt for:', req.body.email.email || email);
 
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({ where: { email: req.body.email.email || email } });
         console.log('Found user:', user ? { id: user.id, email: user.email, role: user.role } : 'not found');
         
         if (!user) {
