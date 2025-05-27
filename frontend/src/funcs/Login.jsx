@@ -88,7 +88,12 @@ const Login = ({ onClose, onLoginSuccess }) => {
             
             // After successful registration, try to log in with the original credentials
             try {
-                const user = await login(registerData.email, registerData.password);
+                // Ensure we're passing string values for email and password
+                const loginEmail = String(registerData.email);
+                const loginPassword = String(registerData.password);
+                console.log('Attempting login after registration with:', { email: loginEmail });
+                
+                const user = await login(loginEmail, loginPassword);
                 console.log('Login successful after registration');
                 if (onLoginSuccess) onLoginSuccess(user);
                 onClose();
