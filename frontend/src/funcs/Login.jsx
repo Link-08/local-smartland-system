@@ -72,7 +72,18 @@ const Login = ({ onClose, onLoginSuccess }) => {
         try {
             console.log('Attempting registration with:', registerData.email);
             
-            const response = await api.post("/api/auth/register", registerData);
+            // Prepare registration data
+            const registrationData = {
+                username: registerData.email, // Use email as username
+                email: registerData.email,
+                password: registerData.password,
+                role: registerData.role,
+                firstName: registerData.fullName.split(' ')[0] || '',
+                lastName: registerData.fullName.split(' ').slice(1).join(' ') || '',
+                phone: registerData.phoneNumber
+            };
+            
+            const response = await api.post("/api/auth/register", registrationData);
             const data = response.data;
             console.log('Registration response:', data);
             
