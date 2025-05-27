@@ -90,33 +90,52 @@ const auth = async (req, res, next) => {
 
 const refreshTokenAuth = async (req, res, next) => {
   try {
+    console.log('=== Starting refreshTokenAuth middleware ===');
     const authHeader = req.header('Authorization');
+    console.log('Auth header present:', !!authHeader);
     
     if (!authHeader) {
+      console.log('No Authorization header found');
       return res.status(401).json({ error: 'No Authorization header' });
     }
 
     if (!authHeader.startsWith('Bearer ')) {
+      console.log('Invalid Authorization header format:', authHeader);
       return res.status(401).json({ error: 'Invalid Authorization header format' });
     }
 
     const token = authHeader.replace('Bearer ', '');
+    console.log('Token extracted:', !!token);
     
     if (!token) {
+      console.log('No token found in Authorization header');
       return res.status(401).json({ error: 'No token found' });
     }
 
     try {
-      // VERIFY the token instead of just decoding
-      const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET); // ✅ This checks expiration
+      console.log('Verifying refresh token...');
+      console.log('Using REFRESH_TOKEN_SECRET:', !!REFRESH_TOKEN_SECRET);
+      
+      const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET);
+      console.log('Token decoded successfully:', {
+        id: decoded.id,
+        exp: decoded.exp,
+        iat: decoded.iat
+      });
+      
       if (!decoded || !decoded.id) {
+        console.log('Invalid token format - missing id:', decoded);
         return res.status(401).json({ error: 'Invalid token format' });
       }
 
       req.decodedToken = decoded;
+      console.log('=== Refresh token auth completed successfully ===');
       next();
     } catch (error) {
-      // This will catch expired tokens
+      console.error('=== Token verification error ===');
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({ error: 'Refresh token expired' });
       }
@@ -126,7 +145,10 @@ const refreshTokenAuth = async (req, res, next) => {
       return res.status(401).json({ error: 'Token verification failed' });
     }
   } catch (error) {
-    console.error('Refresh token auth middleware error:', error);
+    console.error('=== Refresh token auth middleware error ===');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
