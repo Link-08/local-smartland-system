@@ -86,7 +86,7 @@ const Login = ({ onClose, onLoginSuccess }) => {
             const response = await api.post("/api/auth/register", registrationData);
             console.log('Registration response:', response.data);
             
-            // After successful registration, try to log in
+            // After successful registration, try to log in with the original credentials
             try {
                 const user = await login(registerData.email, registerData.password);
                 console.log('Login successful after registration');

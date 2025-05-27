@@ -65,8 +65,17 @@ router.post("/register", async (req, res) => {
         res.status(201).json({
             user: {
                 id: user.id,
+                accountId: user.accountId,
+                username: user.username,
                 email: user.email,
-                role: user.role
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phone: user.phone,
+                role: user.role,
+                avatar: user.avatar,
+                memberSince: user.memberSince,
+                isActive: user.isActive,
+                status: user.status
             },
             token
         });
