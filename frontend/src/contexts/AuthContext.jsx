@@ -80,10 +80,14 @@ export const AuthProvider = ({ children }) => {
         role
       });
       const { token, user } = response.data;
+      
+      // Store the token and user data
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      return user;
+      
+      // Return success without setting the user state
+      // The user will need to log in separately
+      return { success: true, message: 'Registration successful' };
     } catch (error) {
       console.error('Registration error:', error);
       throw error;

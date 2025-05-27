@@ -79,10 +79,59 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log('Login request body:', req.body);
-        console.log('Login attempt for:', req.body.email.email || email);
+        
+        // Add detailed request logging
+        console.log('Login request received:', {
+            body: req.body,
+            headers: req.headers,
+            ip: req.ip,
+            userAgent: req.headers['user-agent']
+        });
+        
+        // Validate request body
+        if (!email || !password) {
+            return res.status(400).json({ 
+                error: 'Email and password are required',
+                details: 'Please provide both email and password fields'
+            });
+        }
 
-        const user = await User.findOne({ where: { email: req.body.email.email || email } });
+        // Validate email is a string
+        if (typeof email !== 'string') {
+            return res.status(400).json({ 
+                error: 'Invalid email format',
+                details: 'Email must be a string. Received: ' + JSON.stringify(email)
+            });
+        }
+
+        // Validate password is a string
+        if (typeof password !== 'string') {
+            return res.status(400).json({ 
+                error: 'Invalid password format',
+                details: 'Password must be a string'
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                error: 'Invalid email format',
+                details: 'Please provide a valid email address'
+            });
+        }
+
+        // Check if password is a JWT token
+        if (password.split('.').length === 3) {
+            return res.status(400).json({
+                error: 'Invalid password format',
+                details: 'JWT tokens cannot be used as passwords. Please use your actual password.'
+            });
+        }
+
+        console.log('Login attempt for:', email);
+
+        const user = await User.findOne({ where: { email } });
         console.log('Found user:', user ? { id: user.id, email: user.email, role: user.role } : 'not found');
         
         if (!user) {

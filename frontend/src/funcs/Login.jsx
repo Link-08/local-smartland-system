@@ -91,8 +91,8 @@ const Login = ({ onClose, onLoginSuccess }) => {
                 // Store the token and user data
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                console.log('Registration and login successful');
-                alert("Registration successful!");
+                console.log('Registration successful');
+                alert("Registration successful! You can now log in.");
                 onClose();
             } else {
                 console.error('No token or user data received after registration');
