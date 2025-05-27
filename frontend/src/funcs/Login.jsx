@@ -84,18 +84,16 @@ const Login = ({ onClose, onLoginSuccess }) => {
             };
             
             const response = await api.post("/api/auth/register", registrationData);
-            const data = response.data;
-            console.log('Registration response:', data);
+            console.log('Registration response:', response.data);
             
-            if (data.token && data.user) {
-                // Store the token and user data
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                console.log('Registration successful');
-                alert("Registration successful! You can now log in.");
+            // After successful registration, try to log in
+            try {
+                const user = await login(registerData.email, registerData.password);
+                console.log('Login successful after registration');
+                if (onLoginSuccess) onLoginSuccess(user);
                 onClose();
-            } else {
-                console.error('No token or user data received after registration');
+            } catch (loginError) {
+                console.error('Login after registration failed:', loginError);
                 setRegisterError('Registration successful but login failed. Please try logging in manually.');
             }
         } catch (err) {
