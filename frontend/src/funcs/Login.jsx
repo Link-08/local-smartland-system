@@ -69,7 +69,9 @@ const Login = ({ onClose, onLoginSuccess }) => {
             console.log('Registration response:', data);
             
             if (data.token && data.user) {
-                await login(data.user, data.token);
+                // Store the token and user data
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
                 console.log('Registration and login successful');
                 alert("Registration successful!");
                 onClose();
