@@ -182,20 +182,18 @@ router.post("/login", async (req, res) => {
         
         console.log('Login successful for:', email);
         res.json({
-            user: {
-                id: user.id,
-                accountId: user.accountId,
-                username: user.username,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                phone: user.phone,
-                role: user.role,
-                avatar: user.avatar,
-                memberSince: user.memberSince,
-                isActive: user.isActive,
-                status: user.status
-            },
+            id: user.id,
+            accountId: user.accountId,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+            role: user.role,
+            avatar: user.avatar,
+            memberSince: user.memberSince,
+            isActive: user.isActive,
+            status: user.status,
             token
         });
     } catch (error) {

@@ -61,11 +61,11 @@ export const AuthProvider = ({ children }) => {
         email: email,
         password: password
       });
-      const { token, user } = response.data;
+      const { token, ...userData } = response.data;
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      return user;
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      return userData;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
