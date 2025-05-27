@@ -98,7 +98,7 @@ const Login = ({ onClose, onLoginSuccess }) => {
             }
         } catch (err) {
             console.error('Registration error:', err.response?.data || err);
-            setRegisterError(err.response?.data?.message || err.message);
+            setRegisterError(err.response?.data?.message || err.message || 'An error occurred during registration');
         }
     };    
 
