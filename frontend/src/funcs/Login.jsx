@@ -6,7 +6,15 @@ import api from "../config/axios";
 const Login = ({ onClose, onLoginSuccess }) => {
     const { login } = useAuth();
     const [loginData, setLoginData] = useState({ email: "", password: "", rememberMe: false });
-    const [registerData, setRegisterData] = useState({ fullName: "", email: "", password: "", confirmPassword: "", phoneNumber: "", userType: "buyer", termsAccepted: false});
+    const [registerData, setRegisterData] = useState({ 
+        fullName: "", 
+        email: "", 
+        password: "", 
+        confirmPassword: "", 
+        phoneNumber: "", 
+        role: "buyer",
+        termsAccepted: false
+    });
     
     const [loginError, setLoginError] = useState("");  
     const [registerError, setRegisterError] = useState("");  
@@ -125,10 +133,10 @@ const Login = ({ onClose, onLoginSuccess }) => {
                     {/* User Type Selection */}
                     <RadioGroup>
                         <label>
-                            <input type="radio" name="userType" value="buyer" checked={registerData.userType === "buyer"} onChange={(e) => handleChange(e, "register")} /> Buyer
+                            <input type="radio" name="role" value="buyer" checked={registerData.role === "buyer"} onChange={(e) => handleChange(e, "register")} /> Buyer
                         </label>
                         <label>
-                            <input type="radio" name="userType" value="seller" checked={registerData.userType === "seller"} onChange={(e) => handleChange(e, "register")} /> Seller
+                            <input type="radio" name="role" value="seller" checked={registerData.role === "seller"} onChange={(e) => handleChange(e, "register")} /> Seller
                         </label>
                     </RadioGroup>
 
