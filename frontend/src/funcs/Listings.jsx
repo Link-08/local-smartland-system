@@ -4,6 +4,9 @@ import { ListingStyles } from './ListingsStyles';
 import { formatPrice, formatDate } from './formatUtils';
 import api from '../api';
 import { FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaStar, FaList, FaRegCalendarAlt } from 'react-icons/fa';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const getSellerInfo = (sellerKey) => {
   // Example mapping, you can expand this as needed
@@ -24,6 +27,14 @@ const getSellerInfo = (sellerKey) => {
     memberSince: '2024-01-01',
   };
 };
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const ListingPage = ({ property }) => {
     const { id } = useParams();
@@ -46,6 +57,36 @@ const ListingPage = ({ property }) => {
     const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [contactModalOpen, setContactModalOpen] = useState(false);
+
+    // Default coordinates for Cabanatuan, Nueva Ecija
+    const defaultCenter = [15.4910, 120.9679];
+    
+    // Define bounds for Cabanatuan area (approximately 10km radius)
+    const mapBounds = [
+        [15.4410, 120.9179], // Southwest coordinates
+        [15.5410, 121.0179]  // Northeast coordinates
+    ];
+    
+    // Function to get coordinates from coordinates field or location string
+    const getCoordinates = (listing) => {
+        if (listing?.coordinates) {
+            const coords = listing.coordinates.split(',').map(coord => parseFloat(coord.trim()));
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                return coords;
+            }
+        }
+        // Fallback to location string
+        if (listing?.location) {
+            const coords = listing.location.split(',').map(coord => parseFloat(coord.trim()));
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                return coords;
+            }
+        }
+        return defaultCenter;
+    };
+
+    // Get coordinates for the current listing
+    const listingCoordinates = getCoordinates(listing);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -260,11 +301,29 @@ const ListingPage = ({ property }) => {
                     <ListingStyles.Section>
                     <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
                     <ListingStyles.MapContainer>
-                        <ListingStyles.MapPlaceholder>
-                        Map showing location at {listing.location}
-                        </ListingStyles.MapPlaceholder>
+                        <MapContainer 
+                            center={listingCoordinates} 
+                            zoom={13} 
+                            style={{ height: '100%', width: '100%' }}
+                            zoomControl={true}
+                            dragging={false}
+                            touchZoom={false}
+                            doubleClickZoom={false}
+                            scrollWheelZoom={false}
+                            boxZoom={false}
+                            keyboard={false}
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            <Marker position={listingCoordinates}>
+                                <Popup>
+                                    {listing?.location || 'Cabanatuan, Nueva Ecija'}
+                                </Popup>
+                            </Marker>
+                        </MapContainer>
                     </ListingStyles.MapContainer>
-                    <ListingStyles.Address>{listing.location}</ListingStyles.Address>
                     </ListingStyles.Section>
                 </ListingStyles.MainContent>
                 

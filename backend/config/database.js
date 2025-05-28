@@ -1,13 +1,35 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize({
+// Configuration object for Sequelize CLI
+module.exports = {
+    development: {
+        dialect: 'sqlite',
+        storage: './database.sqlite',
+        logging: false,
+        define: {
+            timestamps: true,
+            underscored: true,
+            freezeTableName: true
+        }
+    },
+    test: {
+        dialect: 'sqlite',
+        storage: ':memory:',
+        logging: false,
+        define: {
+            timestamps: true,
+            underscored: true,
+            freezeTableName: true
+        }
+    },
+    production: {
     dialect: 'postgres',
-    host: process.env.DB_HOST || 'dono-01.danbot.host',
-    port: process.env.DB_PORT || 8932,
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
     database: process.env.DB_NAME || 'smartland-system',
-    username: process.env.DB_USER || 'pterodactyl',
-    password: process.env.DB_PASSWORD || 'VH0TOR9MC89UZAR8',
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
     logging: false,
     pool: {
         max: 5,
@@ -17,7 +39,24 @@ const sequelize = new Sequelize({
     },
     define: {
         schema: 'public',
+        timestamps: true,
+            underscored: true,
+            freezeTableName: true
+        }
     }
-});
+};
 
-module.exports = sequelize; 
+// Create Sequelize instance for direct use in the application
+const sequelize = new Sequelize(module.exports.development);
+
+// Test the connection
+sequelize.authenticate()
+    .then(() => {
+        console.log('Database connection has been established successfully.');
+    })
+    .catch(err => {
+        console.error('Unable to connect to the database:', err);
+    });
+
+// Export the Sequelize instance for use in models
+module.exports.sequelize = sequelize; 

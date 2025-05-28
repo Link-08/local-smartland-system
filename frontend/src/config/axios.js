@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://smartland-backend.thetwlight.xyz',
+    baseURL: 'http://localhost:26443',
     headers: {
         'Content-Type': 'application/json'
     }

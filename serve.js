@@ -3,7 +3,7 @@ import path from "path";
 import { readFile } from "fs/promises";
 
 const distDir = path.join(import.meta.dir, "dist");
-console.log("✅ Server running on http://dono-03.danbot.host:2492");
+console.log("✅ Server running on http://localhost:3000");
 
 serve({
     hostname: "0.0.0.0",

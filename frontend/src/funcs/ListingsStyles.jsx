@@ -360,10 +360,18 @@ export const ListingStyles = {
 
     MapContainer: styled.div`
         width: 100%;
-        height: 300px;
+        height: 400px;
         background-color: #2C3E50;
         border-radius: 8px;
         margin-bottom: 16px;
+        overflow: hidden;
+        position: relative;
+        
+        .leaflet-container {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
     `,
 
     MapPlaceholder: styled.div`
@@ -379,6 +387,9 @@ export const ListingStyles = {
     Address: styled.div`
         font-size: 16px;
         color: #ecf0f1;
+        display: flex;
+        align-items: center;
+        margin-top: 12px;
     `,
 
     Sidebar: styled.div`

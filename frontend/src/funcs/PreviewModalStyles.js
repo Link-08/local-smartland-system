@@ -6,30 +6,31 @@ export const PreviewModal = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
 `;
 
 export const PreviewContent = styled.div`
-    background: white;
+    background: #ffffff;
     width: 90%;
     max-width: 1200px;
     max-height: 90vh;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     position: relative;
     display: flex;
-    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 `;
 
 export const CloseButton = styled.button`
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border: none;
     border-radius: 50%;
     width: 40px;
@@ -39,18 +40,23 @@ export const CloseButton = styled.button`
     justify-content: center;
     cursor: pointer;
     z-index: 10;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 24px;
+    color: #2c3e50;
+    transition: all 0.2s ease;
+    
     &:hover {
         background: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 `;
 
 export const ImageGallery = styled.div`
+    width: 50%;
     position: relative;
-    width: 100%;
-    height: 400px;
-    background: #f5f5f5;
+    background: #f8f9fa;
+    overflow: hidden;
 `;
 
 export const MainImage = styled.img`
@@ -59,33 +65,29 @@ export const MainImage = styled.img`
     object-fit: cover;
 `;
 
-export const ImageNavigation = styled.div`
+export const NavButton = styled.button`
     position: absolute;
     top: 50%;
-    left: 0;
-    right: 0;
     transform: translateY(-50%);
-    display: flex;
-    justify-content: space-between;
-    padding: 0 30px;
-    pointer-events: none;
-`;
-
-export const NavButton = styled.button`
     background: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 0;
-    pointer-events: auto;
+    z-index: 5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    left: ${props => props.$left ? '20px' : 'auto'};
+    right: ${props => props.$right ? '20px' : 'auto'};
+    
     &:hover {
         background: white;
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 `;
 
@@ -97,8 +99,9 @@ export const ThumbnailsContainer = styled.div`
     display: flex;
     gap: 10px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 export const Thumbnail = styled.img`
@@ -108,14 +111,19 @@ export const Thumbnail = styled.img`
     border-radius: 4px;
     cursor: pointer;
     border: 2px solid ${props => props.active ? '#2ecc71' : 'transparent'};
+    transition: all 0.2s ease;
+    
     &:hover {
         border-color: #27ae60;
+        transform: scale(1.05);
     }
 `;
 
 export const MainContent = styled.div`
-    padding: 30px;
+    width: 50%;
+    padding: 40px;
     overflow-y: auto;
+    background: #ffffff;
 `;
 
 export const ListingHeader = styled.div`
@@ -123,6 +131,8 @@ export const ListingHeader = styled.div`
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
 `;
 
 export const TitleSection = styled.div`
@@ -130,10 +140,10 @@ export const TitleSection = styled.div`
 `;
 
 export const ListingTitle = styled.h1`
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
     color: #2c3e50;
-    margin-bottom: 8px;
+    margin: 0 0 10px 0;
+    font-weight: 600;
 `;
 
 export const ListingLocation = styled.div`
@@ -148,7 +158,7 @@ export const PriceSection = styled.div`
 `;
 
 export const ListingPrice = styled.div`
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 600;
     color: #2ecc71;
 `;
@@ -171,17 +181,17 @@ export const ContentGrid = styled.div`
 `;
 
 export const Section = styled.div`
-    background: white;
+    background: #ffffff;
     border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
 export const SectionTitle = styled.h2`
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 20px;
     color: #2c3e50;
-    margin-bottom: 20px;
+    margin: 0 0 20px 0;
+    font-weight: 600;
 `;
 
 export const PropertySpecs = styled.div`
@@ -199,6 +209,7 @@ export const SpecItem = styled.div`
 export const SpecLabel = styled.div`
     font-size: 14px;
     color: #7f8c8d;
+    text-transform: capitalize;
 `;
 
 export const SpecValue = styled.div`
@@ -211,6 +222,7 @@ export const Description = styled.p`
     font-size: 16px;
     line-height: 1.6;
     color: #34495e;
+    margin: 0;
 `;
 
 export const AmenitiesList = styled.div`
@@ -273,4 +285,29 @@ export const MetricValue = styled.div`
         if (props.$status === 'sold') return '#3498db';
         return '#2c3e50';
     }};
+`;
+
+export const MapContainer = styled.div`
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 12px;
+    border: 1px solid #e0e0e0;
+    
+    .leaflet-container {
+        height: 100%;
+        width: 100%;
+    }
+    
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+        padding: 8px;
+    }
+    
+    .leaflet-popup-content {
+        margin: 8px;
+        font-size: 14px;
+        color: #2C3E50;
+    }
 `; 

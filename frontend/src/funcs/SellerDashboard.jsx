@@ -8,6 +8,9 @@ import {
   FaEdit, FaTrash, FaPlus, FaMoneyBillWave, FaChartBar,
   FaExclamationTriangle, FaCheck, FaEye, FaList, FaThLarge, FaFilter, FaHome, FaStar, FaTint, FaAngleDown, FaRegCalendarAlt, FaTimes, FaChevronLeft
 } from 'react-icons/fa';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { DashboardStyles } from "./BuyerDashboardStyles";
 import { SellerDashboardStyles } from "./SellerDashboardStyles";
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +26,14 @@ const iconMap = {
     FaEye: <FaEye />,
     FaCheck: <FaCheck />,
 };
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const SellerDashboard = ({ navigateTo }) => {
     // State for UI interactions
@@ -137,30 +148,12 @@ const SellerDashboard = ({ navigateTo }) => {
 
             try {
                 // Fetch seller listings
-                const listingsResponse = await fetch(
-                    `https://smartland-backend.thetwlight.xyz/api/properties?sellerId=${user.id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                    }
-                );
-                if (!listingsResponse.ok) throw new Error('Failed to fetch listings');
-                const listingsData = await listingsResponse.json();
-                setSellerListings(listingsData);
+                const listingsResponse = await api.get(`/api/properties?sellerId=${user.id}`);
+                setSellerListings(listingsResponse.data);
 
                 // Fetch market insights
-                const insightsResponse = await fetch(
-                    `https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                    }
-                );
-                if (!insightsResponse.ok) throw new Error('Failed to fetch insights');
-                const insightsData = await insightsResponse.json();
-                setMarketInsights(insightsData);
+                const insightsResponse = await api.get(`/api/seller/metrics/${user.id}`);
+                setMarketInsights(insightsResponse.data);
 
                 // No need to fetch activities since the endpoint doesn't exist
                 // We'll keep using the default welcome activity
@@ -193,16 +186,8 @@ const SellerDashboard = ({ navigateTo }) => {
             }
 
             try {
-                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to fetch metrics');
-                }
-                const data = await response.json();
-                setMetrics(data);
+                const response = await api.get(`/api/seller/metrics/${user.id}`);
+                setMetrics(response.data);
             } catch (error) {
                 console.error('Error fetching metrics:', error);
             }
@@ -551,28 +536,19 @@ const SellerDashboard = ({ navigateTo }) => {
             amenities: listing.amenities || [],
             restrictions: listing.restrictions || [],
             previousCrops: listing.previousCrops || [],
-            seller: {
-                name: `${user.firstName} ${user.lastName}`,
-                rating: 4.5,
-                listings: sellerListings.length,
-                memberSince: user.memberSince,
-                profileImage: user.avatar || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
-            },
-            // Add additional property details
+            // Add only the specified property details
             size: `${listing.acres} hectares`,
             type: 'Agricultural Land',
-            soilType: listing.soilType || 'Not specified',
-            zoning: listing.zoning || 'Agricultural',
-            waterSource: listing.waterRights || 'Not specified',
-            averageYield: listing.averageYield || 'Not specified',
-            topography: listing.topography || 'Not specified',
+            waterRights: listing.waterRights || 'Not specified',
+            listedDate: listing.datePosted || new Date().toISOString(),
             description: listing.description || 'No description available',
             address: listing.location,
-            listedDate: listing.datePosted || new Date().toISOString(),
-            pricePerHectare: `₱${Math.round(listing.price / listing.acres).toLocaleString()}`,
-            status: listing.status || 'active',
-            viewCount: listing.viewCount || 0,
-            inquiries: listing.inquiries || 0
+            // Add farm details
+            farmDetails: {
+                previousCrops: listing.previousCrops || [],
+                averageYield: listing.averageYield || 'Not specified',
+                topography: listing.topography || 'Not specified'
+            }
         };
         
         setPreviewListing(previewData);
@@ -692,21 +668,11 @@ const SellerDashboard = ({ navigateTo }) => {
     const recordPropertyView = async (listingId) => {
         try {
             if (user && user.id) {
-                await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}/view`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                await api.post('/api/seller/metrics/view', { listingId });
                 // Refresh metrics after recording view
-                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                const response = await api.get('/api/seller/metrics');
                 if (response.ok) {
-                    const data = await response.json();
-                    setMetrics(data);
+                    setMetrics(response.data);
                 }
             }
         } catch (error) {
@@ -718,21 +684,11 @@ const SellerDashboard = ({ navigateTo }) => {
     const recordPropertyInquiry = async (listingId) => {
         try {
             if (user && user.id) {
-                await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}/inquiry`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                await api.post('/api/seller/metrics/inquiry', { listingId });
                 // Refresh metrics after recording inquiry
-                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                const response = await api.get('/api/seller/metrics');
                 if (response.ok) {
-                    const data = await response.json();
-                    setMetrics(data);
+                    setMetrics(response.data);
                 }
             }
         } catch (error) {
@@ -744,23 +700,11 @@ const SellerDashboard = ({ navigateTo }) => {
     const recordPropertySale = async (listingId, daysToSale) => {
         try {
             if (user && user.id) {
-                await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}/sale`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ daysToSale })
-                });
+                await api.post('/api/seller/metrics/sale', { listingId, daysToSale });
                 // Refresh metrics after recording sale
-                const response = await fetch(`https://smartland-backend.thetwlight.xyz/api/seller/metrics/${user.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                const response = await api.get('/api/seller/metrics');
                 if (response.ok) {
-                    const data = await response.json();
-                    setMetrics(data);
+                    setMetrics(response.data);
                 }
             }
         } catch (error) {
@@ -799,6 +743,181 @@ const SellerDashboard = ({ navigateTo }) => {
     const handleSave = () => {
         // Implement save functionality
         alert('Property saved to favorites');
+    };
+
+    const MapSection = ({ coordinates, onCoordinatesChange, isEditable = false }) => {
+        const [isEditing, setIsEditing] = useState(false);
+        const [markerCoordinates, setMarkerCoordinates] = useState([15.4917, 120.9679]);
+        const [tempCoordinates, setTempCoordinates] = useState([15.4917, 120.9679]);
+
+        useEffect(() => {
+            // Parse coordinates from prop if available
+            if (coordinates) {
+                const coords = coordinates.split(',').map(coord => parseFloat(coord.trim()));
+                if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                    setMarkerCoordinates(coords);
+                    setTempCoordinates(coords);
+                }
+            }
+        }, [coordinates]);
+
+        const handleSaveCoordinates = () => {
+            setMarkerCoordinates(tempCoordinates);
+            if (onCoordinatesChange) {
+                onCoordinatesChange(tempCoordinates);
+            }
+            setIsEditing(false);
+        };
+
+        return (
+            <div style={{ position: 'relative' }}>
+                <div style={{ height: '300px', width: '100%', borderRadius: '8px', overflow: 'hidden' }}>
+                    <MapContainer 
+                        center={markerCoordinates} 
+                        zoom={13} 
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={true}
+                        dragging={isEditing}
+                        touchZoom={isEditing}
+                        doubleClickZoom={isEditing}
+                        scrollWheelZoom={isEditing}
+                        boxZoom={isEditing}
+                        keyboard={isEditing}
+                    >
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker 
+                            position={markerCoordinates}
+                            draggable={isEditing}
+                            eventHandlers={{
+                                dragend: (e) => {
+                                    const newCoords = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+                                    setTempCoordinates(newCoords);
+                                }
+                            }}
+                        >
+                            <Popup>
+                                {isEditing ? 'Drag to adjust location' : 'Cabanatuan, Nueva Ecija'}
+                            </Popup>
+                        </Marker>
+                    </MapContainer>
+                </div>
+                {isEditable && (
+                    <div style={{ 
+                        position: 'absolute', 
+                        top: '10px', 
+                        right: '10px', 
+                        zIndex: 1000,
+                        display: 'flex',
+                        gap: '8px'
+                    }}>
+                        {isEditing ? (
+                            <>
+                                <button
+                                    onClick={handleSaveCoordinates}
+                                    style={{
+                                        padding: '8px 16px',
+                                        backgroundColor: '#2ecc71',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                    }}
+                                >
+                                    <FaCheck size={14} /> Save
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setTempCoordinates(markerCoordinates);
+                                        setIsEditing(false);
+                                    }}
+                                    style={{
+                                        padding: '8px 16px',
+                                        backgroundColor: '#e74c3c',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                    }}
+                                >
+                                    <FaTimes size={14} /> Cancel
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#3498db',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}
+                            >
+                                <FaEdit size={14} /> Edit Location
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const handleCoordinatesChange = async (newCoordinates) => {
+        if (!previewListing) return;
+        try {
+            // Format the coordinates as a string
+            const coordinatesString = newCoordinates.join(',');
+            // Update only the coordinates field in the database
+            const response = await api.put(`/api/properties/${previewListing.id}`, {
+                ...previewListing,
+                coordinates: coordinatesString
+            });
+            if (response.data) {
+                // Update the local state for the preview modal
+                setPreviewListing(prev => ({
+                    ...prev,
+                    coordinates: coordinatesString
+                }));
+                // Update the listings list
+                setSellerListings(prevListings => 
+                    prevListings.map(listing => 
+                        listing.id === previewListing.id 
+                            ? { 
+                                ...listing, 
+                                coordinates: coordinatesString
+                            }
+                            : listing
+                    )
+                );
+                alert('Map location updated successfully!');
+            } else {
+                throw new Error('No data received from server');
+            }
+        } catch (error) {
+            console.error('Error updating coordinates:', error);
+            let errorMessage = 'Failed to update map location. ';
+            if (error.response) {
+                errorMessage += `Server responded with ${error.response.status}: ${error.response.data?.message || 'Unknown error'}`;
+            } else if (error.request) {
+                errorMessage += 'No response received from server. Please check your connection.';
+            } else {
+                errorMessage += error.message;
+            }
+            alert(errorMessage);
+        }
     };
 
     if (loading) {
@@ -980,7 +1099,7 @@ const SellerDashboard = ({ navigateTo }) => {
                             <DashboardStyles.ProfileAvatarLarge>
                                 {user.avatar && user.avatar !== 'NA' ? (
                                     <img
-                                        src={user.avatar.startsWith('http') ? user.avatar : `https://smartland-backend.thetwlight.xyz${user.avatar}`}
+                                        src={user.avatar.startsWith('http') ? user.avatar : `${api.defaults.baseURL}${user.avatar}`}
                                         alt="Profile"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                     />
@@ -1374,7 +1493,6 @@ const SellerDashboard = ({ navigateTo }) => {
                                             onChange={handleEditPropertyChange}
                                             required
                                         >
-                                            <option value="">Select water source</option>
                                             <option value="NIA Irrigation">NIA Irrigation</option>
                                             <option value="Deep Well">Deep Well</option>
                                             <option value="Creek Access">Creek Access</option>
@@ -1460,7 +1578,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                         <SellerDashboardStyles.AvatarPreview>
                                             {userProfile.avatar ? (
                                                 <img 
-                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `https://smartland-backend.thetwlight.xyz${userProfile.avatar}`} 
+                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${api.defaults.baseURL}${userProfile.avatar}`} 
                                                     alt="Profile" 
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                                 />
@@ -1702,20 +1820,16 @@ const SellerDashboard = ({ navigateTo }) => {
                 {previewModalOpen && previewListing && (
                     <PreviewModalStyles.PreviewModal>
                         <PreviewModalStyles.PreviewContent>
-                            <PreviewModalStyles.CloseButton onClick={closePreviewModal}>
-                                <FaTimes size={20} />
-                            </PreviewModalStyles.CloseButton>
+                            <PreviewModalStyles.CloseButton onClick={closePreviewModal}>×</PreviewModalStyles.CloseButton>
                             
                             <PreviewModalStyles.ImageGallery>
                                 <PreviewModalStyles.MainImage src={previewListing.images[activeImageIndex]} alt={previewListing.title} />
-                                <PreviewModalStyles.ImageNavigation>
-                                    <PreviewModalStyles.NavButton onClick={handlePrevImage}>
-                                        <FaChevronLeft size={20} />
+                                <PreviewModalStyles.NavButton $left onClick={handlePrevImage}>
+                                    <FaChevronLeft size={24} />
                                     </PreviewModalStyles.NavButton>
-                                    <PreviewModalStyles.NavButton onClick={handleNextImage}>
-                                        <FaChevronRight size={20} />
+                                <PreviewModalStyles.NavButton $right onClick={handleNextImage}>
+                                    <FaChevronRight size={24} />
                                     </PreviewModalStyles.NavButton>
-                                </PreviewModalStyles.ImageNavigation>
                                 <PreviewModalStyles.ThumbnailsContainer>
                                     {previewListing.images.map((image, index) => (
                                         <PreviewModalStyles.Thumbnail
@@ -1738,16 +1852,11 @@ const SellerDashboard = ({ navigateTo }) => {
                                             {previewListing.address}
                                         </PreviewModalStyles.ListingLocation>
                                     </PreviewModalStyles.TitleSection>
-                                    <PreviewModalStyles.PriceSection>
-                                        <PreviewModalStyles.ListingPrice>{formatPrice(previewListing.price)}</PreviewModalStyles.ListingPrice>
-                                        <PreviewModalStyles.PriceUnit>PHP</PreviewModalStyles.PriceUnit>
-                                        <PreviewModalStyles.PricePerUnit>{previewListing.pricePerHectare} per hectare</PreviewModalStyles.PricePerUnit>
-                                    </PreviewModalStyles.PriceSection>
                                 </PreviewModalStyles.ListingHeader>
 
                                 <PreviewModalStyles.ContentGrid>
                                     <PreviewModalStyles.Section>
-                                        <PreviewModalStyles.SectionTitle>Property Overview</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.SectionTitle>Property Details</PreviewModalStyles.SectionTitle>
                                         <PreviewModalStyles.PropertySpecs>
                                             <PreviewModalStyles.SpecItem>
                                                 <PreviewModalStyles.SpecLabel>Size</PreviewModalStyles.SpecLabel>
@@ -1758,19 +1867,11 @@ const SellerDashboard = ({ navigateTo }) => {
                                                 <PreviewModalStyles.SpecValue>{previewListing.type}</PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                             <PreviewModalStyles.SpecItem>
-                                                <PreviewModalStyles.SpecLabel>Soil Type</PreviewModalStyles.SpecLabel>
-                                                <PreviewModalStyles.SpecValue>{previewListing.soilType}</PreviewModalStyles.SpecValue>
+                                                <PreviewModalStyles.SpecLabel>Water Rights</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.waterRights}</PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                             <PreviewModalStyles.SpecItem>
-                                                <PreviewModalStyles.SpecLabel>Zoning</PreviewModalStyles.SpecLabel>
-                                                <PreviewModalStyles.SpecValue>{previewListing.zoning}</PreviewModalStyles.SpecValue>
-                                            </PreviewModalStyles.SpecItem>
-                                            <PreviewModalStyles.SpecItem>
-                                                <PreviewModalStyles.SpecLabel>Water Source</PreviewModalStyles.SpecLabel>
-                                                <PreviewModalStyles.SpecValue>{previewListing.waterSource}</PreviewModalStyles.SpecValue>
-                                            </PreviewModalStyles.SpecItem>
-                                            <PreviewModalStyles.SpecItem>
-                                                <PreviewModalStyles.SpecLabel>Listed</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecLabel>Listed Date</PreviewModalStyles.SpecLabel>
                                                 <PreviewModalStyles.SpecValue>{formatDate(previewListing.listedDate)}</PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                         </PreviewModalStyles.PropertySpecs>
@@ -1787,18 +1888,18 @@ const SellerDashboard = ({ navigateTo }) => {
                                             <PreviewModalStyles.SpecItem>
                                                 <PreviewModalStyles.SpecLabel>Previous Crops</PreviewModalStyles.SpecLabel>
                                                 <PreviewModalStyles.SpecValue>
-                                                    {previewListing.previousCrops.length > 0 
-                                                        ? previewListing.previousCrops.join(', ') 
+                                                    {previewListing.farmDetails.previousCrops.length > 0 
+                                                        ? previewListing.farmDetails.previousCrops.join(', ') 
                                                         : 'No previous crops recorded'}
                                                 </PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                             <PreviewModalStyles.SpecItem>
                                                 <PreviewModalStyles.SpecLabel>Average Yield</PreviewModalStyles.SpecLabel>
-                                                <PreviewModalStyles.SpecValue>{previewListing.averageYield}</PreviewModalStyles.SpecValue>
+                                                <PreviewModalStyles.SpecValue>{previewListing.farmDetails.averageYield}</PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                             <PreviewModalStyles.SpecItem>
                                                 <PreviewModalStyles.SpecLabel>Topography</PreviewModalStyles.SpecLabel>
-                                                <PreviewModalStyles.SpecValue>{previewListing.topography}</PreviewModalStyles.SpecValue>
+                                                <PreviewModalStyles.SpecValue>{previewListing.farmDetails.topography}</PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                         </PreviewModalStyles.PropertySpecs>
                                     </PreviewModalStyles.Section>
@@ -1809,7 +1910,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                             {previewListing.amenities.length > 0 ? (
                                                 previewListing.amenities.map((amenity, index) => (
                                                     <PreviewModalStyles.AmenityItem key={index}>
-                                                        <FaCheck size={12} style={{ marginRight: '5px' }} />
+                                                        <FaCheck size={14} style={{ marginRight: '8px', color: '#2ecc71' }} />
                                                         {amenity}
                                                     </PreviewModalStyles.AmenityItem>
                                                 ))
@@ -1825,7 +1926,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                             {previewListing.restrictions.length > 0 ? (
                                                 previewListing.restrictions.map((restriction, index) => (
                                                     <PreviewModalStyles.RestrictionItem key={index}>
-                                                        <FaExclamationTriangle size={12} style={{ marginRight: '5px' }} />
+                                                        <FaExclamationTriangle size={14} style={{ marginRight: '8px' }} />
                                                         {restriction}
                                                     </PreviewModalStyles.RestrictionItem>
                                                 ))
@@ -1836,23 +1937,12 @@ const SellerDashboard = ({ navigateTo }) => {
                                     </PreviewModalStyles.Section>
 
                                     <PreviewModalStyles.Section>
-                                        <PreviewModalStyles.SectionTitle>Performance Metrics</PreviewModalStyles.SectionTitle>
-                                        <PreviewModalStyles.MetricsGrid>
-                                            <PreviewModalStyles.MetricItem>
-                                                <PreviewModalStyles.MetricLabel>Views</PreviewModalStyles.MetricLabel>
-                                                <PreviewModalStyles.MetricValue>{previewListing.viewCount}</PreviewModalStyles.MetricValue>
-                                            </PreviewModalStyles.MetricItem>
-                                            <PreviewModalStyles.MetricItem>
-                                                <PreviewModalStyles.MetricLabel>Inquiries</PreviewModalStyles.MetricLabel>
-                                                <PreviewModalStyles.MetricValue>{previewListing.inquiries}</PreviewModalStyles.MetricValue>
-                                            </PreviewModalStyles.MetricItem>
-                                            <PreviewModalStyles.MetricItem>
-                                                <PreviewModalStyles.MetricLabel>Status</PreviewModalStyles.MetricLabel>
-                                                <PreviewModalStyles.MetricValue $status={previewListing.status}>
-                                                    {previewListing.status.charAt(0).toUpperCase() + previewListing.status.slice(1)}
-                                                </PreviewModalStyles.MetricValue>
-                                            </PreviewModalStyles.MetricItem>
-                                        </PreviewModalStyles.MetricsGrid>
+                                        <PreviewModalStyles.SectionTitle>Location</PreviewModalStyles.SectionTitle>
+                                        <MapSection 
+                                            coordinates={previewListing.coordinates} 
+                                            onCoordinatesChange={handleCoordinatesChange}
+                                            isEditable={true}
+                                        />
                                     </PreviewModalStyles.Section>
                                 </PreviewModalStyles.ContentGrid>
                             </PreviewModalStyles.MainContent>

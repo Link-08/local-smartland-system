@@ -1,4 +1,4 @@
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 // Import models
 const User = require('./User')(sequelize);
@@ -22,6 +22,7 @@ const models = {
     Favorite
 };
 
+// Set up associations
 Object.keys(models).forEach(modelName => {
     if (models[modelName].associate) {
         models[modelName].associate(models);
@@ -36,7 +37,8 @@ const initializeData = async () => {
             username: 'admin',
             email: 'admin@example.com',
             password: 'admin123',
-            role: 'admin'
+            role: 'admin',
+            status: 'approved' // Set status to approved for admin
         });
 
         // Create mock buyer
@@ -49,7 +51,8 @@ const initializeData = async () => {
             lastName: 'Smith',
             phone: '0912 345 6789',
             avatar: 'JS',
-            memberSince: '2024-03-15'
+            memberSince: '2024-03-15',
+            status: 'approved' // Set status to approved for buyer
         });
 
         // Create mock seller
@@ -62,7 +65,8 @@ const initializeData = async () => {
             lastName: 'Estate PH',
             phone: '0923 456 7890',
             avatar: 'RE',
-            memberSince: '2018-01-01'
+            memberSince: '2018-01-01',
+            status: 'approved' // Set status to approved for seller
         });
 
         // Create default metrics for the mock seller
@@ -101,6 +105,7 @@ const initializeData = async () => {
         console.log('Initial data created successfully');
     } catch (error) {
         console.error('Error initializing data:', error);
+        throw error; // Re-throw to handle in syncDatabase
     }
 };
 
@@ -113,16 +118,16 @@ const syncDatabase = async () => {
         
         // Initialize data after tables are created
         await initializeData();
+        console.log('Database initialization completed successfully');
     } catch (error) {
         console.error('Error syncing database:', error);
         process.exit(1);
     }
 };
 
-// Start the sync process
-syncDatabase();
-
+// Export models and sync function
 module.exports = {
     sequelize,
-    ...models
+    ...models,
+    syncDatabase
 }; 

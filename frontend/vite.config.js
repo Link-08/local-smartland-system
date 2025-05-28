@@ -7,7 +7,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'https://smartland-backend.thetwlight.xyz/',
+                target: 'http://localhost:26443',
                 changeOrigin: true,
                 secure: false
             }

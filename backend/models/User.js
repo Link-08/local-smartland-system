@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    accountId: {
+    account_id: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true
@@ -34,11 +34,11 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('admin', 'buyer', 'seller'),
       defaultValue: 'buyer'
     },
-    firstName: {
+    first_name: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    lastName: {
+    last_name: {
       type: DataTypes.STRING,
       allowNull: true
     },
@@ -50,11 +50,11 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true
     },
-    memberSince: {
+    member_since: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
     },
-    isActive: {
+    is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     },
@@ -62,15 +62,15 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('pending', 'approved', 'rejected'),
       defaultValue: 'pending'
     },
-    rejectionReason: {
+    rejection_reason: {
       type: DataTypes.STRING,
       allowNull: true
     }
   }, {
     timestamps: true,
-    tableName: 'Users',
-    schema: 'public',
+    tableName: 'users',
     freezeTableName: true,
+    underscored: true,
     hooks: {
       beforeValidate: async (user) => {
         if (!user.id) {
@@ -79,11 +79,11 @@ module.exports = (sequelize) => {
           user.id = `USER-${timestamp}${random}`;
         }
 
-        if (!user.accountId) {
+        if (!user.account_id) {
           const prefix = (user.role || 'buyer').toUpperCase();
           const accountTimestamp = Date.now().toString().slice(-6);
           const accountRandom = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-          user.accountId = `${prefix}-${accountTimestamp}${accountRandom}`;
+          user.account_id = `${prefix}-${accountTimestamp}${accountRandom}`;
         }
 
         if (user.password) {
@@ -121,7 +121,7 @@ module.exports = (sequelize) => {
   User.updateUserStatus = async function(userId, status, rejectionReason = null) {
     const updateData = { status };
     if (rejectionReason) {
-      updateData.rejectionReason = rejectionReason;
+      updateData.rejection_reason = rejectionReason;
     }
     
     const [updatedCount] = await this.update(updateData, {
@@ -146,6 +146,26 @@ module.exports = (sequelize) => {
     User.hasMany(models.Log, {
       foreignKey: 'userId',
       as: 'logs'
+    });
+    User.hasMany(models.Property, {
+      foreignKey: 'sellerId',
+      as: 'properties'
+    });
+    User.hasMany(models.PropertyView, {
+      foreignKey: 'userId',
+      as: 'propertyViews'
+    });
+    User.hasMany(models.PropertyInquiry, {
+      foreignKey: 'userId',
+      as: 'propertyInquiries'
+    });
+    User.hasMany(models.Favorite, {
+      foreignKey: 'userId',
+      as: 'favorites'
+    });
+    User.hasOne(models.SellerMetrics, {
+      foreignKey: 'sellerId',
+      as: 'sellerMetrics'
     });
   };
 
