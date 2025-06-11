@@ -1,97 +1,79 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../config/axios';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:26443/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const fetchUser = async () => {
-    if (isFetching) {
-      return user;
-    }
-
-    setIsFetching(true);
-    try {
-      const response = await api.get('/api/auth/me');
-      if (response.data && response.data.user) {
-        setUser(response.data.user);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        return response.data.user;
-      }
-      throw new Error('Invalid user data received');
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-      throw error;
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
+  // Check for existing token and user data on mount
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (token) {
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        }
-        try {
-          await fetchUser();
-        } catch (error) {
-          console.error('Failed to fetch user data:', error);
-        }
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
-      setLoading(false);
-    };
-
-    initializeAuth();
+    }
+    setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
-      console.log('Login attempt with:', { email, password });
-      const response = await api.post('/api/auth/login', {
-        email: email,
-        password: password
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password
       });
-      const { token, ...userData } = response.data;
+      
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      return userData;
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      setIsAuthenticated(true);
+      return user;
     } catch (error) {
       console.error('Login error:', error);
-      throw error;
+      throw new Error(error.response?.data?.error || 'Failed to login');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const register = async (username, email, password, role) => {
+  const register = async (email, password, firstName, lastName, phoneNumber, role) => {
     try {
-      const response = await api.post('/api/auth/register', {
-        username,
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/auth/register`, {
         email,
         password,
+        firstName,
+        lastName,
+        phoneNumber,
         role
       });
-      const { token, user } = response.data;
       
-      // Store the token and user data
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
-      // Return success without setting the user state
-      // The user will need to log in separately
-      return { success: true, message: 'Registration successful' };
+      setUser(user);
+      setIsAuthenticated(true);
+      return user;
     } catch (error) {
       console.error('Registration error:', error);
-      throw error;
+      throw new Error(error.response?.data?.error || 'Failed to register');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,14 +81,50 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   const updateUser = async () => {
     try {
-      const updatedUser = await fetchUser();
-      return updatedUser;
+      console.log('updateUser function called');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found in localStorage');
+        throw new Error('No authentication token found');
+      }
+
+      console.log('Fetching updated user data for ID:', user.id);
+      const response = await axios.get(`${API_URL}/seller/profile/${user.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('Received user data from server:', response.data);
+
+      // Create a new user object with all the necessary fields
+      const updatedUserData = {
+        id: response.data.id,
+        email: response.data.email,
+        role: user.role, // Preserve the role from the current user
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        phone: response.data.phone,
+        username: response.data.username,
+        createdAt: response.data.createdAt
+      };
+      console.log('Combined user data:', updatedUserData);
+
+      // Update localStorage first
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
+      console.log('Updated user data in localStorage');
+      
+      // Then update the state
+      setUser(updatedUserData);
+      console.log('Updated user state in context');
+      
+      return updatedUserData;
     } catch (error) {
-      console.error('Error updating user data:', error);
+      console.error('Error in updateUser:', error);
       throw error;
     }
   };
@@ -114,18 +132,16 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    isAuthenticated,
     login,
     register,
     logout,
-    fetchUser,
-    updateUser,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin'
+    updateUser
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

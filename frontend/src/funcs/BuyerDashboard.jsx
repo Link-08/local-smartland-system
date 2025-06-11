@@ -91,21 +91,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                     const insightsResponse = await api.get('/api/market-insights');
                     setMarketInsights(insightsResponse.data);
                 } catch (insightsError) {
-                    // If the endpoint doesn't exist, use mock data
-                    setMarketInsights([
-                        {
-                            id: 1,
-                            title: 'Rice Farm Prices',
-                            text: 'Average rice farm prices in Nueva Ecija have increased by 15% in the last quarter.',
-                            accentColor: '#3498db'
-                        },
-                        {
-                            id: 2,
-                            title: 'Water Rights',
-                            text: 'Properties with established water rights are selling 20% faster than those without.',
-                            accentColor: '#2ecc71'
-                        }
-                    ]);
+                    setMarketInsights([]);
                 }
                 setLoadingInsights(false);
 
@@ -114,21 +100,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                     const activitiesResponse = await api.get('/api/user-activities');
                     setRecentActivities(activitiesResponse.data);
                 } catch (activityError) {
-                    // If the endpoint doesn't exist, use mock data
-                    setRecentActivities([
-                        {
-                            id: 1,
-                            type: 'view',
-                            message: 'Viewed property "Prime Rice Farm"',
-                            timestamp: new Date().toISOString()
-                        },
-                        {
-                            id: 2,
-                            type: 'favorite',
-                            message: 'Saved property "Fertile Farmland"',
-                            timestamp: new Date(Date.now() - 86400000).toISOString()
-                        }
-                    ]);
+                    setRecentActivities([]);
                 }
                 setLoadingActivities(false);
             } catch (error) {

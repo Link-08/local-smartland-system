@@ -49,12 +49,12 @@ api.interceptors.response.use(
                 }
             } catch (refreshError) {
                 console.error('Token refresh failed:', refreshError);
+                // Clear auth data
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                // Dispatch a custom event that components can listen to
+                window.dispatchEvent(new CustomEvent('auth:logout'));
             }
-            
-            // If refresh failed, clear token and redirect to login
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
         }
         
         return Promise.reject(error);

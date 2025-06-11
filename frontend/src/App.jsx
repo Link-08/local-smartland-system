@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { AuthProvider } from "./contexts/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./funcs/Navbar";
 import MapView from "./funcs/MapView";
 import Admin from "./funcs/Admin";
@@ -8,58 +9,64 @@ import ListingOverview from "./funcs/ListingOverview";
 import ListingPage from "./funcs/Listings";
 import BuyerDashboard from "./funcs/BuyerDashboard";
 import SellerDashboard from "./funcs/SellerDashboard";
-import Login from "./funcs/Login";
-import { BrowserRouter } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-// Separate component for the main app content
-const AppContent = () => {
-    const [currentPage, setCurrentPage] = useState("home");
-    const [selectedProperty, setSelectedProperty] = useState(null);
-
-    const navigateTo = (page, data) => {
-        setCurrentPage(page);
-        if (page === 'speclist' && data && data.property) {
-            setSelectedProperty(data.property);
-        }
-    };
-
-    const renderPage = () => {
-        switch (currentPage.toLowerCase()) {
-            case "home":
-                return <HomePage />;
-            case "buyer dashboard":
-                return <BuyerDashboard navigateTo={navigateTo} />;
-            case "seller dashboard":
-                return <SellerDashboard navigateTo={navigateTo} />;
-            case "speclist":
-                return <ListingPage property={selectedProperty} />;
-            case "listings":
-                return <ListingOverview navigateTo={navigateTo} />;
-            case "admin":
-                return <Admin />;
-            case "map":
-                return <MapView />;
-            case "login":
-                return <Login />;
-            default:
-                return <HomePage />;
-        }
-    };
-
-    return (
-        <div className="app-container">
-            <Navbar navigateTo={navigateTo} currentPage={currentPage} />
-            {renderPage()}
-        </div>
-    );
-};
-
-// Main App component
 function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
-                <AppContent />
+                <div className="app-container">
+                    <Navbar />
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/map" element={<MapView />} />
+                        
+                        {/* Protected Routes */}
+                        <Route 
+                            path="/buyer-dashboard" 
+                            element={
+                                <ProtectedRoute requiredRole="buyer">
+                                    <BuyerDashboard />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/seller-dashboard" 
+                            element={
+                                <ProtectedRoute requiredRole="seller">
+                                    <SellerDashboard />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/admin" 
+                            element={
+                                <ProtectedRoute requiredRole="admin">
+                                    <Admin />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/listings" 
+                            element={
+                                <ProtectedRoute requiredRole="buyer">
+                                    <ListingOverview />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/listings/:id" 
+                            element={
+                                <ProtectedRoute requiredRole="buyer">
+                                    <ListingPage />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        
+                        {/* Catch all route */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </div>
             </AuthProvider>
         </BrowserRouter>
     );

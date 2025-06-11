@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import { NavContainer, Logo, Smartland, System, NavLinks, NavItem, LoginButton, MenuToggle, ProfileSection, DropdownItem, Dropdown } from "./NavbarStyles";
 import Login from "./Login";
 import { FaCircleUser } from "react-icons/fa6";
 
-const Navbar = ({ navigateTo, currentPage }) => {
+const Navbar = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginOpen, setLoginOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -24,6 +26,19 @@ const Navbar = ({ navigateTo, currentPage }) => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Listen for auth:logout event
+    useEffect(() => {
+        const handleLogout = () => {
+            logout();
+            navigate('/');
+        };
+
+        window.addEventListener('auth:logout', handleLogout);
+        return () => {
+            window.removeEventListener('auth:logout', handleLogout);
+        };
+    }, [logout, navigate]);
 
     // Define menu items based on user role
     const getMenuItems = () => {
@@ -45,41 +60,40 @@ const Navbar = ({ navigateTo, currentPage }) => {
 
     const handleNavigation = (page) => {
         // Check if user is trying to access buyer-only pages
-        if ((page === "speclist" || page === "listings") && user?.role !== "buyer") {
+        if ((page === "listings") && user?.role !== "buyer") {
             return; // Prevent navigation for non-buyers
         }
-        navigateTo(page);
+        
+        // Convert page name to route path
+        const routeMap = {
+            "home": "/",
+            "buyer dashboard": "/buyer-dashboard",
+            "seller dashboard": "/seller-dashboard",
+            "admin": "/admin",
+            "listings": "/listings",
+            "map": "/map"
+        };
+        
+        const path = routeMap[page.toLowerCase()] || "/";
+        navigate(path);
         setMenuOpen(false);
     };
 
     const handleSettings = () => {
-        navigateTo("settings");
+        navigate("/settings");
         setDropdownOpen(false);
-    };
-
-    // Role-based redirection after login
-    const handleLoginSuccess = (user) => {
-        if (user.role === 'admin') {
-            navigateTo('admin');
-        } else if (user.role === 'buyer') {
-            navigateTo('listings');
-        } else if (user.role === 'seller') {
-            navigateTo('seller dashboard');
-        } else {
-            navigateTo('home');
-        }
     };
 
     const handleLogout = () => {
         logout();
+        navigate('/');
         setDropdownOpen(false);
-        navigateTo('home');
     };
 
     return (
         <>
             <NavContainer>
-                <Logo onClick={() => navigateTo("home")}>
+                <Logo onClick={() => navigate("/")}>
                     <Smartland>SMARTLAND</Smartland>
                     <System>SYSTEM</System>
                 </Logo>
@@ -119,7 +133,7 @@ const Navbar = ({ navigateTo, currentPage }) => {
                     ☰
                 </MenuToggle>
             </NavContainer>
-            {loginOpen && <Login onClose={() => setLoginOpen(false)} onLoginSuccess={handleLoginSuccess} />}
+            {loginOpen && <Login onClose={() => setLoginOpen(false)} />}
         </>
     );
 };

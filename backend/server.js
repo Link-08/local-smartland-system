@@ -2,12 +2,11 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const sharp = require('sharp');
-const sequelize = require("./config/database");
 const maintenanceMode = require('./middleware/maintenance');
 const path = require('path');
 const fs = require('fs');
+const sequelize = require('./config/database');
 
-const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const elevationRoutes = require("./routes/elevation");
 const sellerRoutes = require("./routes/seller");
@@ -17,28 +16,33 @@ const systemRoutes = require("./routes/system");
 const favoriteRoutes = require("./routes/favorites");
 const userActivityRoutes = require("./routes/userActivities");
 const marketInsightRoutes = require("./routes/marketInsights");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 const port = 26443;
 
-// Create uploads directory if it doesn't exist
+// Create uploads directories if they don't exist
 const uploadsDir = path.join(__dirname, 'uploads');
-const avatarsDir = path.join(uploadsDir, 'avatars');
+const profileDir = path.join(uploadsDir, 'profile');
 
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
-if (!fs.existsSync(avatarsDir)) {
-    fs.mkdirSync(avatarsDir);
+if (!fs.existsSync(profileDir)) {
+    fs.mkdirSync(profileDir);
 }
 
+// Configure CORS
 app.use(cors());
+
+// Configure body parsers
 app.use(express.json());
-app.use(maintenanceMode);
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/elevations", elevationRoutes);
@@ -50,14 +54,17 @@ app.use("/api/favorites", favoriteRoutes);
 app.use("/api/user-activities", userActivityRoutes);
 app.use("/api/market-insights", marketInsightRoutes);
 
-app.get("/", async (req, res) => {
-  try {
-    const [result] = await sequelize.query("SELECT NOW()");
-    res.json({ message: "Database Connected", time: result[0].now });
-  } catch (error) {
-    console.error("Database Connection Error:", error);
-    res.status(500).json({ error: "Database Connection Failed" });
-  }
+// Apply maintenance mode middleware after routes
+app.use(maintenanceMode);
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({ message: "Server is running" });
 });
 
 // Placeholder image endpoint
@@ -89,17 +96,40 @@ app.get("/api/placeholder/:width/:height", async (req, res) => {
   }
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  
+  // Handle multer errors
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ 
+      error: 'File upload error',
+      details: err.message 
+    });
+  }
+  
+  // Handle other errors
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
 });
 
 // Start server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!", error: err.message });
+app.listen(port, async () => {
+  try {
+    await sequelize.sync();
+    console.log('Database synchronized successfully');
+    
+    // Run migrations
+    const { execSync } = require('child_process');
+    execSync('npx sequelize-cli db:migrate', { stdio: 'inherit' });
+    console.log('Migrations completed successfully');
+    
+    console.log(`Server is running on port ${port}`);
+  } catch (error) {
+    console.error('Failed to sync database:', error);
+  }
 });

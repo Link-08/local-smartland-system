@@ -1,13 +1,16 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import { ModalOverlay, ModalContainer, Section, Title, Input, Button, CloseButton, Divider, RadioGroup, CheckboxGroup, CheckboxInput, ErrorText } from "./LoginStyles";
 import api from "../config/axios";
 
-const Login = ({ onClose, onLoginSuccess }) => {
-    const { login } = useAuth();
+const Login = ({ onClose }) => {
+    const { login, register } = useAuth();
+    const navigate = useNavigate();
     const [loginData, setLoginData] = useState({ email: "", password: "", rememberMe: false });
     const [registerData, setRegisterData] = useState({ 
-        fullName: "", 
+        firstName: "", 
+        lastName: "", 
         email: "", 
         password: "", 
         confirmPassword: "", 
@@ -18,6 +21,7 @@ const Login = ({ onClose, onLoginSuccess }) => {
     
     const [loginError, setLoginError] = useState("");  
     const [registerError, setRegisterError] = useState("");  
+    const [registerSuccess, setRegisterSuccess] = useState("");
 
     const handleChange = (e, form) => {
         const { name, value, type, checked } = e.target;
@@ -43,8 +47,21 @@ const Login = ({ onClose, onLoginSuccess }) => {
             const user = await login(loginData.email, loginData.password);
             console.log('Login successful');
             
-            if (onLoginSuccess) onLoginSuccess(user);
-            onClose();
+            // Role-based redirection
+            if (user.role === 'buyer') {
+                navigate('/buyer-dashboard');
+            } else if (user.role === 'seller') {
+                navigate('/seller-dashboard');
+            } else if (user.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
+            
+            // Only call onClose if it exists (modal usage)
+            if (typeof onClose === 'function') {
+                onClose();
+            }
         } catch (error) {
             console.error("Error logging in:", error.response?.data || error);
             setLoginError(error.response?.data?.message || 'An error occurred during login. Please try again.');
@@ -53,6 +70,7 @@ const Login = ({ onClose, onLoginSuccess }) => {
     
     const handleRegister = async () => {
         setRegisterError("");
+        setRegisterSuccess("");
     
         if (!validateEmail(registerData.email)) {
             setRegisterError("Please enter a valid email address.");
@@ -70,103 +88,172 @@ const Login = ({ onClose, onLoginSuccess }) => {
         }
     
         try {
-            console.log('Attempting registration with:', registerData.email);
-            
-            // Prepare registration data
-            const registrationData = {
-                username: registerData.email, // Use email as username
-                email: registerData.email,
-                password: registerData.password,
-                role: registerData.role,
-                firstName: registerData.fullName.split(' ')[0] || '',
-                lastName: registerData.fullName.split(' ').slice(1).join(' ') || '',
-                phone: registerData.phoneNumber
-            };
-            
-            const response = await api.post("/api/auth/register", registrationData);
-            console.log('Registration response:', response.data);
-            
-            // After successful registration, try to log in with the original credentials
-            try {
-                // Ensure we're passing string values for email and password
-                const loginEmail = String(registerData.email);
-                const loginPassword = String(registerData.password);
-                console.log('Attempting login after registration with:', { email: loginEmail });
-                
-                const user = await login(loginEmail, loginPassword);
-                console.log('Login successful after registration');
-                if (onLoginSuccess) onLoginSuccess(user);
-                onClose();
-            } catch (loginError) {
-                console.error('Login after registration failed:', loginError);
-                setRegisterError('Registration successful but login failed. Please try logging in manually.');
-            }
-        } catch (err) {
-            console.error('Registration error:', err.response?.data || err);
-            setRegisterError(err.response?.data?.error || err.message || 'An error occurred during registration');
+            // Call register with all required fields including phoneNumber
+            await register(
+                registerData.email,
+                registerData.password,
+                registerData.firstName,
+                registerData.lastName,
+                registerData.phoneNumber,
+                registerData.role
+            );
+            setRegisterSuccess("User successfully registered");
+            setTimeout(() => {
+                navigate('/');
+            }, 1500);
+        } catch (error) {
+            console.error("Registration error:", error.response?.data || error);
+            setRegisterError(error.response?.data?.message || 'An error occurred during registration. Please try again.');
         }
-    };    
+    };
 
-    return (
-        <ModalOverlay onClick={onClose}>
-            <ModalContainer onClick={(e) => e.stopPropagation()}>
-                <CloseButton onClick={onClose}>&times;</CloseButton>
-
-                {/* Login Section */}
-                <Section>
-                    <Title>Login</Title>
-                    <Input type="email" name="email" placeholder="Email" value={loginData.email} onChange={(e) => handleChange(e, "login")} />
-                    <Input type="password" name="password" placeholder="Password" value={loginData.password} onChange={(e) => handleChange(e, "login")} />
-
+    const renderContent = () => (
+        <>
+            <Section>
+                <Title>Login</Title>
+                <form onSubmit={handleLogin}>
+                    <Input
+                        type="email"
+                        name="email"
+                        placeholder="Email"
+                        value={loginData.email}
+                        onChange={(e) => handleChange(e, "login")}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        name="password"
+                        placeholder="Password"
+                        value={loginData.password}
+                        onChange={(e) => handleChange(e, "login")}
+                        required
+                    />
                     <CheckboxGroup>
-                        <label>
-                            <CheckboxInput 
-                                type="checkbox" 
-                                name="rememberMe" 
-                                checked={loginData.rememberMe} 
-                                onChange={(e) => handleChange(e, "login")} 
-                            /> Remember Me
-                        </label>
+                        <CheckboxInput
+                            type="checkbox"
+                            name="rememberMe"
+                            checked={loginData.rememberMe}
+                            onChange={(e) => handleChange(e, "login")}
+                        />
+                        <label>Remember me</label>
                     </CheckboxGroup>
-
                     {loginError && <ErrorText>{loginError}</ErrorText>}
-                    <Button onClick={handleLogin}>Login</Button>
-                </Section>
-
-                <Divider />
-
-                {/* Register Section */}
-                <Section>
-                    <Title>Register</Title>
-                    <Input type="text" name="fullName" placeholder="Full Name" value={registerData.fullName} onChange={(e) => handleChange(e, "register")} />
-                    <Input type="email" name="email" placeholder="Email" value={registerData.email} onChange={(e) => handleChange(e, "register")} />
-                    <Input type="password" name="password" placeholder="Password" value={registerData.password} onChange={(e) => handleChange(e, "register")} />
-                    <Input type="password" name="confirmPassword" placeholder="Confirm Password" value={registerData.confirmPassword} onChange={(e) => handleChange(e, "register")} />
-                    <Input type="tel" name="phoneNumber" maxLength="15" onInput={(e) => e.target.value = e.target.value.replace(/\D/g, "")} placeholder="Phone Number" value={registerData.phoneNumber} onChange={(e) => handleChange(e, "register")} />
-
-                    {/* User Type Selection */}
+                    <Button type="submit">Login</Button>
+                </form>
+            </Section>
+            
+            <Divider />
+            
+            <Section>
+                <Title>Register</Title>
+                <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+                    <Input
+                        type="text"
+                        name="firstName"
+                        placeholder="First Name"
+                        value={registerData.firstName}
+                        onChange={(e) => handleChange(e, "register")}
+                        required
+                    />
+                    <Input
+                        type="text"
+                        name="lastName"
+                        placeholder="Last Name"
+                        value={registerData.lastName}
+                        onChange={(e) => handleChange(e, "register")}
+                        required
+                    />
+                    <Input
+                        type="email"
+                        name="email"
+                        placeholder="Email"
+                        value={registerData.email}
+                        onChange={(e) => handleChange(e, "register")}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        name="password"
+                        placeholder="Password"
+                        value={registerData.password}
+                        onChange={(e) => handleChange(e, "register")}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Confirm Password"
+                        value={registerData.confirmPassword}
+                        onChange={(e) => handleChange(e, "register")}
+                        required
+                    />
+                    <Input
+                        type="tel"
+                        name="phoneNumber"
+                        placeholder="Phone Number"
+                        value={registerData.phoneNumber}
+                        onChange={(e) => handleChange(e, "register")}
+                        required
+                    />
                     <RadioGroup>
                         <label>
-                            <input type="radio" name="role" value="buyer" checked={registerData.role === "buyer"} onChange={(e) => handleChange(e, "register")} /> Buyer
+                            <input
+                                type="radio"
+                                name="role"
+                                value="buyer"
+                                checked={registerData.role === "buyer"}
+                                onChange={(e) => handleChange(e, "register")}
+                            />
+                            Buyer
                         </label>
                         <label>
-                            <input type="radio" name="role" value="seller" checked={registerData.role === "seller"} onChange={(e) => handleChange(e, "register")} /> Seller
+                            <input
+                                type="radio"
+                                name="role"
+                                value="seller"
+                                checked={registerData.role === "seller"}
+                                onChange={(e) => handleChange(e, "register")}
+                            />
+                            Seller
                         </label>
                     </RadioGroup>
-
-                    {/* Terms & Conditions */}
                     <CheckboxGroup>
-                        <CheckboxInput type="checkbox" id="terms" name="termsAccepted" checked={registerData.termsAccepted} onChange={(e) => handleChange(e, "register")} />
-                        <label htmlFor="terms">
-                            I agree to the <a href="#">Terms & Conditions</a>
-                        </label>
+                        <CheckboxInput
+                            type="checkbox"
+                            name="termsAccepted"
+                            checked={registerData.termsAccepted}
+                            onChange={(e) => handleChange(e, "register")}
+                            required
+                        />
+                        <label>I accept the Terms & Conditions</label>
                     </CheckboxGroup>
-
                     {registerError && <ErrorText>{registerError}</ErrorText>}
-                    <Button onClick={handleRegister}>Register</Button>
-                </Section>
-            </ModalContainer>
-        </ModalOverlay>
+                    {registerSuccess && <div style={{ color: 'green', marginBottom: '10px' }}>{registerSuccess}</div>}
+                    <Button type="submit">Register</Button>
+                </form>
+            </Section>
+        </>
+    );
+
+    // If onClose is provided, render as modal
+    if (typeof onClose === 'function') {
+        return (
+            <ModalOverlay>
+                <ModalContainer>
+                    <CloseButton onClick={onClose}>&times;</CloseButton>
+                    {renderContent()}
+                </ModalContainer>
+            </ModalOverlay>
+        );
+    }
+
+    // Otherwise render as page
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8">
+                {renderContent()}
+            </div>
+        </div>
     );
 };
 

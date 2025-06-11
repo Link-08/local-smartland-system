@@ -1,17 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-// System status endpoint
+// Get system status
 router.get('/status', (req, res) => {
-    // This could be expanded to check actual database connectivity
-    // For now, we'll use an environment variable to control maintenance mode
-    const isMaintenance = process.env.MAINTENANCE_MODE === 'true';
-    
-    res.json({
-        isMaintenance,
-        timestamp: new Date().toISOString(),
-        message: isMaintenance ? 'System is under maintenance' : 'System is operational'
-    });
+    res.json({ message: 'This endpoint will be implemented with the new database schema' });
+});
+
+// Get system settings
+router.get('/settings', (req, res) => {
+    res.json({ message: 'This endpoint will be implemented with the new database schema' });
 });
 
 module.exports = router; 

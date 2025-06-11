@@ -11,24 +11,25 @@ import {
     IDImage, ModalActions, NavContainer, Logo, Smartland, System, NavLinks,
     NavItem, ProfileSection, Avatar, AppWrapper
 } from './AdminStyles';
-import { mockUsers } from '../data/mockUsers';
 
 const Admin = () => {
     const { user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState("pending");
-    const [pendingUsers, setPendingUsers] = useState([]);
-    const [approvedUsers, setApprovedUsers] = useState([]);
-    const [rejectedUsers, setRejectedUsers] = useState([]);
+    const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [accountLogs, setAccountLogs] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [summary, setSummary] = useState({ pending: 0, active: 0, inactive: 0 });
 
-    // Fetch logs for admin section
+    // Fetch users based on active tab
     useEffect(() => {
-        const fetchLogs = async () => {
+        const fetchUsers = async () => {
             try {
                 if (!user) {
                     console.error('No user found in context');
@@ -49,70 +50,90 @@ const Admin = () => {
                     return;
                 }
 
-                console.log('Fetching logs for admin:', { 
-                    id: user.id, 
-                    email: user.email, 
-                    role: user.role,
-                    token: token.substring(0, 10) + '...' // Log only first 10 chars of token
+                setLoading(true);
+                const status = activeTab === 'pending' ? 'pending' : 
+                               activeTab === 'approved' ? 'active' : 'pending';
+                
+                const res = await api.get('/api/admin/users', {
+                    params: {
+                        status,
+                        page: currentPage,
+                        limit: 10
+                    }
                 });
 
-                const res = await api.get('/api/admin/logs');
-                console.log('Logs response:', res.data);
-                setAccountLogs(res.data || []);
+                if (res.data && Array.isArray(res.data.users)) {
+                    setUsers(res.data.users);
+                    setTotalPages(res.data.totalPages || 1);
+                    setTotalUsers(res.data.users.filter(u => u.role !== 'admin').length);
+                } else {
+                    console.error('Invalid response format:', res.data);
+                    setUsers([]);
+                    setTotalPages(1);
+                    setTotalUsers(0);
+                }
+                setError(null);
             } catch (error) {
-                console.error('Failed to fetch logs:', error.response?.data || error.message);
+                console.error('Failed to fetch users:', error.response?.data || error.message);
                 if (error.response?.status === 401) {
                     setError('Session expired. Please log in again.');
-                    localStorage.removeItem('token'); // Clear invalid token
+                    localStorage.removeItem('token');
                 } else if (error.response?.status === 403) {
                     setError('Access denied: Admin privileges required');
                 } else {
-                    setError(error.response?.data?.error || 'Failed to fetch logs');
+                    setError(error.response?.data?.error || 'Failed to fetch users');
                 }
-                setAccountLogs([]);
+                setUsers([]);
+                setTotalPages(1);
+                setTotalUsers(0);
             } finally {
                 setLoading(false);
             }
         };
 
         if (!authLoading && user) {
-            fetchLogs();
+            fetchUsers();
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, activeTab, currentPage]);
 
-    // Inject mock users for local development (only buyers and sellers)
+    // Fetch summary counts
     useEffect(() => {
-        if (process.env.NODE_ENV === 'development') {
-            setPendingUsers(mockUsers.pending.filter(u => u.role === 'buyer' || u.role === 'seller'));
-            setApprovedUsers(mockUsers.approved.filter(u => u.role === 'buyer' || u.role === 'seller'));
-            setRejectedUsers(mockUsers.rejected.filter(u => u.role === 'buyer' || u.role === 'seller'));
-            setLoading(false);
-        }
-    }, []);
+        const fetchSummary = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await api.get('/api/admin/users/summary');
+                setSummary(res.data);
+            } catch (e) {
+                setSummary({ pending: 0, active: 0, inactive: 0 });
+            }
+        };
+        fetchSummary();
+    }, [users]);
 
     // Filter users based on search term
     const filterUsers = (users) => {
+        if (!Array.isArray(users)) return [];
         if (!searchTerm) return users;
         return users.filter(user => 
-            user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.role?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     };
 
     // Get current users based on active tab
     const getCurrentUsers = () => {
-        switch (activeTab) {
-            case "pending":
-                return filterUsers(pendingUsers);
-            case "approved":
-                return filterUsers(approvedUsers);
-            case "rejected":
-                return filterUsers(rejectedUsers);
-            default:
-                return [];
+        let filtered = filterUsers(users);
+        // Hide admin accounts in Active Users tab
+        if (activeTab === 'approved') {
+            filtered = filtered.filter(user => user.role !== 'admin');
         }
+        return filtered;
+    };
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     // Approve user
@@ -123,8 +144,7 @@ const Admin = () => {
             console.log('Approve response:', res.data);
             
             // Update local state
-            setPendingUsers(prev => prev.filter(u => u.id !== userId));
-            setApprovedUsers(prev => [res.data.user, ...prev]);
+            setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u));
             
             alert('User approved successfully');
         } catch (error) {
@@ -141,8 +161,7 @@ const Admin = () => {
             console.log('Reject response:', res.data);
             
             // Update local state
-            setPendingUsers(prev => prev.filter(u => u.id !== userId));
-            setRejectedUsers(prev => [res.data.user, ...prev]);
+            setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u));
             
             alert('User rejected successfully');
         } catch (error) {
@@ -173,7 +192,7 @@ const Admin = () => {
                 <DetailColumn>
                 <DetailItem>
                     <DetailLabel>Full Name</DetailLabel>
-                    <DetailValue>{selectedUser.name}</DetailValue>
+                    <DetailValue>{(selectedUser.firstName || '') + ' ' + (selectedUser.lastName || '')}</DetailValue>
                 </DetailItem>
                 <DetailItem>
                     <DetailLabel>Email</DetailLabel>
@@ -185,7 +204,7 @@ const Admin = () => {
                 </DetailItem>
                 <DetailItem>
                     <DetailLabel>Registration Date</DetailLabel>
-                    <DetailValue>{selectedUser.registrationDate}</DetailValue>
+                    <DetailValue>{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : '-'}</DetailValue>
                 </DetailItem>
                 <DetailItem>
                     <DetailLabel>Land Location</DetailLabel>
@@ -255,17 +274,19 @@ const Admin = () => {
         );
     };
 
+    if (!user || user.role !== 'admin') {
+        return <div>Access denied: Admin privileges required</div>;
+    }
+
     if (loading) {
         return <div>Loading...</div>;
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div>{error}</div>;
     }
 
-    if (!user || user.role !== 'admin') {
-        return <div>Access denied: Admin privileges required</div>;
-    }
+    const filteredUsers = getCurrentUsers();
 
     return (
         <AppWrapper>
@@ -274,19 +295,19 @@ const Admin = () => {
         {/* Admin Dashboard */}
         <AdminContainer>
             <AdminHeader>
-            <AdminTitle>User Verification</AdminTitle>
+                    <AdminTitle>User Management</AdminTitle>
             <AdminStats>
                 <StatCard>
-                <StatNumber>{pendingUsers?.length || 0}</StatNumber>
-                <StatLabel>Pending</StatLabel>
+                    <StatNumber>{summary.pending}</StatNumber>
+                    <StatLabel>Pending Verification</StatLabel>
                 </StatCard>
                 <StatCard>
-                <StatNumber>{approvedUsers?.length || 0}</StatNumber>
-                <StatLabel>Approved</StatLabel>
+                    <StatNumber>{summary.active}</StatNumber>
+                    <StatLabel>Active Users</StatLabel>
                 </StatCard>
                 <StatCard>
-                <StatNumber>{rejectedUsers?.length || 0}</StatNumber>
-                <StatLabel>Rejected</StatLabel>
+                    <StatNumber>{summary.inactive}</StatNumber>
+                    <StatLabel>Inactive Users</StatLabel>
                 </StatCard>
             </AdminStats>
             </AdminHeader>
@@ -302,19 +323,19 @@ const Admin = () => {
                 selected={activeTab === "approved"} 
                 onClick={() => setActiveTab("approved")}
             >
-                Approved Users
+                        Active Users
             </Tab>
             <Tab 
                 selected={activeTab === "rejected"} 
                 onClick={() => setActiveTab("rejected")}
             >
-                Rejected Applications
+                        Inactive Users
             </Tab>
             </TabContainer>
 
             <SearchInput 
             type="text" 
-            placeholder="Search by name, email, or location..." 
+                    placeholder="Search by email or role..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -323,41 +344,36 @@ const Admin = () => {
             <UsersTable>
                 <thead>
                 <tr>
-                    <TableHeader>User</TableHeader>
-                    <TableHeader>Location</TableHeader>
+                                <TableHeader>Email</TableHeader>
+                                <TableHeader>Role</TableHeader>
+                                <TableHeader>Status</TableHeader>
                     <TableHeader>Registration Date</TableHeader>
                     <TableHeader>Actions</TableHeader>
                 </tr>
                 </thead>
                 <tbody>
-                {getCurrentUsers().length > 0 ? (
-                    getCurrentUsers().map(user => (
+                            {filteredUsers.length > 0 ? (
+                                filteredUsers.map(user => (
                     <TableRow key={user.id}>
-                        <TableCell>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <UserImage src={user.profileImage} alt={user.name} />
-                            <div>
-                            <div style={{ fontWeight: 'bold' }}>{user.name}</div>
-                            <div style={{ fontSize: '0.9rem', color: '#bdc3c7' }}>{user.email}</div>
-                            </div>
-                        </div>
-                        </TableCell>
-                        <TableCell>{user.location}</TableCell>
-                        <TableCell>{user.registrationDate}</TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell>{user.role}</TableCell>
+                                        <TableCell>{user.isActive ? 'Active' : 'Inactive'}</TableCell>
+                                        <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                         <ViewButton onClick={() => handleViewUser(user)}>
                             View Details
                         </ViewButton>
                         
-                        {user.status === "pending" && (
-                            <>
+                                            {!user.isActive && (
                             <ApproveButton onClick={() => handleApprove(user.id)}>
-                                Approve
+                                                    Activate
                             </ApproveButton>
+                                            )}
+                                            
+                                            {user.isActive && (
                             <RejectButton onClick={() => handleReject(user.id)}>
-                                Reject
+                                                    Deactivate
                             </RejectButton>
-                            </>
                         )}
                         </TableCell>
                     </TableRow>
@@ -372,6 +388,53 @@ const Admin = () => {
                 </tbody>
             </UsersTable>
             </UsersList>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        marginTop: '20px',
+                        gap: '10px'
+                    }}>
+                        <button 
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: currentPage === 1 ? '#ccc' : '#3498db',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Previous
+                        </button>
+                        <span style={{ 
+                            padding: '8px 16px',
+                            backgroundColor: '#34495E',
+                            color: 'white',
+                            borderRadius: '4px'
+                        }}>
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <button 
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: currentPage === totalPages ? '#ccc' : '#3498db',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
         </AdminContainer>
 
         {/* User Detail Modal */}

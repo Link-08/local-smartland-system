@@ -36,60 +36,53 @@ L.Icon.Default.mergeOptions({
 });
 
 const SellerDashboard = ({ navigateTo }) => {
+    // Use AuthContext for the signed-in seller
+    const { user, logout, fetchUser, setUser, updateUser } = useAuth();
+    
+    // State management
+    const [loading, setLoading] = useState(true);
+    const [userProfile, setUserProfile] = useState(null);
+    const [lastUpdate, setLastUpdate] = useState(Date.now());
+    const [editProfileOpen, setEditProfileOpen] = useState(false);
+    const [activeProfileTab, setActiveProfileTab] = useState('personal');
+    const [metrics, setMetrics] = useState({
+        totalViews: 0,
+        totalInquiries: 0,
+        avgTimeToSale: 0,
+        trendViews: '0%',
+        trendInquiries: '0%',
+        trendAvgTimeToSale: '0%'
+    });
+    const [sellerListings, setSellerListings] = useState([]);
+    const [previewListing, setPreviewListing] = useState(null);
+    const [previewModalOpen, setPreviewModalOpen] = useState(false);
+    const [addNewOpen, setAddNewOpen] = useState(false);
+    const [editProperty, setEditProperty] = useState(null);
+    const [editPropertyOpen, setEditPropertyOpen] = useState(false);
+    const [newProperty, setNewProperty] = useState({
+        title: '',
+        description: '',
+        price: '',
+        location: '',
+        acres: '',
+        waterRights: '',
+        suitableCrops: [],
+        image: '',
+        status: 'active'
+    });
+    const [formErrors, setFormErrors] = useState({});
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [activeToolModal, setActiveToolModal] = useState(null);
+    const [toolModalOpen, setToolModalOpen] = useState(false);
+    
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('listings');
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedListing, setSelectedListing] = useState(null);
-    const [addNewOpen, setAddNewOpen] = useState(false);
-    const [newProperty, setNewProperty] = useState({
-        title: '',
-        location: '',
-        price: '',
-        acres: '',
-        waterRights: '',
-        suitableCrops: '',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef' // Default image
-    });
-    const [editPropertyOpen, setEditPropertyOpen] = useState(false);
-    const [editProperty, setEditProperty] = useState({
-        id: '',
-        title: '',
-        location: '',
-        price: '',
-        acres: '',
-        waterRights: '',
-        suitableCrops: '',
-        image: '',
-        status: '',
-        viewCount: 0,
-        inquiries: 0,
-        datePosted: ''
-    });
-    const [editProfileOpen, setEditProfileOpen] = useState(false);
-    const [activeProfileTab, setActiveProfileTab] = useState('personal');
-    const [userProfile, setUserProfile] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        username: '',
-        password: '',
-        confirmPassword: '',
-        avatar: 'NA'
-    });
-    const [toolModalOpen, setToolModalOpen] = useState(false);
-    const [activeToolModal, setActiveToolModal] = useState(null);
-    const [previewModalOpen, setPreviewModalOpen] = useState(false);
-    const [previewListing, setPreviewListing] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    
-    // Use AuthContext for the signed-in seller
-    const { user, logout, loading, fetchUser, setUser, updateUser } = useAuth();
-
-    // Add state for seller listings
-    const [sellerListings, setSellerListings] = useState([]);
 
     // Add state for market insights
     const [marketInsights, setMarketInsights] = useState({
@@ -103,37 +96,21 @@ const SellerDashboard = ({ navigateTo }) => {
     });
 
     // Add state for recent activities
-    const [recentActivities, setRecentActivities] = useState([
-        {
-            id: 'default-1',
-            type: 'welcome',
-            title: 'Welcome to your Seller Dashboard',
-            time: 'just now',
-            icon: 'FaCheck',
-            $iconColor: '#3498db',
-            $bgColor: 'rgba(52, 152, 219, 0.1)'
-        }
-    ]);
-
-    // Add state for metrics
-    const [metrics, setMetrics] = useState({
-        totalViews: 0,
-        totalInquiries: 0,
-        avgTimeToSale: 0,
-        trendViews: '0%',
-        trendInquiries: '0%',
-        trendAvgTimeToSale: '0%'
-    });
+    const [recentActivities, setRecentActivities] = useState([]);
 
     // Add useEffect to initialize userProfile when user data is available
     useEffect(() => {
         if (user) {
+            // Generate username based on role and name
+            const rolePrefix = user.role === 'seller' ? 'seller' : 'buyer';
+            const username = `${rolePrefix}_${user.firstName?.toLowerCase() || ''}_${user.lastName?.toLowerCase() || ''}`.replace(/\s+/g, '_');
+            
             setUserProfile({
                 firstName: user.firstName || '',
                 lastName: user.lastName || '',
                 email: user.email || '',
                 phone: user.phone || '',
-                username: user.username || '',
+                username: username,
                 password: '',
                 confirmPassword: '',
                 avatar: user.avatar || 'NA'
@@ -144,38 +121,42 @@ const SellerDashboard = ({ navigateTo }) => {
     // Add useEffect to fetch seller listings, market insights, and recent activities
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?.id) return;
-
+            if (!user) return;
+            
             try {
-                // Fetch seller listings
-                const listingsResponse = await api.get(`/api/properties?sellerId=${user.id}`);
-                setSellerListings(listingsResponse.data);
-
-                // Fetch market insights
-                const insightsResponse = await api.get(`/api/seller/metrics/${user.id}`);
-                setMarketInsights(insightsResponse.data);
-
-                // No need to fetch activities since the endpoint doesn't exist
-                // We'll keep using the default welcome activity
-            } catch (error) {
-                console.error('Error fetching seller data:', error);
-                // Reset states on error
-                setSellerListings([]);
-                setMarketInsights({
-                    totalListings: 0,
-                    activeListings: 0,
-                    totalViews: 0,
-                    averagePrice: 0,
-                    priceTrend: 0,
-                    averageTimeToSale: 0,
-                    optimizationTips: [],
+                setLoading(true);
+                console.log('Fetching initial user data for ID:', user.id);
+                
+                // Fetch the complete user profile
+                const response = await api.get(`/api/seller/profile/${user.id}`);
+                console.log('Received initial user data:', response.data);
+                
+                // Initialize user profile with the fetched data
+                setUserProfile({
+                    ...response.data,
+                    password: '',
+                    confirmPassword: '',
+                    currentPassword: ''
                 });
-                // Keep the default welcome activity
+                
+                // Fetch other data...
+                const [metricsResponse, propertiesResponse] = await Promise.all([
+                    api.get(`/api/seller/metrics/${user.id}`),
+                    api.get(`/api/seller/properties/${user.id}`)
+                ]);
+                
+                setMetrics(metricsResponse.data);
+                setSellerListings(propertiesResponse.data);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                alert('Failed to load dashboard data. Please try again.');
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchData();
-    }, [user]);
+    }, [user, lastUpdate]); // Add lastUpdate to dependencies to trigger refresh when profile is updated
 
     // Add useEffect to fetch metrics data with error handling
     useEffect(() => {
@@ -343,30 +324,87 @@ const SellerDashboard = ({ navigateTo }) => {
         }
     };
 
-    const handleEditProfile = () => {
-        setUserProfile({
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            email: user.email || '',
-            phone: user.phone || '',
-            username: user.username || '',
-            password: '',
-            confirmPassword: '',
-            avatar: user.avatar || 'NA'
-        });
-        setEditProfileOpen(true);
+    const handleEditProfile = async () => {
+        try {
+            // Always fetch the latest seller data
+            const response = await api.get(`/api/seller/profile/${user.id}`);
+            const sellerData = response.data;
+            setUserProfile({
+                firstName: sellerData.firstName || '',
+                lastName: sellerData.lastName || '',
+                email: sellerData.email || '',
+                phone: sellerData.phone || '',
+                username: sellerData.username || '', // Always use latest username
+                password: '',
+                confirmPassword: '',
+                avatar: sellerData.avatar || 'NA'
+            });
+            setEditProfileOpen(true);
+        } catch (error) {
+            console.error('Error fetching seller profile:', error);
+            alert('Failed to fetch profile data. Please try again.');
+        }
     };
     
+    // Add validation functions
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
+    const validatePhone = (phone) => {
+        const re = /^\+?[\d\s-]{10,}$/;
+        return re.test(phone);
+    };
+
+    const validateForm = () => {
+        const errors = {};
+        const { firstName, lastName, email, phone, username } = userProfile;
+
+        if (!firstName.trim()) {
+            errors.firstName = 'First name is required';
+        }
+
+        if (!lastName.trim()) {
+            errors.lastName = 'Last name is required';
+        }
+
+        if (!validateEmail(email)) {
+            errors.email = 'Please enter a valid email address';
+        }
+
+        if (phone && !validatePhone(phone)) {
+            errors.phone = 'Please enter a valid phone number';
+        }
+
+        if (!username.trim()) {
+            errors.username = 'Username is required';
+        } else if (username.length < 3) {
+            errors.username = 'Username must be at least 3 characters long';
+        } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            errors.username = 'Username can only contain letters, numbers, and underscores';
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    // Update handleProfileChange to track unsaved changes
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
         setUserProfile(prev => ({
             ...prev,
             [name]: value
         }));
+        setHasUnsavedChanges(true);
     };
     
+    // Update handleProfileSubmit to include validation
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
         try {
             const { firstName, lastName, email, phone, username, password, confirmPassword, currentPassword } = userProfile;
             
@@ -434,36 +472,46 @@ const SellerDashboard = ({ navigateTo }) => {
             }
             
             // Handle profile update
-            console.log('Submitting profile update with data:', { firstName, lastName, email, phone, username });
+            console.log('Starting profile update with data:', { firstName, lastName, email, phone, username });
+            console.log('Current user:', user);
             
-            const response = await api.patch("/api/auth/profile", {
+            const response = await api.put(`/api/seller/profile/${user.id}`, {
                 firstName,
                 lastName,
-                email,
                 phone,
                 username
             });
             
-            console.log('Profile update response:', response.data);
+            console.log('Profile update API response:', response.data);
             
-            if (response.data && response.data.user) {
+            if (response.data && response.data.profile) {
+                console.log('Profile update successful, updating user state...');
                 // Update the user in AuthContext
                 if (updateUser) {
-                    await updateUser(); // Use the new updateUser function
-                }
+                    console.log('Calling updateUser function...');
+                    const updatedUser = await updateUser();
+                    console.log('Received updated user data:', updatedUser);
                 
                 // Update local state with the complete user data
-                setUserProfile(prev => ({
-                    ...prev,
-                    ...response.data.user,
+                    const newProfile = {
+                        ...updatedUser,
                     password: '', // Clear password fields
                     confirmPassword: '',
                     currentPassword: ''
-                }));
+                    };
+                    console.log('Setting new user profile:', newProfile);
+                    setUserProfile(newProfile);
+                    
+                    // Force a re-render
+                    setLastUpdate(Date.now());
+                } else {
+                    console.error('updateUser function is not available');
+                }
                 
                 setEditProfileOpen(false);
                 alert("Profile updated successfully!");
             } else {
+                console.error('Invalid response format:', response.data);
                 throw new Error('Invalid response format from server');
             }
         } catch (error) {
@@ -477,6 +525,7 @@ const SellerDashboard = ({ navigateTo }) => {
         }
     };
 
+    // Update handleAvatarUpload to include loading state
     const handleAvatarUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -494,8 +543,15 @@ const SellerDashboard = ({ navigateTo }) => {
         }
 
         try {
+            setIsUploading(true);
             const formData = new FormData();
             formData.append('avatar', file);
+
+            console.log('Uploading file:', {
+                name: file.name,
+                type: file.type,
+                size: file.size
+            });
 
             const response = await api.post('/api/auth/profile/image', formData, {
                 headers: {
@@ -503,26 +559,43 @@ const SellerDashboard = ({ navigateTo }) => {
                 }
             });
 
+            console.log('Upload response:', response.data);
+            console.log('API base URL:', api.defaults.baseURL);
+
             if (response.data && response.data.user) {
-                // Update the user in AuthContext
-                if (updateUser) {
-                    await updateUser(); // Use the new updateUser function
-                }
+                const updatedUser = response.data.user;
+                console.log('Updated user data:', updatedUser);
+                console.log('Avatar URL:', updatedUser.avatar);
 
-                // Update local state with the complete user data
-                setUserProfile(prev => ({
-                    ...prev,
-                    ...response.data.user,
-                    password: '', // Clear password fields
-                    confirmPassword: '',
-                    currentPassword: ''
-                }));
+                // Update the user profile with the new avatar URL
+                setUserProfile(prev => {
+                    const newProfile = {
+                        ...prev,
+                        ...updatedUser,
+                        password: '',
+                        confirmPassword: '',
+                        currentPassword: ''
+                    };
+                    console.log('New user profile:', newProfile);
+                    return newProfile;
+                });
 
+                // Force a re-render
+                setLastUpdate(Date.now());
                 alert('Profile image updated successfully!');
+            } else {
+                throw new Error('Invalid response format from server');
             }
         } catch (error) {
             console.error('Avatar upload error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
             alert('Failed to upload profile image: ' + (error.response?.data?.error || error.message));
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -646,12 +719,14 @@ const SellerDashboard = ({ navigateTo }) => {
             setAddNewOpen(false);
             setNewProperty({
                 title: '',
-                location: '',
+                description: '',
                 price: '',
+                location: '',
                 acres: '',
                 waterRights: '',
-                suitableCrops: '',
-                image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
+                suitableCrops: [],
+                image: '',
+                status: 'active'
             });
         } catch (error) {
             console.error('Error creating new listing:', error);
@@ -920,6 +995,19 @@ const SellerDashboard = ({ navigateTo }) => {
         }
     };
 
+    // Add confirmation dialog for closing edit mode
+    const handleCloseEditProfile = () => {
+        if (hasUnsavedChanges) {
+            if (window.confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+                setEditProfileOpen(false);
+                setHasUnsavedChanges(false);
+                setFormErrors({});
+            }
+        } else {
+            setEditProfileOpen(false);
+        }
+    };
+
     if (loading) {
         return <div style={{ color: '#2C3E50', textAlign: 'center', marginTop: '40px' }}>Loading seller profile...</div>;
     }
@@ -1097,11 +1185,19 @@ const SellerDashboard = ({ navigateTo }) => {
                         <DashboardStyles.ProfileSection>
                         <DashboardStyles.ProfileHeader>
                             <DashboardStyles.ProfileAvatarLarge>
-                                {user.avatar && user.avatar !== 'NA' ? (
+                                {userProfile.avatar && userProfile.avatar !== 'NA' ? (
                                     <img
-                                        src={user.avatar.startsWith('http') ? user.avatar : `${api.defaults.baseURL}${user.avatar}`}
+                                        src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${api.defaults.baseURL}${userProfile.avatar}`}
                                         alt="Profile"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                        onError={(e) => {
+                                            console.error('Error loading profile image:', e);
+                                            console.log('Failed image URL:', e.target.src);
+                                            e.target.src = `https://ui-avatars.com/api/?name=${userProfile.firstName}+${userProfile.lastName}&background=random`;
+                                        }}
+                                        onLoad={(e) => {
+                                            console.log('Profile image loaded successfully:', e.target.src);
+                                        }}
                                     />
                                 ) : (
                                     <div style={{
@@ -1115,7 +1211,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                         fontSize: '32px',
                                         color: '#666'
                                     }}>
-                                        {user.firstName?.[0]}{user.lastName?.[0]}
+                                        {userProfile.firstName?.[0]}{userProfile.lastName?.[0]}
                                     </div>
                                 )}
                             </DashboardStyles.ProfileAvatarLarge>
@@ -1546,48 +1642,56 @@ const SellerDashboard = ({ navigateTo }) => {
                 )}
 
                 {editProfileOpen && (
-                    <SellerDashboardStyles.ModalOverlay>
-                        <SellerDashboardStyles.ModalContainer>
-                            <SellerDashboardStyles.ModalHeader>
-                                <SellerDashboardStyles.ModalTitle>
+                    <DashboardStyles.ModalOverlay>
+                        <DashboardStyles.ModalContainer>
+                            <DashboardStyles.ModalHeader>
+                                <DashboardStyles.ModalTitle>
                                     Edit Profile
-                                </SellerDashboardStyles.ModalTitle>
-                                <SellerDashboardStyles.ModalCloseButton onClick={() => setEditProfileOpen(false)}>
+                                </DashboardStyles.ModalTitle>
+                                <DashboardStyles.ModalCloseButton onClick={() => setEditProfileOpen(false)}>
                                     ×
-                                </SellerDashboardStyles.ModalCloseButton>
-                            </SellerDashboardStyles.ModalHeader>
+                                </DashboardStyles.ModalCloseButton>
+                            </DashboardStyles.ModalHeader>
                             
-                            <SellerDashboardStyles.ProfileTabsContainer>
-                                <SellerDashboardStyles.ProfileTab 
+                            <DashboardStyles.ProfileTabsContainer>
+                                <DashboardStyles.ProfileTab 
                                     $active={activeProfileTab === 'personal'} 
                                     onClick={() => setActiveProfileTab('personal')}
                                 >
                                     Personal Info
-                                </SellerDashboardStyles.ProfileTab>
-                                <SellerDashboardStyles.ProfileTab 
+                                </DashboardStyles.ProfileTab>
+                                <DashboardStyles.ProfileTab 
                                     $active={activeProfileTab === 'security'} 
                                     onClick={() => setActiveProfileTab('security')}
                                 >
                                     Security
-                                </SellerDashboardStyles.ProfileTab>
-                            </SellerDashboardStyles.ProfileTabsContainer>
+                                </DashboardStyles.ProfileTab>
+                            </DashboardStyles.ProfileTabsContainer>
                             
                             <form onSubmit={handleProfileSubmit}>
-                                <SellerDashboardStyles.ProfileTabContent $active={activeProfileTab === 'personal'}>
-                                    <SellerDashboardStyles.AvatarUploadSection>
-                                        <SellerDashboardStyles.AvatarPreview>
-                                            {userProfile.avatar ? (
-                                                <img 
-                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${api.defaults.baseURL}${userProfile.avatar}`} 
-                                                    alt="Profile" 
+                                <DashboardStyles.ProfileTabContent $active={activeProfileTab === 'personal'}>
+                                    <DashboardStyles.AvatarUploadSection>
+                                        <DashboardStyles.AvatarPreview>
+                                            {userProfile.avatar && userProfile.avatar !== 'NA' ? (
+                                                <img
+                                                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${api.defaults.baseURL}${userProfile.avatar}`}
+                                                    alt="Profile"
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                                    onError={(e) => {
+                                                        console.error('Error loading profile image:', e);
+                                                        console.log('Failed image URL:', e.target.src);
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${userProfile.firstName}+${userProfile.lastName}&background=random`;
+                                                    }}
+                                                    onLoad={(e) => {
+                                                        console.log('Profile image loaded successfully:', e.target.src);
+                                                    }}
                                                 />
                                             ) : (
-                                                <div style={{ 
-                                                    width: '100%', 
-                                                    height: '100%', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
+                                                <div style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
                                                     justifyContent: 'center',
                                                     backgroundColor: '#f0f0f0',
                                                     borderRadius: '50%',
@@ -1597,126 +1701,134 @@ const SellerDashboard = ({ navigateTo }) => {
                                                     {userProfile.firstName?.[0]}{userProfile.lastName?.[0]}
                                                 </div>
                                             )}
-                                        </SellerDashboardStyles.AvatarPreview>
-                                        <SellerDashboardStyles.AvatarUploadButton>
+                                        </DashboardStyles.AvatarPreview>
+                                        <DashboardStyles.AvatarUploadButton>
                                             <FaCamera size={14} /> Change Photo
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
+                                            <input
+                                                type="file"
+                                                accept="image/*"
                                                 onChange={handleAvatarUpload}
-                                                style={{ display: 'none' }}
                                             />
-                                        </SellerDashboardStyles.AvatarUploadButton>
-                                    </SellerDashboardStyles.AvatarUploadSection>
-                                    
-                                    <SellerDashboardStyles.FormRow>
-                                        <SellerDashboardStyles.FormGroup>
-                                            <SellerDashboardStyles.FormLabel>First Name*</SellerDashboardStyles.FormLabel>
-                                            <SellerDashboardStyles.FormInput
+                                        </DashboardStyles.AvatarUploadButton>
+                                    </DashboardStyles.AvatarUploadSection>
+                                    <DashboardStyles.FormRow>
+                                        <DashboardStyles.FormGroup>
+                                            <DashboardStyles.FormLabel>First Name*</DashboardStyles.FormLabel>
+                                            <DashboardStyles.FormInput
                                                 type="text"
                                                 name="firstName"
                                                 value={userProfile.firstName}
                                                 onChange={handleProfileChange}
                                                 required
                                             />
-                                        </SellerDashboardStyles.FormGroup>
+                                        </DashboardStyles.FormGroup>
                                         
-                                        <SellerDashboardStyles.FormGroup>
-                                            <SellerDashboardStyles.FormLabel>Last Name*</SellerDashboardStyles.FormLabel>
-                                            <SellerDashboardStyles.FormInput
+                                        <DashboardStyles.FormGroup>
+                                            <DashboardStyles.FormLabel>Last Name*</DashboardStyles.FormLabel>
+                                            <DashboardStyles.FormInput
                                                 type="text"
                                                 name="lastName"
                                                 value={userProfile.lastName}
                                                 onChange={handleProfileChange}
                                                 required
                                             />
-                                        </SellerDashboardStyles.FormGroup>
-                                    </SellerDashboardStyles.FormRow>
+                                        </DashboardStyles.FormGroup>
+                                    </DashboardStyles.FormRow>
                                     
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Email Address*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>Email Address*</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
                                             type="email"
                                             name="email"
                                             value={userProfile.email}
                                             onChange={handleProfileChange}
                                             required
                                         />
-                                    </SellerDashboardStyles.FormGroup>
+                                    </DashboardStyles.FormGroup>
                                     
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Phone Number*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>Phone Number*</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
                                             type="tel"
                                             name="phone"
-                                            value={userProfile.phone}
+                                            value={userProfile.phone || ''}
                                             onChange={handleProfileChange}
                                             required
+                                            placeholder="Enter your phone number"
                                         />
-                                    </SellerDashboardStyles.FormGroup>
+                                        {formErrors.phone && (
+                                            <small style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px' }}>
+                                                {formErrors.phone}
+                                            </small>
+                                        )}
+                                    </DashboardStyles.FormGroup>
                                     
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Username*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>Username*</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
                                             type="text"
                                             name="username"
-                                            value={userProfile.username}
+                                            value={userProfile.username || ''}
                                             onChange={handleProfileChange}
                                             required
+                                            placeholder="Enter your username"
                                         />
-                                    </SellerDashboardStyles.FormGroup>
-                                </SellerDashboardStyles.ProfileTabContent>
+                                        <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px' }}>
+                                            Choose a unique username for your account
+                                        </small>
+                                    </DashboardStyles.FormGroup>
+                                </DashboardStyles.ProfileTabContent>
                                 
-                                <SellerDashboardStyles.ProfileTabContent $active={activeProfileTab === 'security'}>
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Current Password</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                <DashboardStyles.ProfileTabContent $active={activeProfileTab === 'security'}>
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>Current Password</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
                                             type="password"
                                             name="currentPassword"
                                             value={userProfile.currentPassword || ''}
                                             onChange={handleProfileChange}
                                             placeholder="Enter your current password"
                                         />
-                                    </SellerDashboardStyles.FormGroup>
+                                    </DashboardStyles.FormGroup>
                                     
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>New Password</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>New Password</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
                                             type="password"
                                             name="password"
                                             value={userProfile.password || ''}
                                             onChange={handleProfileChange}
                                             placeholder="Enter new password"
                                         />
-                                    </SellerDashboardStyles.FormGroup>
+                                    </DashboardStyles.FormGroup>
                                     
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Confirm New Password</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                    <DashboardStyles.FormGroup>
+                                        <DashboardStyles.FormLabel>Confirm New Password</DashboardStyles.FormLabel>
+                                        <DashboardStyles.FormInput
                                             type="password"
                                             name="confirmPassword"
                                             value={userProfile.confirmPassword || ''}
                                             onChange={handleProfileChange}
                                             placeholder="Confirm new password"
                                         />
-                                    </SellerDashboardStyles.FormGroup>
-                                </SellerDashboardStyles.ProfileTabContent>
+                                    </DashboardStyles.FormGroup>
+                                </DashboardStyles.ProfileTabContent>
                                 
-                                <SellerDashboardStyles.FormActions>
-                                    <SellerDashboardStyles.FormCancelButton
+                                <DashboardStyles.FormActions>
+                                    <DashboardStyles.FormCancelButton
                                         type="button"
                                         onClick={() => setEditProfileOpen(false)}
                                     >
                                         Cancel
-                                    </SellerDashboardStyles.FormCancelButton>
+                                    </DashboardStyles.FormCancelButton>
                                     
-                                    <SellerDashboardStyles.FormSubmitButton type="submit">
+                                    <DashboardStyles.FormSubmitButton type="submit">
                                         Save Changes
-                                    </SellerDashboardStyles.FormSubmitButton>
-                                </SellerDashboardStyles.FormActions>
+                                    </DashboardStyles.FormSubmitButton>
+                                </DashboardStyles.FormActions>
                             </form>
-                        </SellerDashboardStyles.ModalContainer>
-                    </SellerDashboardStyles.ModalOverlay>
+                        </DashboardStyles.ModalContainer>
+                    </DashboardStyles.ModalOverlay>
                 )}
 
                 {/* Seller Tools Modal */}

@@ -3,59 +3,37 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   const Property = sequelize.define('Property', {
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true
-    },
-    sellerId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
     title: {
       type: DataTypes.STRING,
       allowNull: false
     },
     description: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    location: {
-      type: DataTypes.STRING,
-      allowNull: false
+      type: DataTypes.TEXT
     },
     price: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false
     },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     acres: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false
     },
     waterRights: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     suitableCrops: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: []
-    },
-    images: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: []
+      type: DataTypes.STRING
     },
     image: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'
-    },
-    status: {
-      type: DataTypes.ENUM('active', 'sold', 'pending'),
-      defaultValue: 'active'
+      type: DataTypes.STRING
     },
     viewCount: {
       type: DataTypes.INTEGER,
@@ -65,10 +43,20 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
-    datePosted: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+    status: {
+      type: DataTypes.ENUM('active', 'pending', 'sold'),
+      defaultValue: 'active'
+    },
+    sellerId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
     }
+  }, {
+    timestamps: true
   });
 
   Property.associate = (models) => {
