@@ -6,6 +6,8 @@ const favoriteRoutes = require('./routes/favorites');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const sellerRoutes = require('./routes/seller');
+const marketInsightsRoutes = require('./routes/marketInsights');
+const userActivitiesRoutes = require('./routes/userActivities');
 
 const app = express();
 
@@ -21,6 +23,8 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/seller', sellerRoutes);
+app.use('/api/market-insights', marketInsightsRoutes);
+app.use('/api/user-activities', userActivitiesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

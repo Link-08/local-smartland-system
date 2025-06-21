@@ -5,7 +5,7 @@ import {
     FaBed, FaBath, FaRulerCombined, FaRegClock,
     FaArrowRight, FaChevronRight, FaArrowUp, FaArrowDown,
     FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse, FaCamera,
-    FaExclamationTriangle, FaCheck
+    FaExclamationTriangle, FaCheck, FaChevronLeft, FaTimes, FaEnvelope, FaShare, FaEye, FaChartBar
   } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles"
 import api from '../config/axios';
@@ -18,6 +18,12 @@ const BuyerDashboard = ({ navigateTo }) => {
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('saved');
+    
+    // Modal state
+    const [selectedProperty, setSelectedProperty] = useState(null);
+    const [propertyModalOpen, setPropertyModalOpen] = useState(false);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [contactModalOpen, setContactModalOpen] = useState(false);
     
     // State for user data and loading
     const [user, setUser] = useState(null);
@@ -372,6 +378,87 @@ const BuyerDashboard = ({ navigateTo }) => {
         }
     };
 
+    // Modal functions
+    const openPropertyModal = (property) => {
+        setSelectedProperty(property);
+        setPropertyModalOpen(true);
+        setActiveImageIndex(0);
+    };
+
+    const closePropertyModal = () => {
+        setPropertyModalOpen(false);
+        setSelectedProperty(null);
+        setActiveImageIndex(0);
+    };
+
+    const handlePrevImage = () => {
+        if (selectedProperty && selectedProperty.images) {
+            setActiveImageIndex(prev => 
+                prev === 0 ? selectedProperty.images.length - 1 : prev - 1
+            );
+        }
+    };
+
+    const handleNextImage = () => {
+        if (selectedProperty && selectedProperty.images) {
+            setActiveImageIndex(prev => 
+                prev === selectedProperty.images.length - 1 ? 0 : prev + 1
+            );
+        }
+    };
+
+    const handleThumbnailClick = (index) => {
+        setActiveImageIndex(index);
+    };
+
+    const handleSaveProperty = async () => {
+        if (!selectedProperty) return;
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please log in to save properties to favorites');
+            return;
+        }
+
+        try {
+            const response = await api.post(`/api/favorites/${selectedProperty.id}`);
+            if (response.status === 201) {
+                alert('Property saved to favorites');
+            }
+        } catch (error) {
+            if (error.response?.status === 400) {
+                alert('Property is already in your favorites');
+            } else if (error.response?.status === 401) {
+                alert('Please log in to save properties to favorites');
+            } else {
+                console.error('Error saving property:', error);
+                alert('Failed to save property to favorites');
+            }
+        }
+    };
+
+    const handleShareProperty = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: selectedProperty.title,
+                text: `Check out this agricultural property: ${selectedProperty.title}`,
+                url: window.location.href
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link copied to clipboard!');
+        }
+    };
+
+    const handleContactSeller = () => {
+        setContactModalOpen(true);
+    };
+
+    const closeContactModal = () => {
+        setContactModalOpen(false);
+    };
+
     if (loading) {
         return (
             <DashboardStyles.DashboardContainer>
@@ -482,6 +569,29 @@ const BuyerDashboard = ({ navigateTo }) => {
                                         src={user.avatar.startsWith('http') ? user.avatar : `${api.defaults.baseURL}${user.avatar}`}
                                         alt="Profile"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                        onError={(e) => {
+                                            console.error('Error loading profile image:', e);
+                                            console.log('Failed image URL:', e.target.src);
+                                            // Hide the broken image and show fallback
+                                            e.target.style.display = 'none';
+                                            const parent = e.target.parentNode;
+                                            const fallback = document.createElement('div');
+                                            fallback.style.cssText = `
+                                                width: 100%;
+                                                height: 100%;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+                                                border-radius: 50%;
+                                                color: white;
+                                                font-weight: bold;
+                                                font-size: 24px;
+                                            `;
+                                            const fullName = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+                                            fallback.textContent = fullName ? fullName.charAt(0).toUpperCase() : '?';
+                                            parent.insertBefore(fallback, e.target);
+                                        }}
                                     />
                                 ) : (
                                     <>
@@ -624,7 +734,14 @@ const BuyerDashboard = ({ navigateTo }) => {
                             savedProperties.map(property => (
                                 <DashboardStyles.PropertyCard key={property.id}>
                                 <DashboardStyles.PropertyImageContainer>
-                                    <DashboardStyles.PropertyImage src={property.image} alt={property.title} />
+                                    <DashboardStyles.PropertyImage 
+                                        src={property.image} 
+                                        alt={property.title}
+                                        onError={(e) => {
+                                            console.error('Error loading property image:', e);
+                                            e.target.src = `${api.defaults.baseURL}/api/placeholder/400/300`;
+                                        }}
+                                    />
                                 </DashboardStyles.PropertyImageContainer>
                                 
                                 <DashboardStyles.PropertyContent>
@@ -643,15 +760,169 @@ const BuyerDashboard = ({ navigateTo }) => {
                                     </DashboardStyles.PropertySpec>
                                     </DashboardStyles.PropertySpecs>
                                     
+                                    {/* Enhanced Quick Information Section */}
+                                    <div style={{ 
+                                        backgroundColor: '#f8f9fa', 
+                                        padding: '12px', 
+                                        borderRadius: '8px', 
+                                        margin: '12px 0',
+                                        border: '1px solid #e9ecef'
+                                    }}>
+                                        <div style={{ 
+                                            display: 'grid', 
+                                            gridTemplateColumns: '1fr 1fr', 
+                                            gap: '8px',
+                                            fontSize: '13px'
+                                        }}>
+                                            {property.type && (
+                                                <DashboardStyles.PropertySpec>
+                                                    <FaBuilding size={14} /> <strong>{property.type}</strong>
+                                                </DashboardStyles.PropertySpec>
+                                            )}
+                                            {property.topography && (
+                                                <DashboardStyles.PropertySpec>
+                                                    <FaTractor size={14} /> <strong>{property.topography}</strong>
+                                                </DashboardStyles.PropertySpec>
+                                            )}
+                                            {property.averageYield && (
+                                                <DashboardStyles.PropertySpec style={{ gridColumn: '1 / -1' }}>
+                                                    <FaChartBar size={14} /> <strong>Avg Yield:</strong> {property.averageYield}
+                                                </DashboardStyles.PropertySpec>
+                                            )}
+                                        </div>
+                                        
+                                        {property.amenities && property.amenities.length > 0 && (
+                                            <div style={{ 
+                                                marginTop: '8px', 
+                                                paddingTop: '8px', 
+                                                borderTop: '1px solid #dee2e6',
+                                                fontSize: '12px'
+                                            }}>
+                                                <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>
+                                                    <FaWarehouse size={12} style={{ marginRight: '4px' }} /> Amenities:
+                                                </div>
+                                                <div style={{ 
+                                                    display: 'flex', 
+                                                    flexWrap: 'wrap', 
+                                                    gap: '4px',
+                                                    color: '#6c757d'
+                                                }}>
+                                                    {property.amenities.slice(0, 3).map((amenity, idx) => (
+                                                        <span key={idx} style={{ 
+                                                            backgroundColor: '#e9ecef', 
+                                                            padding: '2px 6px', 
+                                                            borderRadius: '4px',
+                                                            fontSize: '11px'
+                                                        }}>
+                                                            {amenity}
+                                                        </span>
+                                                    ))}
+                                                    {property.amenities.length > 3 && (
+                                                        <span style={{ 
+                                                            backgroundColor: '#e9ecef', 
+                                                            padding: '2px 6px', 
+                                                            borderRadius: '4px',
+                                                            fontSize: '11px',
+                                                            color: '#6c757d'
+                                                        }}>
+                                                            +{property.amenities.length - 3} more
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
                                     <DashboardStyles.SuitableCrops>
                                         <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {property.suitableCrops}
                                     </DashboardStyles.SuitableCrops>
                                     
+                                    {property.restrictionsText && (
+                                        <div style={{ 
+                                            marginTop: '8px',
+                                            padding: '8px',
+                                            backgroundColor: '#f8d7da',
+                                            border: '1px solid #f5c6cb',
+                                            borderRadius: '4px',
+                                            fontSize: '12px',
+                                            color: '#721c24'
+                                        }}>
+                                            <strong>Restrictions:</strong> {property.restrictionsText}
+                                        </div>
+                                    )}
+                                    
+                                    {property.remarks && (
+                                        <div style={{ 
+                                            marginTop: '8px',
+                                            padding: '8px',
+                                            backgroundColor: '#fff3cd',
+                                            border: '1px solid #ffeaa7',
+                                            borderRadius: '4px',
+                                            fontSize: '12px',
+                                            color: '#856404'
+                                        }}>
+                                            <strong>Remarks:</strong> {property.remarks}
+                                        </div>
+                                    )}
+                                    
                                     <DashboardStyles.PropertyActions>
-                                    <DashboardStyles.ActionButton $small onClick={() => navigateTo(`/listings/${property.id}`)}>
+                                    <DashboardStyles.ActionButton $small onClick={() => openPropertyModal(property)}>
                                         View Details
                                     </DashboardStyles.ActionButton>
                                     </DashboardStyles.PropertyActions>
+                                    
+                                    {/* Seller Information */}
+                                    {property.seller && (
+                                        <div style={{ 
+                                            marginTop: '12px',
+                                            padding: '8px',
+                                            backgroundColor: '#f8f9fa',
+                                            borderRadius: '6px',
+                                            border: '1px solid #e9ecef',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}>
+                                            <img
+                                                src={property.seller.avatar || '/api/placeholder/30/30'}
+                                                alt={`${property.seller.firstName || 'Seller'}`}
+                                                style={{
+                                                    width: '30px',
+                                                    height: '30px',
+                                                    borderRadius: '50%',
+                                                    objectFit: 'cover'
+                                                }}
+                                                onError={(e) => {
+                                                    console.error('Error loading seller avatar:', e);
+                                                    // Hide the broken image and show fallback
+                                                    e.target.style.display = 'none';
+                                                    const parent = e.target.parentNode;
+                                                    const fallback = document.createElement('div');
+                                                    fallback.style.cssText = `
+                                                        width: 30px;
+                                                        height: 30px;
+                                                        border-radius: 50%;
+                                                        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        color: white;
+                                                        font-weight: bold;
+                                                        font-size: 12px;
+                                                    `;
+                                                    const sellerName = `${property.seller.firstName || ''} ${property.seller.lastName || ''}`.trim();
+                                                    fallback.textContent = sellerName ? sellerName.charAt(0).toUpperCase() : '?';
+                                                    parent.insertBefore(fallback, e.target);
+                                                }}
+                                            />
+                                            <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                                                <div style={{ fontWeight: '500', color: '#495057' }}>
+                                                    {property.seller.firstName} {property.seller.lastName}
+                                                </div>
+                                                <div>Property Seller</div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </DashboardStyles.PropertyContent>
                                 </DashboardStyles.PropertyCard>
                             ))
@@ -718,6 +989,29 @@ const BuyerDashboard = ({ navigateTo }) => {
                                                 src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${api.defaults.baseURL}${userProfile.avatar}`}
                                                 alt="Profile"
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                                onError={(e) => {
+                                                    console.error('Error loading profile image:', e);
+                                                    console.log('Failed image URL:', e.target.src);
+                                                    // Hide the broken image and show fallback
+                                                    e.target.style.display = 'none';
+                                                    const parent = e.target.parentNode;
+                                                    const fallback = document.createElement('div');
+                                                    fallback.style.cssText = `
+                                                        width: 100%;
+                                                        height: 100%;
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+                                                        border-radius: 50%;
+                                                        color: white;
+                                                        font-weight: bold;
+                                                        font-size: 24px;
+                                                    `;
+                                                    const fullName = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+                                                    fallback.textContent = fullName ? fullName.charAt(0).toUpperCase() : '?';
+                                                    parent.insertBefore(fallback, e.target);
+                                                }}
                                             />
                                         ) : (
                                             <div style={{
@@ -852,6 +1146,865 @@ const BuyerDashboard = ({ navigateTo }) => {
                         </form>
                     </DashboardStyles.ModalContainer>
                 </DashboardStyles.ModalOverlay>
+            )}
+
+            {/* Property Details Modal */}
+            {propertyModalOpen && selectedProperty && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        maxWidth: '90vw',
+                        maxHeight: '90vh',
+                        width: '1000px',
+                        overflow: 'auto',
+                        position: 'relative'
+                    }}>
+                        {/* Modal Header */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '20px 24px',
+                            borderBottom: '1px solid #e0e0e0'
+                        }}>
+                            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '600', color: '#2c3e50' }}>
+                                {selectedProperty.title}
+                            </h2>
+                            <button
+                                onClick={closePropertyModal}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    color: '#666',
+                                    padding: '4px',
+                                    borderRadius: '4px',
+                                    transition: 'background-color 0.2s'
+                                }}
+                                onMouseOver={(e) => e.target.style.backgroundColor = '#f0f0f0'}
+                                onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div style={{ padding: '24px' }}>
+                            {/* Image Gallery */}
+                            <div style={{ marginBottom: '24px' }}>
+                                <div style={{
+                                    position: 'relative',
+                                    height: '400px',
+                                    borderRadius: '8px',
+                                    overflow: 'hidden',
+                                    marginBottom: '12px'
+                                }}>
+                                    <img
+                                        src={selectedProperty.images?.[activeImageIndex] || selectedProperty.image}
+                                        alt={selectedProperty.title}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover'
+                                        }}
+                                        onError={(e) => {
+                                            console.error('Error loading property image:', e);
+                                            e.target.src = `${api.defaults.baseURL}/api/placeholder/800/500`;
+                                        }}
+                                    />
+                                    {selectedProperty.images && selectedProperty.images.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={handlePrevImage}
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: '12px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    background: 'rgba(0, 0, 0, 0.6)',
+                                                    border: 'none',
+                                                    color: 'white',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '50%',
+                                                    cursor: 'pointer',
+                                                    fontSize: '16px'
+                                                }}
+                                            >
+                                                <FaChevronLeft />
+                                            </button>
+                                            <button
+                                                onClick={handleNextImage}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '12px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    background: 'rgba(0, 0, 0, 0.6)',
+                                                    border: 'none',
+                                                    color: 'white',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '50%',
+                                                    cursor: 'pointer',
+                                                    fontSize: '16px'
+                                                }}
+                                            >
+                                                <FaChevronRight />
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                                
+                                {/* Thumbnails */}
+                                {selectedProperty.images && selectedProperty.images.length > 1 && (
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '8px',
+                                        overflowX: 'auto',
+                                        padding: '4px 0'
+                                    }}>
+                                        {selectedProperty.images.map((image, index) => (
+                                            <img
+                                                key={index}
+                                                src={image}
+                                                alt={`${selectedProperty.title} - Image ${index + 1}`}
+                                                onClick={() => handleThumbnailClick(index)}
+                                                style={{
+                                                    width: '80px',
+                                                    height: '60px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    border: index === activeImageIndex ? '2px solid #3498db' : '2px solid transparent',
+                                                    opacity: index === activeImageIndex ? 1 : 0.7,
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onError={(e) => {
+                                                    console.error('Error loading thumbnail image:', e);
+                                                    e.target.src = `${api.defaults.baseURL}/api/placeholder/80/60`;
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Property Details Grid */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '2fr 1fr',
+                                gap: '24px'
+                            }}>
+                                {/* Left Column - Property Details */}
+                                <div>
+                                    {/* Price and Location */}
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'flex-start',
+                                        marginBottom: '20px'
+                                    }}>
+                                        <div>
+                                            <h3 style={{
+                                                fontSize: '28px',
+                                                fontWeight: '700',
+                                                color: '#2c3e50',
+                                                margin: '0 0 8px 0'
+                                            }}>
+                                                ₱{selectedProperty.price.toLocaleString()}
+                                            </h3>
+                                            <p style={{
+                                                fontSize: '16px',
+                                                color: '#7f8c8d',
+                                                margin: 0,
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}>
+                                                <FaMapMarkerAlt style={{ marginRight: '6px' }} />
+                                                {selectedProperty.location}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Property Specifications */}
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '16px',
+                                        marginBottom: '24px'
+                                    }}>
+                                        <div style={{
+                                            background: '#f8f9fa',
+                                            padding: '16px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: '#7f8c8d',
+                                                marginBottom: '4px'
+                                            }}>
+                                                Land Size
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50'
+                                            }}>
+                                                {selectedProperty.acres} hectares
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            background: '#f8f9fa',
+                                            padding: '16px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: '#7f8c8d',
+                                                marginBottom: '4px'
+                                            }}>
+                                                Price per Hectare
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50'
+                                            }}>
+                                                ₱{Math.round(selectedProperty.price / selectedProperty.acres).toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            background: '#f8f9fa',
+                                            padding: '16px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: '#7f8c8d',
+                                                marginBottom: '4px'
+                                            }}>
+                                                Water Rights
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50'
+                                            }}>
+                                                {selectedProperty.waterRights || 'Not specified'}
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            background: '#f8f9fa',
+                                            padding: '16px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: '#7f8c8d',
+                                                marginBottom: '4px'
+                                            }}>
+                                                Listed Date
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50'
+                                            }}>
+                                                {new Date(selectedProperty.createdAt).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                        {selectedProperty.type && (
+                                            <div style={{
+                                                background: '#f8f9fa',
+                                                padding: '16px',
+                                                borderRadius: '8px'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '14px',
+                                                    color: '#7f8c8d',
+                                                    marginBottom: '4px'
+                                                }}>
+                                                    Property Type
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '18px',
+                                                    fontWeight: '600',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    {selectedProperty.type}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedProperty.topography && (
+                                            <div style={{
+                                                background: '#f8f9fa',
+                                                padding: '16px',
+                                                borderRadius: '8px'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '14px',
+                                                    color: '#7f8c8d',
+                                                    marginBottom: '4px'
+                                                }}>
+                                                    Topography
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '18px',
+                                                    fontWeight: '600',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    {selectedProperty.topography}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedProperty.averageYield && (
+                                            <div style={{
+                                                background: '#f8f9fa',
+                                                padding: '16px',
+                                                borderRadius: '8px'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '14px',
+                                                    color: '#7f8c8d',
+                                                    marginBottom: '4px'
+                                                }}>
+                                                    Average Yield
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '18px',
+                                                    fontWeight: '600',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    {selectedProperty.averageYield}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Description */}
+                                    {selectedProperty.description && (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <h4 style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50',
+                                                margin: '0 0 12px 0'
+                                            }}>
+                                                Description
+                                            </h4>
+                                            <p style={{
+                                                fontSize: '16px',
+                                                lineHeight: '1.6',
+                                                color: '#34495e',
+                                                margin: 0
+                                            }}>
+                                                {selectedProperty.description}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Suitable Crops */}
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <h4 style={{
+                                            fontSize: '18px',
+                                            fontWeight: '600',
+                                            color: '#2c3e50',
+                                            margin: '0 0 12px 0',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}>
+                                            <FaSeedling style={{ marginRight: '8px', color: '#27ae60' }} />
+                                            Suitable Crops
+                                        </h4>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: '8px'
+                                        }}>
+                                            {selectedProperty.suitableCrops?.split(',').map((crop, index) => (
+                                                <span
+                                                    key={index}
+                                                    style={{
+                                                        background: '#e8f5e8',
+                                                        color: '#27ae60',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '20px',
+                                                        fontSize: '14px',
+                                                        fontWeight: '500'
+                                                    }}
+                                                >
+                                                    {crop.trim()}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Amenities */}
+                                    {selectedProperty.amenities && selectedProperty.amenities.length > 0 && (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <h4 style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50',
+                                                margin: '0 0 12px 0'
+                                            }}>
+                                                Amenities
+                                            </h4>
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '8px'
+                                            }}>
+                                                {selectedProperty.amenities.map((amenity, index) => (
+                                                    <div
+                                                        key={index}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            fontSize: '16px',
+                                                            color: '#34495e'
+                                                        }}
+                                                    >
+                                                        <FaCheck style={{
+                                                            marginRight: '8px',
+                                                            color: '#27ae60',
+                                                            fontSize: '14px'
+                                                        }} />
+                                                        {amenity}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Restrictions */}
+                                    {selectedProperty.restrictionsText && (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <h4 style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50',
+                                                margin: '0 0 12px 0'
+                                            }}>
+                                                Restrictions
+                                            </h4>
+                                            <div style={{
+                                                background: '#f8d7da',
+                                                border: '1px solid #f5c6cb',
+                                                borderRadius: '8px',
+                                                padding: '16px',
+                                                color: '#721c24'
+                                            }}>
+                                                {selectedProperty.restrictionsText}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Remarks */}
+                                    {selectedProperty.remarks && (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <h4 style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50',
+                                                margin: '0 0 12px 0'
+                                            }}>
+                                                Remarks
+                                            </h4>
+                                            <div style={{
+                                                background: '#fff3cd',
+                                                border: '1px solid #ffeaa7',
+                                                borderRadius: '8px',
+                                                padding: '16px',
+                                                color: '#856404'
+                                            }}>
+                                                {selectedProperty.remarks}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Right Column - Seller Info & Actions */}
+                                <div>
+                                    {/* Seller Information */}
+                                    <div style={{
+                                        background: '#f8f9fa',
+                                        padding: '20px',
+                                        borderRadius: '12px',
+                                        marginBottom: '20px'
+                                    }}>
+                                        <h4 style={{
+                                            fontSize: '18px',
+                                            fontWeight: '600',
+                                            color: '#2c3e50',
+                                            margin: '0 0 16px 0'
+                                        }}>
+                                            Seller Information
+                                        </h4>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            marginBottom: '16px'
+                                        }}>
+                                            <img
+                                                src={selectedProperty.seller?.avatar || '/api/placeholder/50/50'}
+                                                alt={selectedProperty.seller?.firstName || 'Seller'}
+                                                style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    borderRadius: '50%',
+                                                    marginRight: '12px',
+                                                    objectFit: 'cover'
+                                                }}
+                                                onError={(e) => {
+                                                    console.error('Error loading seller avatar:', e);
+                                                    e.target.src = `https://ui-avatars.com/api/?name=${selectedProperty.seller?.firstName || 'Seller'}+${selectedProperty.seller?.lastName || ''}&background=random&size=50`;
+                                                }}
+                                            />
+                                            <div>
+                                                <div style={{
+                                                    fontSize: '16px',
+                                                    fontWeight: '600',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    {selectedProperty.seller?.firstName} {selectedProperty.seller?.lastName}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '14px',
+                                                    color: '#7f8c8d'
+                                                }}>
+                                                    Member since {new Date(selectedProperty.createdAt).getFullYear()}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleContactSeller}
+                                            style={{
+                                                width: '100%',
+                                                background: '#3498db',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '12px',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontSize: '16px',
+                                                fontWeight: '500',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px'
+                                            }}
+                                        >
+                                            <FaEnvelope />
+                                            Contact Seller
+                                        </button>
+                                    </div>
+
+                                    {/* Property Status */}
+                                    <div style={{
+                                        background: '#f8f9fa',
+                                        padding: '20px',
+                                        borderRadius: '12px',
+                                        marginBottom: '20px'
+                                    }}>
+                                        <h4 style={{
+                                            fontSize: '18px',
+                                            fontWeight: '600',
+                                            color: '#2c3e50',
+                                            margin: '0 0 16px 0'
+                                        }}>
+                                            Property Status
+                                        </h4>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '12px'
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Status</span>
+                                                <span style={{
+                                                    background: '#27ae60',
+                                                    color: 'white',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '500'
+                                                }}>
+                                                    Active
+                                                </span>
+                                            </div>
+                                            {selectedProperty.waterRights?.toLowerCase().includes('irrigation') && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Irrigation</span>
+                                                    <span style={{
+                                                        background: '#3498db',
+                                                        color: 'white',
+                                                        padding: '4px 12px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '12px',
+                                                        fontWeight: '500',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px'
+                                                    }}>
+                                                        <FaWater />
+                                                        Available
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Actions */}
+                                    <div style={{
+                                        background: '#f8f9fa',
+                                        padding: '20px',
+                                        borderRadius: '12px'
+                                    }}>
+                                        <h4 style={{
+                                            fontSize: '18px',
+                                            fontWeight: '600',
+                                            color: '#2c3e50',
+                                            margin: '0 0 16px 0'
+                                        }}>
+                                            Quick Actions
+                                        </h4>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '12px'
+                                        }}>
+                                            <button
+                                                onClick={handleSaveProperty}
+                                                style={{
+                                                    width: '100%',
+                                                    background: '#e74c3c',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '12px',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '16px',
+                                                    fontWeight: '500',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '8px'
+                                                }}
+                                            >
+                                                <FaHeart />
+                                                Save to Favorites
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Contact Seller Modal */}
+            {contactModalOpen && selectedProperty && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        maxWidth: '400px',
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflow: 'auto'
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '20px'
+                        }}>
+                            <h3 style={{
+                                margin: 0,
+                                fontSize: '20px',
+                                fontWeight: '600',
+                                color: '#2c3e50'
+                            }}>
+                                Contact {selectedProperty.seller?.firstName} {selectedProperty.seller?.lastName}
+                            </h3>
+                            <button
+                                onClick={closeContactModal}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    color: '#666',
+                                    padding: '4px',
+                                    borderRadius: '4px'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div style={{
+                            background: '#f8f9fa',
+                            padding: '16px',
+                            borderRadius: '8px',
+                            marginBottom: '20px'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginBottom: '16px'
+                            }}>
+                                <img
+                                    src={selectedProperty.seller?.avatar || '/api/placeholder/50/50'}
+                                    alt={selectedProperty.seller?.firstName || 'Seller'}
+                                    style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '50%',
+                                        marginRight: '12px',
+                                        objectFit: 'cover'
+                                    }}
+                                    onError={(e) => {
+                                        console.error('Error loading seller avatar:', e);
+                                        e.target.src = `https://ui-avatars.com/api/?name=${selectedProperty.seller?.firstName || 'Seller'}+${selectedProperty.seller?.lastName || ''}&background=random&size=40`;
+                                    }}
+                                />
+                                <div>
+                                    <div style={{
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#2c3e50'
+                                    }}>
+                                        {selectedProperty.seller?.firstName} {selectedProperty.seller?.lastName}
+                                    </div>
+                                    <div style={{
+                                        fontSize: '14px',
+                                        color: '#7f8c8d'
+                                    }}>
+                                        Property Seller
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: '16px' }}>
+                                <div style={{
+                                    fontSize: '14px',
+                                    color: '#7f8c8d',
+                                    marginBottom: '4px'
+                                }}>
+                                    Email Address
+                                </div>
+                                <div style={{
+                                    fontSize: '16px',
+                                    color: '#2c3e50',
+                                    fontWeight: '500'
+                                }}>
+                                    {selectedProperty.seller?.email || 'Email not available'}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{
+                                    fontSize: '14px',
+                                    color: '#7f8c8d',
+                                    marginBottom: '4px'
+                                }}>
+                                    Phone Number
+                                </div>
+                                <div style={{
+                                    fontSize: '16px',
+                                    color: '#2c3e50',
+                                    fontWeight: '500'
+                                }}>
+                                    {selectedProperty.seller?.phone || 'Phone not available'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px'
+                        }}>
+                            <button
+                                onClick={closeContactModal}
+                                style={{
+                                    flex: 1,
+                                    background: '#95a5a6',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                Close
+                            </button>
+                            {selectedProperty.seller?.email && (
+                                <button
+                                    onClick={() => {
+                                        window.open(`mailto:${selectedProperty.seller.email}?subject=Inquiry about ${selectedProperty.title}`, '_blank');
+                                        closeContactModal();
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        background: '#3498db',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '16px',
+                                        fontWeight: '500',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    <FaEnvelope />
+                                    Send Email
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </DashboardStyles.DashboardContainer>
     );

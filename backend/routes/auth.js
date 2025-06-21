@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { User } = require('../models/index');
 const { auth } = require('../middleware/auth');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
 // Configure multer for file uploads
@@ -87,7 +88,9 @@ router.post('/register', async (req, res) => {
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone // Include phone in response
+        phone: user.phone,
+        username: user.username,
+        avatar: user.avatar
       }
     });
   } catch (error) {
@@ -131,12 +134,234 @@ router.post('/login', async (req, res) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        fullName: user.fullName
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        username: user.username,
+        avatar: user.avatar
       }
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Error logging in' });
+  }
+});
+
+// Refresh token
+router.post('/refresh-token', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    // Decode token without verifying expiration to get user info
+    const decoded = jwt.decode(token);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Find user in database
+    const user = await User.findOne({ where: { id: decoded.id } });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(400).json({ error: 'Account is deactivated' });
+    }
+    
+    // Generate a new token
+    const newToken = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1h' }
+    );
+
+    res.json({
+      token: newToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        username: user.username,
+        avatar: user.avatar
+      }
+    });
+
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(500).json({ error: 'Error refreshing token' });
+  }
+});
+
+// Generic user profile endpoint
+router.get('/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'email', 'firstName', 'lastName', 'phone', 'username', 'avatar', 'role', 'createdAt']
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+// Update user profile endpoint
+router.put('/profile', auth, async (req, res) => {
+  try {
+    const { firstName, lastName, phone, username } = req.body;
+    
+    // Validate input
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: 'First name and last name are required' });
+    }
+
+    // Check if username is already taken by another user
+    if (username) {
+      const existingUser = await User.findOne({
+        where: {
+          username,
+          id: { [Op.ne]: req.user.id }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username is already taken' });
+      }
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await user.update({
+      firstName,
+      lastName,
+      phone,
+      username
+    });
+    
+    // Reload the user data
+    await user.reload();
+
+    res.json({ 
+      message: 'Profile updated successfully',
+      profile: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        username: user.username,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ error: 'Failed to update user profile' });
+  }
+});
+
+// PATCH endpoint for profile updates (for compatibility with BuyerDashboard)
+router.patch('/profile', auth, async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, username } = req.body;
+    
+    // Validate input
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: 'First name and last name are required' });
+    }
+
+    // Check if username is already taken by another user
+    if (username) {
+      const existingUser = await User.findOne({
+        where: {
+          username,
+          id: { [Op.ne]: req.user.id }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username is already taken' });
+      }
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await user.update({
+      firstName,
+      lastName,
+      phone,
+      username
+    });
+    
+    // Reload the user data
+    await user.reload();
+
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        username: user.username,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ error: 'Failed to update user profile' });
+  }
+});
+
+// Update password endpoint
+router.patch('/password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await user.update({ password: hashedPassword });
+
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ error: 'Failed to update password' });
   }
 });
 

@@ -12,7 +12,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { DashboardStyles } from "./BuyerDashboardStyles";
-import { SellerDashboardStyles } from "./SellerDashboardStyles";
+import { SellerDashboardStyles } from "./SellerDashboardStyles.jsx";
 import { useAuth } from '../contexts/AuthContext';
 import api from '../config/axios';
 import PriceCalculatorTool from "./PriceCalculatorTool";
@@ -66,7 +66,7 @@ const SellerDashboard = ({ navigateTo }) => {
         location: '',
         acres: '',
         waterRights: '',
-        suitableCrops: [],
+        suitableCrops: '',
         image: '',
         status: 'active',
         displayPrice: true,
@@ -106,6 +106,23 @@ const SellerDashboard = ({ navigateTo }) => {
     // Add state for recent activities
     const [recentActivities, setRecentActivities] = useState([]);
 
+    // Helper function to record activity and update recent activities
+    const recordActivity = async (action, description) => {
+        try {
+            await api.post('/api/user-activities', {
+                action,
+                description,
+                userId: user.id
+            });
+            
+            // Update recent activities immediately
+            const response = await api.get(`/api/user-activities/recent/${user.id}`);
+            setRecentActivities(response.data);
+        } catch (error) {
+            console.error('Error recording activity:', error);
+        }
+    };
+
     // Add useEffect to initialize userProfile when user data is available
     useEffect(() => {
         if (user) {
@@ -136,7 +153,7 @@ const SellerDashboard = ({ navigateTo }) => {
                 console.log('Fetching initial user data for ID:', user.id);
                 
                 // Fetch the complete user profile
-                const response = await api.get(`/api/seller/profile/${user.id}`);
+                const response = await api.get(`/api/auth/profile`);
                 console.log('Received initial user data:', response.data);
                 
                 // Initialize user profile with the fetched data
@@ -148,13 +165,15 @@ const SellerDashboard = ({ navigateTo }) => {
                 });
                 
                 // Fetch other data...
-                const [metricsResponse, propertiesResponse] = await Promise.all([
+                const [metricsResponse, propertiesResponse, activitiesResponse] = await Promise.all([
                     api.get(`/api/seller/metrics/${user.id}`),
-                    api.get(`/api/seller/properties/${user.id}`)
+                    api.get(`/api/seller/properties/${user.id}`),
+                    api.get(`/api/user-activities/recent/${user.id}`)
                 ]);
                 
                 setMetrics(metricsResponse.data);
                 setSellerListings(propertiesResponse.data);
+                setRecentActivities(activitiesResponse.data);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
                 alert('Failed to load dashboard data. Please try again.');
@@ -189,25 +208,25 @@ const SellerDashboard = ({ navigateTo }) => {
         return () => clearInterval(intervalId);
     }, [user]);
 
-    // Update performance metrics to use default data
+    // Update performance metrics to use actual data from backend
     const performanceMetrics = [
         {
             title: 'Total Views',
-            value: '0',
-            trend: '0%',
-            isPositive: true
+            value: metrics.totalViews?.toString() || '0',
+            trend: metrics.trendViews || '0%',
+            isPositive: metrics.trendViews?.includes('+') || false
         },
         {
             title: 'Total Inquiries',
-            value: '0',
-            trend: '0%',
-            isPositive: true
+            value: metrics.totalInquiries?.toString() || '0',
+            trend: metrics.trendInquiries || '0%',
+            isPositive: metrics.trendInquiries?.includes('+') || false
         },
         {
             title: 'Average Time to Sale',
-            value: 'Not Available',
-            trend: '0%',
-            isPositive: true
+            value: metrics.avgTimeToSale > 0 ? `${metrics.avgTimeToSale} days` : 'Not Available',
+            trend: metrics.trendAvgTimeToSale || '0%',
+            isPositive: metrics.trendAvgTimeToSale?.includes('-') || false
         }
     ];
 
@@ -221,7 +240,8 @@ const SellerDashboard = ({ navigateTo }) => {
     const CropSelector = ({ value, onChange, name, required, placeholder }) => {
         // Parse the current value string into an array (assuming comma-separated values)
         const [selectedCrops, setSelectedCrops] = React.useState(() => {
-            return value ? value.split(',').map(crop => crop.trim()) : [];
+            if (!value || typeof value !== 'string') return [];
+            return value.split(',').map(crop => crop.trim()).filter(crop => crop.length > 0);
         });
         
         // Define the cropOptions array
@@ -238,9 +258,9 @@ const SellerDashboard = ({ navigateTo }) => {
         
         // This effect runs when the props.value changes
         React.useEffect(() => {
-            if (value === undefined) return;
+            if (value === undefined || value === null) return;
             
-            const newCrops = value ? value.split(',').map(crop => crop.trim()) : [];
+            const newCrops = (typeof value === 'string' && value) ? value.split(',').map(crop => crop.trim()).filter(crop => crop.length > 0) : [];
             // Only update the state if the values actually differ to prevent loops
             if (JSON.stringify(newCrops) !== JSON.stringify(selectedCrops)) {
                 setSelectedCrops(newCrops);
@@ -318,24 +338,62 @@ const SellerDashboard = ({ navigateTo }) => {
     
     const handleEditPropertySubmit = async (e) => {
         e.preventDefault();
+        
+        // Add confirmation dialog
+        const isConfirmed = window.confirm('Are you sure you want to update this property listing?');
+        
+        if (!isConfirmed) {
+            return;
+        }
+        
         try {
-            const response = await api.put(`/api/properties/${editProperty.id}`, editProperty);
+            // Format the data to ensure all fields are properly handled
+            const formattedData = {
+                ...editProperty,
+                price: typeof editProperty.price === 'string' 
+                    ? parseFloat(editProperty.price.replace(/[^0-9.]/g, '')) 
+                    : parseFloat(editProperty.price),
+                acres: parseFloat(editProperty.acres),
+                amenities: Array.isArray(editProperty.amenities) ? editProperty.amenities : [],
+                displayPrice: editProperty.displayPrice !== undefined ? editProperty.displayPrice : true
+            };
+
+            const response = await api.put(`/api/properties/${editProperty.id}`, formattedData);
+            
+            // Update the listings with the response data
             setSellerListings(prevListings => 
                 prevListings.map(listing => 
                     listing.id === editProperty.id ? response.data : listing
                 )
             );
+            
             setEditPropertyOpen(false);
+            
+            // Record the property update activity
+            await recordActivity('property_updated', `Property "${editProperty.title}" updated`);
+            
+            // Show success message
+            alert('Property updated successfully!');
         } catch (error) {
             console.error('Error updating listing:', error);
-            alert('Failed to update listing. Please try again.');
+            
+            // Provide specific error messages
+            if (error.response?.status === 404) {
+                alert('Property not found. It may have been deleted.');
+            } else if (error.response?.status === 403) {
+                alert('You are not authorized to update this property.');
+            } else if (error.response?.status === 401) {
+                alert('Please log in again to update properties.');
+            } else {
+                alert('Failed to update property. Please try again.');
+            }
         }
     };
 
     const handleEditProfile = async () => {
         try {
             // Always fetch the latest seller data
-            const response = await api.get(`/api/seller/profile/${user.id}`);
+            const response = await api.get(`/api/auth/profile`);
             const sellerData = response.data;
             setUserProfile({
                 firstName: sellerData.firstName || '',
@@ -483,7 +541,7 @@ const SellerDashboard = ({ navigateTo }) => {
             console.log('Starting profile update with data:', { firstName, lastName, email, phone, username });
             console.log('Current user:', user);
             
-            const response = await api.put(`/api/seller/profile/${user.id}`, {
+            const response = await api.put(`/api/auth/profile`, {
                 firstName,
                 lastName,
                 phone,
@@ -494,6 +552,10 @@ const SellerDashboard = ({ navigateTo }) => {
             
             if (response.data && response.data.profile) {
                 console.log('Profile update successful, updating user state...');
+                
+                // Record the profile update activity
+                await recordActivity('profile_updated', `Profile updated for ${firstName} ${lastName}`);
+                
                 // Update the user in AuthContext
                 if (updateUser) {
                     console.log('Calling updateUser function...');
@@ -588,6 +650,11 @@ const SellerDashboard = ({ navigateTo }) => {
                     return newProfile;
                 });
 
+                // Update the global user context
+                if (updateUser) {
+                    await updateUser();
+                }
+
                 // Force a re-render
                 setLastUpdate(Date.now());
                 alert('Profile image updated successfully!');
@@ -615,21 +682,29 @@ const SellerDashboard = ({ navigateTo }) => {
             ...listing,
             images: listing.images || [listing.image || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'],
             amenities: listing.amenities || [],
-            restrictions: listing.restrictions || [],
+            restrictions: listing.restrictionsText ? [listing.restrictionsText] : [],
             previousCrops: listing.previousCrops || [],
-            // Add only the specified property details
+            // Add all property details from the form
             size: `${listing.acres} hectares`,
-            type: 'Agricultural Land',
+            type: listing.type || 'Agricultural Land',
             waterRights: listing.waterRights || 'Not specified',
-            listedDate: listing.datePosted || new Date().toISOString(),
             description: listing.description || 'No description available',
             address: listing.location,
-            // Add farm details
+            // Add comprehensive farm details
             farmDetails: {
                 previousCrops: listing.previousCrops || [],
                 averageYield: listing.averageYield || 'Not specified',
-                topography: listing.topography || 'Not specified'
-            }
+                topography: listing.topography || 'Not specified',
+                suitableCrops: listing.suitableCrops || 'Not specified'
+            },
+            // Add pricing information
+            price: listing.price,
+            displayPrice: listing.displayPrice !== undefined ? listing.displayPrice : true,
+            // Add additional information
+            remarks: listing.remarks || '',
+            status: listing.status || 'active',
+            viewCount: listing.viewCount || 0,
+            inquiries: listing.inquiries || 0
         };
         
         setPreviewListing(previewData);
@@ -642,14 +717,45 @@ const SellerDashboard = ({ navigateTo }) => {
 
     // Function to handle delete listing
     const handleDeleteListing = async (listingId) => {
+        // Add confirmation dialog
+        const isConfirmed = window.confirm('Are you sure you want to delete this listing? This action cannot be undone.');
+        
+        if (!isConfirmed) {
+            return;
+        }
+
         try {
-            await api.delete(`/api/properties/${listingId}`);
+            const response = await api.delete(`/api/properties/${listingId}`);
+            
+            if (response.status === 200) {
+                // Find the listing to get its title for activity logging
+                const listingToDelete = sellerListings.find(listing => listing.id === listingId);
+                const listingTitle = listingToDelete ? listingToDelete.title : 'Unknown property';
+                
+                // Remove the listing from the state
             setSellerListings(prevListings => 
                 prevListings.filter(listing => listing.id !== listingId)
             );
+                
+                // Record the property deletion activity
+                await recordActivity('property_deleted', `Property "${listingTitle}" deleted`);
+                
+                // Show success message
+                alert('Listing deleted successfully!');
+            }
         } catch (error) {
             console.error('Error deleting listing:', error);
+            
+            // Provide specific error messages based on the error
+            if (error.response?.status === 404) {
+                alert('Listing not found. It may have already been deleted.');
+            } else if (error.response?.status === 403) {
+                alert('You are not authorized to delete this listing.');
+            } else if (error.response?.status === 401) {
+                alert('Please log in again to delete listings.');
+            } else {
             alert('Failed to delete listing. Please try again.');
+            }
         }
     };
 
@@ -707,14 +813,26 @@ const SellerDashboard = ({ navigateTo }) => {
             // Format the data according to the model requirements
             const formattedData = {
                 ...newProperty,
-                id: `PROP-${Date.now()}`, // Generate a unique ID
                 sellerId: user.id, // Add the seller's ID
-                price: parseFloat(newProperty.price.replace(/[^0-9.]/g, '')), // Convert price to number
+                price: typeof newProperty.price === 'string' 
+                    ? parseFloat(newProperty.price.replace(/[^0-9.]/g, '')) 
+                    : parseFloat(newProperty.price), // Convert price to number
                 acres: parseFloat(newProperty.acres), // Convert acres to number
                 status: 'active', // Set default status
                 viewCount: 0,
                 inquiries: 0,
-                image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef' // Add default image
+                image: newProperty.image || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef', // Use provided image or default
+                // Ensure all fields are properly formatted for display
+                description: newProperty.description || '',
+                waterRights: newProperty.waterRights || 'Not specified',
+                suitableCrops: newProperty.suitableCrops || 'Various crops',
+                type: newProperty.type || 'Agricultural Land',
+                topography: newProperty.topography || 'Flat to rolling',
+                averageYield: newProperty.averageYield || 'Not specified',
+                amenities: Array.isArray(newProperty.amenities) ? newProperty.amenities : [],
+                restrictionsText: newProperty.restrictionsText || '',
+                remarks: newProperty.remarks || '',
+                displayPrice: newProperty.displayPrice !== undefined ? newProperty.displayPrice : true
             };
 
             console.log('Sending property data:', formattedData);
@@ -723,8 +841,32 @@ const SellerDashboard = ({ navigateTo }) => {
             const response = await api.post('/api/properties', formattedData);
             console.log('Server response:', response.data);
             
-            setSellerListings(prevListings => [...prevListings, response.data]);
+            // Add the new listing to the state with all enhanced information
+            const newListingWithDefaults = {
+                ...response.data,
+                viewCount: 0,
+                inquiries: 0,
+                description: response.data.description || '',
+                waterRights: response.data.waterRights || 'Not specified',
+                suitableCrops: response.data.suitableCrops || 'Various crops',
+                type: response.data.type || 'Agricultural Land',
+                topography: response.data.topography || 'Flat to rolling',
+                averageYield: response.data.averageYield || 'Not specified',
+                amenities: Array.isArray(response.data.amenities) ? response.data.amenities : [],
+                restrictionsText: response.data.restrictionsText || '',
+                remarks: response.data.remarks || '',
+                displayPrice: response.data.displayPrice !== undefined ? response.data.displayPrice : true
+            };
+            
+            setSellerListings(prevListings => [newListingWithDefaults, ...prevListings]); // Add to beginning for immediate visibility
             setAddNewOpen(false);
+            
+            // Record the property creation activity
+            await recordActivity('property_created', `New property "${formattedData.title}" created`);
+            
+            // Show success message
+            alert('Property listing created successfully! Your new listing is now visible in your dashboard.');
+            
             setNewProperty({
                 title: '',
                 description: '',
@@ -732,9 +874,17 @@ const SellerDashboard = ({ navigateTo }) => {
                 location: '',
                 acres: '',
                 waterRights: '',
-                suitableCrops: [],
+                suitableCrops: '',
                 image: '',
-                status: 'active'
+                status: 'active',
+                displayPrice: true,
+                type: '',
+                topography: '',
+                averageYield: '',
+                amenities: [],
+                restrictionsText: '',
+                remarks: '',
+                coordinates: null
             });
         } catch (error) {
             console.error('Error creating new listing:', error);
@@ -753,8 +903,8 @@ const SellerDashboard = ({ navigateTo }) => {
             if (user && user.id) {
                 await api.post('/api/seller/metrics/view', { listingId });
                 // Refresh metrics after recording view
-                const response = await api.get('/api/seller/metrics');
-                if (response.ok) {
+                const response = await api.get(`/api/seller/metrics/${user.id}`);
+                if (response.data) {
                     setMetrics(response.data);
                 }
             }
@@ -769,8 +919,8 @@ const SellerDashboard = ({ navigateTo }) => {
             if (user && user.id) {
                 await api.post('/api/seller/metrics/inquiry', { listingId });
                 // Refresh metrics after recording inquiry
-                const response = await api.get('/api/seller/metrics');
-                if (response.ok) {
+                const response = await api.get(`/api/seller/metrics/${user.id}`);
+                if (response.data) {
                     setMetrics(response.data);
                 }
             }
@@ -785,8 +935,8 @@ const SellerDashboard = ({ navigateTo }) => {
             if (user && user.id) {
                 await api.post('/api/seller/metrics/sale', { listingId, daysToSale });
                 // Refresh metrics after recording sale
-                const response = await api.get('/api/seller/metrics');
-                if (response.ok) {
+                const response = await api.get(`/api/seller/metrics/${user.id}`);
+                if (response.data) {
                     setMetrics(response.data);
                 }
             }
@@ -797,14 +947,17 @@ const SellerDashboard = ({ navigateTo }) => {
 
     // Add these handlers for image navigation
     const handlePrevImage = () => {
+        if (!previewListing || !previewListing.images) return;
         setActiveImageIndex(prev => (prev > 0 ? prev - 1 : previewListing.images.length - 1));
     };
 
     const handleNextImage = () => {
+        if (!previewListing || !previewListing.images) return;
         setActiveImageIndex(prev => (prev < previewListing.images.length - 1 ? prev + 1 : 0));
     };
 
     const handleThumbnailClick = (index) => {
+        if (!previewListing || !previewListing.images) return;
         setActiveImageIndex(index);
     };
 
@@ -835,12 +988,21 @@ const SellerDashboard = ({ navigateTo }) => {
 
         useEffect(() => {
             // Parse coordinates from prop if available
-            if (coordinates) {
-                const coords = coordinates.split(',').map(coord => parseFloat(coord.trim()));
-                if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                    setMarkerCoordinates(coords);
-                    setTempCoordinates(coords);
+            if (coordinates && typeof coordinates === 'string') {
+                try {
+                    const coords = coordinates.split(',').map(coord => parseFloat(coord.trim()));
+                    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                        setMarkerCoordinates(coords);
+                        setTempCoordinates(coords);
+                    }
+                } catch (error) {
+                    console.warn('Error parsing coordinates:', error);
+                    // Keep default coordinates
                 }
+            } else if (Array.isArray(coordinates) && coordinates.length === 2) {
+                // If coordinates is already an array
+                setMarkerCoordinates(coordinates);
+                setTempCoordinates(coordinates);
             }
         }, [coordinates]);
 
@@ -1016,6 +1178,55 @@ const SellerDashboard = ({ navigateTo }) => {
         }
     };
 
+    // Function to mark property as sold
+    const handleMarkAsSold = async (listingId) => {
+        try {
+            const isConfirmed = window.confirm('Are you sure you want to mark this property as sold? This action cannot be undone.');
+            
+            if (!isConfirmed) {
+                return;
+            }
+
+            // Calculate days to sale
+            const listing = sellerListings.find(l => l.id === listingId);
+            const daysToSale = listing ? Math.ceil((new Date() - new Date(listing.createdAt)) / (1000 * 60 * 60 * 24)) : 0;
+
+            // Record the sale
+            await recordPropertySale(listingId, daysToSale);
+            
+            // Update the listing status locally
+            setSellerListings(prevListings => 
+                prevListings.map(listing => 
+                    listing.id === listingId 
+                        ? { ...listing, status: 'sold' }
+                        : listing
+                )
+            );
+            
+            // Record the property sale activity
+            if (listing) {
+                await recordActivity('property_sold', `Property "${listing.title}" marked as sold`);
+            }
+            
+            alert('Property marked as sold successfully!');
+        } catch (error) {
+            console.error('Error marking property as sold:', error);
+            alert('Failed to mark property as sold. Please try again.');
+        }
+    };
+
+    useEffect(() => {
+        const fetchMarketInsights = async () => {
+            try {
+                const response = await api.get('/api/market-insights');
+                setMarketInsights(response.data);
+            } catch (error) {
+                console.error('Error fetching market insights:', error);
+            }
+        };
+        fetchMarketInsights();
+    }, [sellerListings.length]);
+
     if (loading) {
         return <div style={{ color: '#2C3E50', textAlign: 'center', marginTop: '40px' }}>Loading seller profile...</div>;
     }
@@ -1077,12 +1288,19 @@ const SellerDashboard = ({ navigateTo }) => {
                         {sellerListings
                             .filter(listing => {
                             if (activeTab === 'listings') return true;
-                            return listing.status === activeTab;
+                            return (listing.status || 'active') === activeTab;
                             })
-                            .map(listing => (
-                            <DashboardStyles.PropertyCard key={listing.id}>
+                            .map((listing, index) => (
+                            <DashboardStyles.PropertyCard key={listing.id || `listing-${index}`}>
                             <DashboardStyles.PropertyImageContainer>
-                                <DashboardStyles.PropertyImage src={listing.image} alt={listing.title} />
+                                <DashboardStyles.PropertyImage 
+                                    src={listing.image} 
+                                    alt={listing.title}
+                                    onError={(e) => {
+                                        console.error('Error loading property image:', e);
+                                        e.target.src = `${api.defaults.baseURL}/api/placeholder/400/300`;
+                                    }}
+                                />
                                 <div style={{ 
                                 position: 'absolute', 
                                 top: '10px', 
@@ -1091,9 +1309,9 @@ const SellerDashboard = ({ navigateTo }) => {
                                 borderRadius: '4px',
                                 fontSize: '12px',
                                 fontWeight: 'bold',
-                                ...getStatusStyle(listing.status)
+                                ...getStatusStyle(listing.status || 'active')
                                 }}>
-                                {listing.status.toUpperCase()}
+                                {(listing.status || 'active').toUpperCase()}
                                 </div>
                             </DashboardStyles.PropertyImageContainer>
                             
@@ -1103,21 +1321,138 @@ const SellerDashboard = ({ navigateTo }) => {
                                 <FaMapMarkerAlt size={12} /> {listing.location}
                                 </DashboardStyles.PropertyLocation>
                                 <DashboardStyles.PropertyPrice>
-                                    {listing.displayPrice ? formatPrice(listing.price) : 'Price on Request'}
+                                    {formatPrice(listing.price)}
+                                    <span style={{ 
+                                        marginLeft: '8px', 
+                                        fontSize: '12px', 
+                                        color: listing.displayPrice ? '#27ae60' : '#e74c3c',
+                                        fontWeight: 'normal'
+                                    }}>
+                                        ({listing.displayPrice ? 'Public' : 'Private'})
+                                    </span>
                                 </DashboardStyles.PropertyPrice>
                                 
-                                <DashboardStyles.PropertySpecs>
+                                {listing.description && (
+                                    <div style={{ 
+                                        marginTop: '8px',
+                                        fontSize: '13px',
+                                        color: '#2C3E50',
+                                        lineHeight: '1.4'
+                                    }}>
+                                        {listing.description}
+                                    </div>
+                                )}
+                                
+                                {/* Enhanced Quick Information Section */}
+                                <div style={{ 
+                                    backgroundColor: '#f8f9fa', 
+                                    padding: '12px', 
+                                    borderRadius: '8px', 
+                                    margin: '12px 0',
+                                    border: '1px solid #e9ecef'
+                                }}>
+                                    <div style={{ 
+                                        display: 'grid', 
+                                        gridTemplateColumns: '1fr 1fr', 
+                                        gap: '8px',
+                                        fontSize: '13px'
+                                    }}>
                                 <DashboardStyles.PropertySpec>
-                                    <FaRulerCombined size={14} /> {listing.acres} Hectares
+                                            <FaRulerCombined size={14} /> <strong>{listing.acres} Hectares</strong>
                                 </DashboardStyles.PropertySpec>
                                 <DashboardStyles.PropertySpec>
-                                    <FaWater size={14} /> {listing.waterRights}
+                                            <FaWater size={14} /> <strong>{listing.waterRights || 'Not specified'}</strong>
                                 </DashboardStyles.PropertySpec>
-                                </DashboardStyles.PropertySpecs>
+                                        {listing.type && (
+                                            <DashboardStyles.PropertySpec>
+                                                <FaBuilding size={14} /> <strong>{listing.type}</strong>
+                                            </DashboardStyles.PropertySpec>
+                                        )}
+                                        {listing.topography && (
+                                            <DashboardStyles.PropertySpec>
+                                                <FaTractor size={14} /> <strong>{listing.topography}</strong>
+                                            </DashboardStyles.PropertySpec>
+                                        )}
+                                        {listing.averageYield && (
+                                            <DashboardStyles.PropertySpec style={{ gridColumn: '1 / -1' }}>
+                                                <FaChartBar size={14} /> <strong>Avg Yield:</strong> {listing.averageYield}
+                                            </DashboardStyles.PropertySpec>
+                                        )}
+                                    </div>
+                                    
+                                    {listing.amenities && listing.amenities.length > 0 && (
+                                        <div style={{ 
+                                            marginTop: '8px', 
+                                            paddingTop: '8px', 
+                                            borderTop: '1px solid #dee2e6',
+                                            fontSize: '12px'
+                                        }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>
+                                                <FaWarehouse size={12} style={{ marginRight: '4px' }} /> Amenities:
+                                            </div>
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                flexWrap: 'wrap', 
+                                                gap: '4px',
+                                                color: '#6c757d'
+                                            }}>
+                                                {listing.amenities.slice(0, 3).map((amenity, idx) => (
+                                                    <span key={idx} style={{ 
+                                                        backgroundColor: '#e9ecef', 
+                                                        padding: '2px 6px', 
+                                                        borderRadius: '4px',
+                                                        fontSize: '11px'
+                                                    }}>
+                                                        {amenity}
+                                                    </span>
+                                                ))}
+                                                {listing.amenities.length > 3 && (
+                                                    <span style={{ 
+                                                        backgroundColor: '#e9ecef', 
+                                                        padding: '2px 6px', 
+                                                        borderRadius: '4px',
+                                                        fontSize: '11px',
+                                                        color: '#6c757d'
+                                                    }}>
+                                                        +{listing.amenities.length - 3} more
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 
                                 <DashboardStyles.SuitableCrops>
                                 <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {listing.suitableCrops}
                                 </DashboardStyles.SuitableCrops>
+                                
+                                {listing.restrictionsText && (
+                                    <div style={{ 
+                                        marginTop: '8px',
+                                        padding: '8px',
+                                        backgroundColor: '#f8d7da',
+                                        border: '1px solid #f5c6cb',
+                                        borderRadius: '4px',
+                                        fontSize: '12px',
+                                        color: '#721c24'
+                                    }}>
+                                        <strong>Restrictions:</strong> {listing.restrictionsText}
+                                    </div>
+                                )}
+                                
+                                {listing.remarks && (
+                                    <div style={{ 
+                                        marginTop: '8px',
+                                        padding: '8px',
+                                        backgroundColor: '#fff3cd',
+                                        border: '1px solid #ffeaa7',
+                                        borderRadius: '4px',
+                                        fontSize: '12px',
+                                        color: '#856404'
+                                    }}>
+                                        <strong>Remarks:</strong> {listing.remarks}
+                                    </div>
+                                )}
                                 
                                 <div style={{ 
                                     display: 'flex', 
@@ -1128,9 +1463,9 @@ const SellerDashboard = ({ navigateTo }) => {
                                     fontSize: '13px',
                                     color: '#7f8c8d'
                                 }}>
-                                <span><FaEye size={12} style={{ marginRight: '4px' }} /> {listing.viewCount} views</span>
-                                <span><FaExclamationTriangle size={12} style={{ marginRight: '4px' }} /> {listing.inquiries} inquiries</span>
-                                <span><FaRegClock size={12} style={{ marginRight: '4px' }} /> Listed: {formatDate(listing.datePosted || listing.listedDate)}</span>
+                                <span><FaEye size={12} style={{ marginRight: '4px' }} /> {listing.viewCount || 0} views</span>
+                                <span><FaExclamationTriangle size={12} style={{ marginRight: '4px' }} /> {listing.inquiries || 0} inquiries</span>
+                                <span><FaRegClock size={12} style={{ marginRight: '4px' }} /> Listed: {formatDate(listing.createdAt)}</span>
                                 </div>
                                 
                                 <DashboardStyles.PropertyActions>
@@ -1138,10 +1473,15 @@ const SellerDashboard = ({ navigateTo }) => {
                                         <DashboardStyles.ActionButton $small onClick={() => handleEditListing(listing)} style={{ backgroundColor: "#3498db" }}>
                                         <FaEdit size={12} style={{ marginRight: '4px' }} /> Edit
                                         </DashboardStyles.ActionButton>
-                                        {listing.status !== 'sold' && (
-                                        <DashboardStyles.ActionButton $small onClick={() => handleDeleteListing(listing.id)} style={{ backgroundColor: "#e74c3c" }}>
-                                            <FaTrash size={12} style={{ marginRight: '4px' }} /> Delete
-                                        </DashboardStyles.ActionButton>
+                                        {(listing.status || 'active') !== 'sold' && (
+                                            <>
+                                                <DashboardStyles.ActionButton $small onClick={() => handleMarkAsSold(listing.id)} style={{ backgroundColor: "#f39c12" }}>
+                                                    <FaCheck size={12} style={{ marginRight: '4px' }} /> Mark as Sold
+                                                </DashboardStyles.ActionButton>
+                                                <DashboardStyles.ActionButton $small onClick={() => handleDeleteListing(listing.id)} style={{ backgroundColor: "#e74c3c" }}>
+                                                    <FaTrash size={12} style={{ marginRight: '4px' }} /> Delete
+                                                </DashboardStyles.ActionButton>
+                                            </>
                                         )}
                                     </div>
                                     <DashboardStyles.ActionButton $small onClick={() => handlePreviewListing(listing)} style={{ backgroundColor: "#2ecc71" }}>
@@ -1187,7 +1527,25 @@ const SellerDashboard = ({ navigateTo }) => {
                                         onError={(e) => {
                                             console.error('Error loading profile image:', e);
                                             console.log('Failed image URL:', e.target.src);
-                                            e.target.src = `https://ui-avatars.com/api/?name=${userProfile.firstName}+${userProfile.lastName}&background=random`;
+                                            // Hide the broken image and show fallback
+                                            e.target.style.display = 'none';
+                                            const parent = e.target.parentNode;
+                                            const fallback = document.createElement('div');
+                                            fallback.style.cssText = `
+                                                width: 100%;
+                                                height: 100%;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+                                                border-radius: 50%;
+                                                color: white;
+                                                font-weight: bold;
+                                                font-size: 32px;
+                                            `;
+                                            const fullName = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+                                            fallback.textContent = fullName ? fullName.charAt(0).toUpperCase() : '?';
+                                            parent.insertBefore(fallback, e.target);
                                         }}
                                         onLoad={(e) => {
                                             console.log('Profile image loaded successfully:', e.target.src);
@@ -1678,6 +2036,17 @@ const SellerDashboard = ({ navigateTo }) => {
                                 </SellerDashboardStyles.FormGroup>
                                 
                                 <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Description</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormTextarea
+                                        name="description"
+                                        value={editProperty.description || ''}
+                                        onChange={handleEditPropertyChange}
+                                        placeholder="Provide a detailed description of the property, its features, and what makes it special..."
+                                        rows="3"
+                                    />
+                                </SellerDashboardStyles.FormGroup>
+                                
+                                <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Location*</SellerDashboardStyles.FormLabel>
                                     <SellerDashboardStyles.FormInput
                                         type="text"
@@ -1718,6 +2087,44 @@ const SellerDashboard = ({ navigateTo }) => {
                                 
                                 <SellerDashboardStyles.FormRow>
                                     <SellerDashboardStyles.FormGroup>
+                                        <SellerDashboardStyles.FormLabel>Property Type</SellerDashboardStyles.FormLabel>
+                                        <SellerDashboardStyles.FormSelect
+                                            name="type"
+                                            value={editProperty.type || ''}
+                                            onChange={handleEditPropertyChange}
+                                        >
+                                            <option value="">Select property type</option>
+                                            <option value="Rice Farm">Rice Farm</option>
+                                            <option value="Corn Farm">Corn Farm</option>
+                                            <option value="Mixed Crop Farm">Mixed Crop Farm</option>
+                                            <option value="Vegetable Farm">Vegetable Farm</option>
+                                            <option value="Fruit Orchard">Fruit Orchard</option>
+                                            <option value="Livestock Farm">Livestock Farm</option>
+                                            <option value="Agricultural Land">Agricultural Land</option>
+                                            <option value="Commercial Farm">Commercial Farm</option>
+                                        </SellerDashboardStyles.FormSelect>
+                                    </SellerDashboardStyles.FormGroup>
+                                    
+                                    <SellerDashboardStyles.FormGroup>
+                                        <SellerDashboardStyles.FormLabel>Topography</SellerDashboardStyles.FormLabel>
+                                        <SellerDashboardStyles.FormSelect
+                                            name="topography"
+                                            value={editProperty.topography || ''}
+                                            onChange={handleEditPropertyChange}
+                                        >
+                                            <option value="">Select topography</option>
+                                            <option value="Flat">Flat</option>
+                                            <option value="Rolling Hills">Rolling Hills</option>
+                                            <option value="Hilly">Hilly</option>
+                                            <option value="Mountainous">Mountainous</option>
+                                            <option value="Valley">Valley</option>
+                                            <option value="Plateau">Plateau</option>
+                                        </SellerDashboardStyles.FormSelect>
+                                    </SellerDashboardStyles.FormGroup>
+                                </SellerDashboardStyles.FormRow>
+                                
+                                <SellerDashboardStyles.FormRow>
+                                    <SellerDashboardStyles.FormGroup>
                                         <SellerDashboardStyles.FormLabel>Water Rights*</SellerDashboardStyles.FormLabel>
                                         <SellerDashboardStyles.FormSelect
                                             name="waterRights"
@@ -1750,6 +2157,17 @@ const SellerDashboard = ({ navigateTo }) => {
                                 </SellerDashboardStyles.FormRow>
                                 
                                 <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Average Yield</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormInput
+                                        type="text"
+                                        name="averageYield"
+                                        value={editProperty.averageYield || ''}
+                                        onChange={handleEditPropertyChange}
+                                        placeholder="E.g., 120 sacks/hectare, 5 tons/hectare"
+                                    />
+                                </SellerDashboardStyles.FormGroup>
+                                
+                                <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Suitable Crops*</SellerDashboardStyles.FormLabel>
                                     <CropSelector
                                         name="suitableCrops"
@@ -1757,6 +2175,81 @@ const SellerDashboard = ({ navigateTo }) => {
                                         onChange={handleEditPropertyChange}
                                         required
                                         placeholder="E.g., Rice, Corn, Vegetables"
+                                    />
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Amenities</SellerDashboardStyles.FormLabel>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '8px' }}>
+                                        {[
+                                            'Electricity Connection', 'Water Pump House', 'Storage Facility', 'Farm House',
+                                            'Tool Shed', 'Concrete Roads', 'Drainage System', 'Fence/Boundary Markers',
+                                            'Vehicle Access', 'Internet/Phone Signal', 'Farm Equipment', 'Greenhouse'
+                                        ].map(amenity => (
+                                            <label key={amenity} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editProperty.amenities?.includes(amenity) || false}
+                                                    onChange={(e) => {
+                                                        const currentAmenities = editProperty.amenities || [];
+                                                        if (e.target.checked) {
+                                                            setEditProperty(prev => ({ 
+                                                                ...prev, 
+                                                                amenities: [...currentAmenities, amenity] 
+                                                            }));
+                                                        } else {
+                                                            setEditProperty(prev => ({ 
+                                                                ...prev, 
+                                                                amenities: currentAmenities.filter(a => a !== amenity) 
+                                                            }));
+                                                        }
+                                                    }}
+                                                    style={{ marginRight: '8px' }}
+                                                />
+                                                {amenity}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Price Display Settings</SellerDashboardStyles.FormLabel>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                name="displayPrice"
+                                                checked={editProperty.displayPrice || false}
+                                                onChange={(e) => setEditProperty(prev => ({ ...prev, displayPrice: e.target.checked }))}
+                                                style={{ marginRight: '8px' }}
+                                            />
+                                            <span style={{ fontSize: '14px', color: '#2C3E50' }}>Display price publicly</span>
+                                        </label>
+                                    </div>
+                                    <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                        Uncheck this if you prefer buyers to contact you for pricing information
+                                    </small>
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Restrictions/Notes</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormTextarea
+                                        name="restrictionsText"
+                                        value={editProperty.restrictionsText || ''}
+                                        onChange={handleEditPropertyChange}
+                                        placeholder="Any restrictions, zoning limitations, or special conditions buyers should know about..."
+                                        rows="3"
+                                    />
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Additional Remarks</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormTextarea
+                                        name="remarks"
+                                        value={editProperty.remarks || ''}
+                                        onChange={handleEditPropertyChange}
+                                        placeholder="Any additional information or special remarks about the property..."
+                                        rows="3"
                                     />
                                 </SellerDashboardStyles.FormGroup>
                                 
@@ -1816,7 +2309,25 @@ const SellerDashboard = ({ navigateTo }) => {
                                                     onError={(e) => {
                                                         console.error('Error loading profile image:', e);
                                                         console.log('Failed image URL:', e.target.src);
-                                                        e.target.src = `https://ui-avatars.com/api/?name=${userProfile.firstName}+${userProfile.lastName}&background=random`;
+                                                        // Hide the broken image and show fallback
+                                                        e.target.style.display = 'none';
+                                                        const parent = e.target.parentNode;
+                                                        const fallback = document.createElement('div');
+                                                        fallback.style.cssText = `
+                                                            width: 100%;
+                                                            height: 100%;
+                                                            display: flex;
+                                                            align-items: center;
+                                                            justify-content: center;
+                                                            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+                                                            border-radius: 50%;
+                                                            color: white;
+                                                            font-weight: bold;
+                                                            font-size: 32px;
+                                                        `;
+                                                        const fullName = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+                                                        fallback.textContent = fullName ? fullName.charAt(0).toUpperCase() : '?';
+                                                        parent.insertBefore(fallback, e.target);
                                                     }}
                                                     onLoad={(e) => {
                                                         console.log('Profile image loaded successfully:', e.target.src);
@@ -2071,7 +2582,14 @@ const SellerDashboard = ({ navigateTo }) => {
                             <PreviewModalStyles.CloseButton onClick={closePreviewModal}>×</PreviewModalStyles.CloseButton>
                             
                             <PreviewModalStyles.ImageGallery>
-                                <PreviewModalStyles.MainImage src={previewListing.images[activeImageIndex]} alt={previewListing.title} />
+                                <PreviewModalStyles.MainImage 
+                                    src={previewListing.images[activeImageIndex]} 
+                                    alt={previewListing.title}
+                                    onError={(e) => {
+                                        console.error('Error loading preview image:', e);
+                                        e.target.src = `${api.defaults.baseURL}/api/placeholder/800/500`;
+                                    }}
+                                />
                                 <PreviewModalStyles.NavButton $left onClick={handlePrevImage}>
                                     <FaChevronLeft size={24} />
                                     </PreviewModalStyles.NavButton>
@@ -2084,8 +2602,12 @@ const SellerDashboard = ({ navigateTo }) => {
                                             key={index}
                                             src={image}
                                             alt={`${previewListing.title} - Image ${index + 1}`}
-                                            active={index === activeImageIndex}
+                                            $active={index === activeImageIndex}
                                             onClick={() => handleThumbnailClick(index)}
+                                            onError={(e) => {
+                                                console.error('Error loading preview thumbnail:', e);
+                                                e.target.src = `${api.defaults.baseURL}/api/placeholder/80/60`;
+                                            }}
                                             />
                                     ))}
                                 </PreviewModalStyles.ThumbnailsContainer>
@@ -2100,6 +2622,26 @@ const SellerDashboard = ({ navigateTo }) => {
                                             {previewListing.address}
                                         </PreviewModalStyles.ListingLocation>
                                     </PreviewModalStyles.TitleSection>
+                                    
+                                    {/* Add pricing section */}
+                                    <PreviewModalStyles.PricingSection>
+                                        <PreviewModalStyles.Price>
+                                            {previewListing.displayPrice ? formatPrice(previewListing.price) : 'Price on Request'}
+                                            {previewListing.displayPrice && (
+                                                <span style={{ 
+                                                    marginLeft: '8px', 
+                                                    fontSize: '14px', 
+                                                    color: '#27ae60',
+                                                    fontWeight: 'normal'
+                                                }}>
+                                                    (Public)
+                                                </span>
+                                            )}
+                                        </PreviewModalStyles.Price>
+                                        <PreviewModalStyles.StatusBadge style={getStatusStyle(previewListing.status)}>
+                                            {previewListing.status.toUpperCase()}
+                                        </PreviewModalStyles.StatusBadge>
+                                    </PreviewModalStyles.PricingSection>
                                 </PreviewModalStyles.ListingHeader>
 
                                 <PreviewModalStyles.ContentGrid>
@@ -2120,7 +2662,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                             </PreviewModalStyles.SpecItem>
                                             <PreviewModalStyles.SpecItem>
                                                 <PreviewModalStyles.SpecLabel>Listed Date</PreviewModalStyles.SpecLabel>
-                                                <PreviewModalStyles.SpecValue>{formatDate(previewListing.listedDate)}</PreviewModalStyles.SpecValue>
+                                                <PreviewModalStyles.SpecValue>{formatDate(previewListing.createdAt)}</PreviewModalStyles.SpecValue>
                                             </PreviewModalStyles.SpecItem>
                                         </PreviewModalStyles.PropertySpecs>
                                     </PreviewModalStyles.Section>
@@ -2133,6 +2675,10 @@ const SellerDashboard = ({ navigateTo }) => {
                                     <PreviewModalStyles.Section>
                                         <PreviewModalStyles.SectionTitle>Farm Details</PreviewModalStyles.SectionTitle>
                                         <PreviewModalStyles.PropertySpecs>
+                                            <PreviewModalStyles.SpecItem>
+                                                <PreviewModalStyles.SpecLabel>Suitable Crops</PreviewModalStyles.SpecLabel>
+                                                <PreviewModalStyles.SpecValue>{previewListing.farmDetails.suitableCrops}</PreviewModalStyles.SpecValue>
+                                            </PreviewModalStyles.SpecItem>
                                             <PreviewModalStyles.SpecItem>
                                                 <PreviewModalStyles.SpecLabel>Previous Crops</PreviewModalStyles.SpecLabel>
                                                 <PreviewModalStyles.SpecValue>
@@ -2168,20 +2714,52 @@ const SellerDashboard = ({ navigateTo }) => {
                                         </PreviewModalStyles.AmenitiesList>
                                     </PreviewModalStyles.Section>
 
-                                    <PreviewModalStyles.Section>
-                                        <PreviewModalStyles.SectionTitle>Restrictions</PreviewModalStyles.SectionTitle>
-                                        <PreviewModalStyles.RestrictionsList>
-                                            {previewListing.restrictions.length > 0 ? (
-                                                previewListing.restrictions.map((restriction, index) => (
+                                    {previewListing.restrictions.length > 0 && (
+                                        <PreviewModalStyles.Section>
+                                            <PreviewModalStyles.SectionTitle>Restrictions</PreviewModalStyles.SectionTitle>
+                                            <PreviewModalStyles.RestrictionsList>
+                                                {previewListing.restrictions.map((restriction, index) => (
                                                     <PreviewModalStyles.RestrictionItem key={index}>
                                                         <FaExclamationTriangle size={14} style={{ marginRight: '8px' }} />
                                                         {restriction}
                                                     </PreviewModalStyles.RestrictionItem>
-                                                ))
-                                            ) : (
-                                                <PreviewModalStyles.EmptyMessage>No restrictions listed</PreviewModalStyles.EmptyMessage>
-                                            )}
-                                        </PreviewModalStyles.RestrictionsList>
+                                                ))}
+                                            </PreviewModalStyles.RestrictionsList>
+                                        </PreviewModalStyles.Section>
+                                    )}
+
+                                    {previewListing.remarks && (
+                                        <PreviewModalStyles.Section>
+                                            <PreviewModalStyles.SectionTitle>Additional Remarks</PreviewModalStyles.SectionTitle>
+                                            <PreviewModalStyles.Description>{previewListing.remarks}</PreviewModalStyles.Description>
+                                        </PreviewModalStyles.Section>
+                                    )}
+
+                                    <PreviewModalStyles.Section>
+                                        <PreviewModalStyles.SectionTitle>Performance Metrics</PreviewModalStyles.SectionTitle>
+                                        <PreviewModalStyles.PerformanceMetrics>
+                                            <PreviewModalStyles.MetricCard>
+                                                <PreviewModalStyles.PerformanceMetricValue>
+                                                    <FaEye size={16} />
+                                                    {previewListing.viewCount}
+                                                </PreviewModalStyles.PerformanceMetricValue>
+                                                <PreviewModalStyles.PerformanceMetricLabel>Views</PreviewModalStyles.PerformanceMetricLabel>
+                                            </PreviewModalStyles.MetricCard>
+                                            <PreviewModalStyles.MetricCard>
+                                                <PreviewModalStyles.PerformanceMetricValue>
+                                                    <FaExclamationTriangle size={16} />
+                                                    {previewListing.inquiries}
+                                                </PreviewModalStyles.PerformanceMetricValue>
+                                                <PreviewModalStyles.PerformanceMetricLabel>Inquiries</PreviewModalStyles.PerformanceMetricLabel>
+                                            </PreviewModalStyles.MetricCard>
+                                            <PreviewModalStyles.MetricCard>
+                                                <PreviewModalStyles.PerformanceMetricValue>
+                                                    <FaRegClock size={16} />
+                                                    {Math.ceil((new Date() - new Date(previewListing.createdAt)) / (1000 * 60 * 60 * 24))}
+                                                </PreviewModalStyles.PerformanceMetricValue>
+                                                <PreviewModalStyles.PerformanceMetricLabel>Days Listed</PreviewModalStyles.PerformanceMetricLabel>
+                                            </PreviewModalStyles.MetricCard>
+                                        </PreviewModalStyles.PerformanceMetrics>
                                     </PreviewModalStyles.Section>
 
                                     <PreviewModalStyles.Section>

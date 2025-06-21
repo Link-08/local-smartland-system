@@ -114,7 +114,7 @@ const MarketAnalysisTool = () => {
                     </div>
                   </div>
                   <div style={{ marginBottom: '8px' }}>
-                    ₱{p.price.toLocaleString()} ({p.acres} ha) • {new Date(p.datePosted).toLocaleDateString()}
+                    ₱{p.price.toLocaleString()} ({p.acres} ha) • {new Date(p.createdAt).toLocaleDateString()}
                   </div>
                   <div style={{ marginBottom: '8px' }}>
                     Water: {p.waterRights}, Crops: {p.suitableCrops}

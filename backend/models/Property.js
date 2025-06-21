@@ -32,6 +32,35 @@ module.exports = (sequelize) => {
     suitableCrops: {
       type: DataTypes.STRING
     },
+    type: {
+      type: DataTypes.STRING
+    },
+    topography: {
+      type: DataTypes.STRING
+    },
+    averageYield: {
+      type: DataTypes.STRING
+    },
+    amenities: {
+      type: DataTypes.TEXT,
+      get() {
+        const rawValue = this.getDataValue('amenities');
+        return rawValue ? JSON.parse(rawValue) : [];
+      },
+      set(value) {
+        this.setDataValue('amenities', JSON.stringify(value));
+      }
+    },
+    restrictionsText: {
+      type: DataTypes.TEXT
+    },
+    remarks: {
+      type: DataTypes.TEXT
+    },
+    displayPrice: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
     image: {
       type: DataTypes.STRING
     },

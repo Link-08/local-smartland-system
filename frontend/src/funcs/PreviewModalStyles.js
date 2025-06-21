@@ -110,7 +110,7 @@ export const Thumbnail = styled.img`
     object-fit: cover;
     border-radius: 4px;
     cursor: pointer;
-    border: 2px solid ${props => props.active ? '#2ecc71' : 'transparent'};
+    border: 2px solid ${props => props.$active ? '#2ecc71' : 'transparent'};
     transition: all 0.2s ease;
     
     &:hover {
@@ -151,6 +151,44 @@ export const ListingLocation = styled.div`
     font-size: 16px;
     display: flex;
     align-items: center;
+`;
+
+export const PricingSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+`;
+
+export const Price = styled.div`
+    font-size: 28px;
+    font-weight: 600;
+    color: #2ecc71;
+    display: flex;
+    align-items: center;
+`;
+
+export const StatusBadge = styled.div`
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+export const PriceVisibility = styled.span`
+    font-size: 14px;
+    color: #27ae60;
+    font-weight: normal;
+    margin-left: 8px;
+`;
+
+export const PriceHidden = styled.span`
+    font-size: 14px;
+    color: #e74c3c;
+    font-weight: normal;
+    margin-left: 8px;
 `;
 
 export const PriceSection = styled.div`
@@ -310,4 +348,37 @@ export const MapContainer = styled.div`
         font-size: 14px;
         color: #2C3E50;
     }
+`;
+
+export const PerformanceMetrics = styled.div`
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+`;
+
+export const MetricCard = styled.div`
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+`;
+
+export const PerformanceMetricValue = styled.div`
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+`;
+
+export const PerformanceMetricLabel = styled.div`
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 `; 

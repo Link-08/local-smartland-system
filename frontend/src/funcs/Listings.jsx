@@ -225,7 +225,14 @@ const ListingPage = ({ property }) => {
                 <ListingStyles.ContentGrid>
                 <ListingStyles.MainContent>
                     <ListingStyles.ImageGallery>
-                    <ListingStyles.MainImage src={listing.images[activeImageIndex] || listing.image} alt={listing.title} />
+                    <ListingStyles.MainImage 
+                        src={listing.images[activeImageIndex] || listing.image} 
+                        alt={listing.title}
+                        onError={(e) => {
+                            console.error('Error loading property image:', e);
+                            e.target.src = `${api.defaults.baseURL}/api/placeholder/800/500`;
+                        }}
+                    />
                     {listing.images.length > 1 && (
                         <>
                             <ListingStyles.PrevButton onClick={handlePrevImage}>
@@ -244,6 +251,10 @@ const ListingPage = ({ property }) => {
                             alt={`${listing.title} - Image ${index + 1}`}
                             active={index === activeImageIndex}
                             onClick={() => handleThumbnailClick(index)}
+                            onError={(e) => {
+                                console.error('Error loading thumbnail image:', e);
+                                e.target.src = `${api.defaults.baseURL}/api/placeholder/80/60`;
+                            }}
                         />
                         ))}
                     </ListingStyles.ThumbnailsContainer>
@@ -267,9 +278,27 @@ const ListingPage = ({ property }) => {
                         <ListingStyles.SpecItem>
                         <ListingStyles.SpecLabel>Listed</ListingStyles.SpecLabel>
                         <ListingStyles.SpecValue>
-                            {formatDate(listing.datePosted)}
+                            {formatDate(listing.createdAt)}
                         </ListingStyles.SpecValue>
                         </ListingStyles.SpecItem>
+                        {listing.type && (
+                            <ListingStyles.SpecItem>
+                                <ListingStyles.SpecLabel>Property Type</ListingStyles.SpecLabel>
+                                <ListingStyles.SpecValue>{listing.type}</ListingStyles.SpecValue>
+                            </ListingStyles.SpecItem>
+                        )}
+                        {listing.topography && (
+                            <ListingStyles.SpecItem>
+                                <ListingStyles.SpecLabel>Topography</ListingStyles.SpecLabel>
+                                <ListingStyles.SpecValue>{listing.topography}</ListingStyles.SpecValue>
+                            </ListingStyles.SpecItem>
+                        )}
+                        {listing.averageYield && (
+                            <ListingStyles.SpecItem>
+                                <ListingStyles.SpecLabel>Average Yield</ListingStyles.SpecLabel>
+                                <ListingStyles.SpecValue>{listing.averageYield}</ListingStyles.SpecValue>
+                            </ListingStyles.SpecItem>
+                        )}
                     </ListingStyles.PropertySpecs>
                     </ListingStyles.Section>
                     
@@ -288,23 +317,32 @@ const ListingPage = ({ property }) => {
                     </ListingStyles.PropertySpecs>
                     </ListingStyles.Section>
                     
-                    <ListingStyles.Section>
-                    <ListingStyles.SectionTitle>Amenities</ListingStyles.SectionTitle>
-                    <ListingStyles.AmenitiesList>
-                        {listing.amenities.map((amenity, index) => (
-                        <ListingStyles.AmenityItem key={index}>{amenity}</ListingStyles.AmenityItem>
-                        ))}
-                    </ListingStyles.AmenitiesList>
-                    </ListingStyles.Section>
+                    {listing.amenities && listing.amenities.length > 0 && (
+                        <ListingStyles.Section>
+                        <ListingStyles.SectionTitle>Amenities</ListingStyles.SectionTitle>
+                        <ListingStyles.AmenitiesList>
+                            {listing.amenities.map((amenity, index) => (
+                            <ListingStyles.AmenityItem key={index}>{amenity}</ListingStyles.AmenityItem>
+                            ))}
+                        </ListingStyles.AmenitiesList>
+                        </ListingStyles.Section>
+                    )}
                     
-                    <ListingStyles.Section>
-                    <ListingStyles.SectionTitle>Restrictions</ListingStyles.SectionTitle>
-                    <ListingStyles.RestrictionsList>
-                        {listing.restrictions.map((restriction, index) => (
-                        <ListingStyles.RestrictionItem key={index}>{restriction}</ListingStyles.RestrictionItem>
-                        ))}
-                    </ListingStyles.RestrictionsList>
-                    </ListingStyles.Section>
+                    {listing.restrictionsText && (
+                        <ListingStyles.Section>
+                        <ListingStyles.SectionTitle>Restrictions</ListingStyles.SectionTitle>
+                        <ListingStyles.RestrictionsList>
+                            <ListingStyles.RestrictionItem>{listing.restrictionsText}</ListingStyles.RestrictionItem>
+                        </ListingStyles.RestrictionsList>
+                        </ListingStyles.Section>
+                    )}
+                    
+                    {listing.remarks && (
+                        <ListingStyles.Section>
+                        <ListingStyles.SectionTitle>Remarks</ListingStyles.SectionTitle>
+                        <ListingStyles.Description>{listing.remarks}</ListingStyles.Description>
+                        </ListingStyles.Section>
+                    )}
                     
                     <ListingStyles.Section>
                     <ListingStyles.SectionTitle>Location</ListingStyles.SectionTitle>
@@ -338,7 +376,14 @@ const ListingPage = ({ property }) => {
                 <ListingStyles.Sidebar>
                     <ListingStyles.SellerCard>
                     <ListingStyles.SellerHeader>
-                        <ListingStyles.SellerAvatar src={listing.seller.profileImage} alt={listing.seller.name} />
+                        <ListingStyles.SellerAvatar 
+                            src={listing.seller.profileImage} 
+                            alt={listing.seller.name}
+                            onError={(e) => {
+                                console.error('Error loading seller avatar:', e);
+                                e.target.src = `https://ui-avatars.com/api/?name=${listing.seller.name}&background=random&size=40`;
+                            }}
+                        />
                         <ListingStyles.SellerInfo>
                         <ListingStyles.SellerName>{listing.seller.name}</ListingStyles.SellerName>
                         <ListingStyles.SellerRating>

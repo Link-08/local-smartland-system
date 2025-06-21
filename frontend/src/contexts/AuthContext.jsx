@@ -12,21 +12,62 @@ export const AuthProvider = ({ children }) => {
 
   // Check for existing token and user data on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (token && storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        try {
+          // Try to fetch fresh user data from server
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            
+            // Fetch fresh data from server
+            const response = await axios.get(`${API_URL}/auth/profile`, {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            });
+            
+            // Create updated user object with fresh data
+            const freshUserData = {
+              id: response.data.id,
+              email: response.data.email,
+              role: response.data.role,
+              firstName: response.data.firstName,
+              lastName: response.data.lastName,
+              phone: response.data.phone,
+              username: response.data.username,
+              avatar: response.data.avatar,
+              createdAt: response.data.createdAt
+            };
+            
+            // Update localStorage and state with fresh data
+            localStorage.setItem('user', JSON.stringify(freshUserData));
+            setUser(freshUserData);
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error('Error fetching fresh user data:', error);
+          // If server request fails, fall back to stored data
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            try {
+              const userData = JSON.parse(storedUser);
+              setUser(userData);
+              setIsAuthenticated(true);
+            } catch (parseError) {
+              console.error('Error parsing stored user data:', parseError);
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+            }
+          }
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email, password) => {
@@ -94,7 +135,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       console.log('Fetching updated user data for ID:', user.id);
-      const response = await axios.get(`${API_URL}/seller/profile/${user.id}`, {
+      const response = await axios.get(`${API_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -105,11 +146,12 @@ export const AuthProvider = ({ children }) => {
       const updatedUserData = {
         id: response.data.id,
         email: response.data.email,
-        role: user.role, // Preserve the role from the current user
+        role: response.data.role,
         firstName: response.data.firstName,
         lastName: response.data.lastName,
         phone: response.data.phone,
         username: response.data.username,
+        avatar: response.data.avatar,
         createdAt: response.data.createdAt
       };
       console.log('Combined user data:', updatedUserData);
