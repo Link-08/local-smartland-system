@@ -9,23 +9,23 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 const getSellerInfo = (sellerKey) => {
-  // Example mapping, you can expand this as needed
-  const sellerProfiles = {
-    'seller': {
-      name: 'Real Estate PH',
-      profileImage: '/api/placeholder/40/40',
-      rating: 4.5,
-      listings: 12,
-      memberSince: '2018-01-01',
-    }
-  };
-  return sellerProfiles[sellerKey] || {
-    name: 'Unknown Seller',
-    profileImage: '/api/placeholder/40/40',
-    rating: 0,
-    listings: 0,
-    memberSince: '2024-01-01',
-  };
+    // Example mapping, you can expand this as needed
+    const sellerProfiles = {
+        'seller': {
+        name: 'Real Estate PH',
+        profileImage: '/api/placeholder/40/40',
+        rating: 4.5,
+        listings: 12,
+        memberSince: '2018-01-01',
+        }
+    };
+    return sellerProfiles[sellerKey] || {
+        name: 'Unknown Seller',
+        profileImage: '/api/placeholder/40/40',
+        rating: 0,
+        listings: 0,
+        memberSince: '2024-01-01',
+    };
 };
 
 // Fix for default marker icon
@@ -51,7 +51,8 @@ const ListingPage = ({ property }) => {
         amenities: property.amenities || [],
         restrictions: property.restrictions || [],
         views: property.views || 0,
-        saved: property.saved || 0
+        saved: property.saved || 0,
+        showPrice: property.showPrice !== false // Default to true if not specified
     } : null);
     const [loading, setLoading] = useState(!property);
     const [error, setError] = useState(null);
@@ -108,7 +109,8 @@ const ListingPage = ({ property }) => {
                     amenities: propertyData.amenities || [],
                     restrictions: propertyData.restrictions || [],
                     views: propertyData.views || 0,
-                    saved: propertyData.saved || 0
+                    saved: propertyData.saved || 0,
+                    showPrice: propertyData.showPrice !== false // Default to true if not specified
                 });
             } catch (err) {
                 console.error('Error fetching property:', err);
@@ -209,8 +211,14 @@ const ListingPage = ({ property }) => {
                         <ListingStyles.ListingLocation>{listing.location}</ListingStyles.ListingLocation>
                     </ListingStyles.TitleSection>
                     <ListingStyles.PriceSection>
-                        <ListingStyles.ListingPrice>{formatPrice(listing.price)}</ListingStyles.ListingPrice>
-                        <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
+                        {listing.showPrice ? (
+                            <>
+                                <ListingStyles.ListingPrice>{formatPrice(listing.price)}</ListingStyles.ListingPrice>
+                                <ListingStyles.PriceUnit>PHP</ListingStyles.PriceUnit>
+                            </>
+                        ) : (
+                            <ListingStyles.PriceOnRequest>Price on Request</ListingStyles.PriceOnRequest>
+                        )}
                     </ListingStyles.PriceSection>
                 </ListingStyles.ListingHeader>
                 
@@ -408,8 +416,12 @@ const ListingPage = ({ property }) => {
                         <ListingStyles.FormGroup>
                             <ListingStyles.Label>Message</ListingStyles.Label>
                             <ListingStyles.TextArea 
-                            placeholder="I'm interested in this agricultural property and would like more information about the soil conditions and irrigation access..."
-                            rows={5}
+                                placeholder={
+                                    !listing.showPrice 
+                                        ? "I'm interested in this agricultural property. Could you please provide the price and more information about the soil conditions and irrigation access..."
+                                        : "I'm interested in this agricultural property and would like more information about the soil conditions and irrigation access..."
+                                }
+                                rows={5}
                             />
                         </ListingStyles.FormGroup>
                         <ListingStyles.SendButton>Send Message</ListingStyles.SendButton>

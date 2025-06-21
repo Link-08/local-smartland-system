@@ -52,6 +52,23 @@ export const SellerDashboardStyles = {
             color: #e74c3c;
         }
     `,
+
+    FormTextarea: styled.textarea`
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 80px;
+        
+        &:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+        }
+    `,
     
     // Form elements
     FormGroup: styled.div`

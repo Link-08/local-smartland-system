@@ -73,6 +73,13 @@ export const ListingStyles = {
         gap: 16px;
     `,
 
+    PriceOnRequest: styled.div`
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #666;
+        font-style: italic;
+    `,
+
     ActionButton: styled.button`
         background-color: #3498db;
         color: white;
