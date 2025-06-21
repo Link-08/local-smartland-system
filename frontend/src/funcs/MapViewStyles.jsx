@@ -423,3 +423,208 @@ export const ClearButton = muiStyled('button')(({ theme }) => ({
 		background: 'rgba(144, 202, 249, 0.1)',
 	}
 }));
+
+export const LandsSection = styled.div`
+    position: fixed;
+    top: 100px;
+    right: 420px; // Position to the left of FilterSection
+    width: 350px;
+    height: calc(100vh - 40vh);
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+`;
+
+export const LandsHeader = styled.div`
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+`;
+
+export const LandsTitle = styled.h3`
+    color: #fff;
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+`;
+
+export const LandsCount = styled.span`
+    color: #bdc3c7;
+    font-size: 0.9em;
+    font-weight: normal;
+    display: block;
+    margin-top: 4px;
+`;
+
+export const CloseButton = styled.button`
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+`;
+
+export const LandsScrollContainer = styled.div`
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 10px 20px;
+    
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+`;
+
+export const LandCard = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-2px);
+    }
+`;
+
+export const LandHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+`;
+
+export const LandTitle = styled.h4`
+    color: #fff;
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 500;
+    flex: 1;
+`;
+
+export const LandType = styled.span`
+    background: ${props => props.type === 'Agricultural' ? '#27ae60' : '#3498db'};
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+`;
+
+export const LandDetails = styled.div`
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+`;
+
+export const LandInfo = styled.div`
+    color: #ecf0f1;
+    font-size: 0.9em;
+`;
+
+export const LandDescription = styled.p`
+    color: #bdc3c7;
+    font-size: 0.9em;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+`;
+
+export const LandFeatures = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+`;
+
+export const FeatureTag = styled.span`
+    background: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+`;
+
+export const LandContact = styled.div`
+    display: flex;
+    gap: 8px;
+`;
+
+export const ContactButton = styled.a`
+    background: #27ae60;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+    transition: background-color 0.2s;
+    
+    &:hover {
+        background: #229954;
+    }
+`;
+
+export const InquireButton = styled.button`
+    background: #3498db;
+    color: #fff;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    flex: 1;
+    transition: background-color 0.2s;
+    
+    &:hover {
+        background: #2980b9;
+    }
+`;
+
+export const LoadingMessage = styled.div`
+    color: #bdc3c7;
+    text-align: center;
+    padding: 40px 20px;
+    font-style: italic;
+`;
+
+export const NoLandsMessage = styled.div`
+    color: #bdc3c7;
+    text-align: center;
+    padding: 40px 20px;
+    font-style: italic;
+    line-height: 1.5;
+`;

@@ -68,7 +68,15 @@ const SellerDashboard = ({ navigateTo }) => {
         waterRights: '',
         suitableCrops: [],
         image: '',
-        status: 'active'
+        status: 'active',
+        displayPrice: true,
+        type: '',
+        topography: '',
+        averageYield: '',
+        amenities: [],
+        restrictionsText: '',
+        remarks: '',
+        coordinates: null
     });
     const [formErrors, setFormErrors] = useState({});
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -1019,22 +1027,6 @@ const SellerDashboard = ({ navigateTo }) => {
         <DashboardStyles.DashboardContainer>
             {/* Main Content */}
             <DashboardStyles.DashboardContent>
-                {/* Welcome Section */}
-                {/* <DashboardStyles.WelcomeSection>
-                <DashboardStyles.WelcomeContent>
-                    <DashboardStyles.WelcomeTitle>
-                    Welcome to your Seller Dashboard, {user.firstName}!
-                    </DashboardStyles.WelcomeTitle>
-                    <DashboardStyles.WelcomeText>
-                    Manage your agricultural property listings, track performance metrics, and respond to inquiries from potential buyers. Your success in selling farm properties starts here.
-                    </DashboardStyles.WelcomeText>
-                    
-                    <DashboardStyles.ActionButton primary onClick={handleAddNewListing} style={{ backgroundColor: "#0a69a8" }}>
-                    Add New Property Listing <FaPlus style={{ marginLeft: 8 }} />
-                    </DashboardStyles.ActionButton>
-                </DashboardStyles.WelcomeContent>
-                </DashboardStyles.WelcomeSection> */}
-                
                 <div style={{ marginBottom: '24px' }}>
                     <DashboardStyles.SectionTitle>
                         <FaChartBar size={20} style={{ marginRight: 8 }} /> Performance Metrics
@@ -1110,7 +1102,9 @@ const SellerDashboard = ({ navigateTo }) => {
                                 <DashboardStyles.PropertyLocation>
                                 <FaMapMarkerAlt size={12} /> {listing.location}
                                 </DashboardStyles.PropertyLocation>
-                                <DashboardStyles.PropertyPrice>{formatPrice(listing.price)}</DashboardStyles.PropertyPrice>
+                                <DashboardStyles.PropertyPrice>
+                                    {listing.displayPrice ? formatPrice(listing.price) : 'Price on Request'}
+                                </DashboardStyles.PropertyPrice>
                                 
                                 <DashboardStyles.PropertySpecs>
                                 <DashboardStyles.PropertySpec>
@@ -1126,13 +1120,13 @@ const SellerDashboard = ({ navigateTo }) => {
                                 </DashboardStyles.SuitableCrops>
                                 
                                 <div style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                marginTop: '12px',
-                                padding: '8px 0',
-                                borderTop: '1px solid #f0f0f0',
-                                fontSize: '13px',
-                                color: '#7f8c8d'
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    marginTop: '12px',
+                                    padding: '8px 0',
+                                    borderTop: '1px solid #f0f0f0',
+                                    fontSize: '13px',
+                                    color: '#7f8c8d'
                                 }}>
                                 <span><FaEye size={12} style={{ marginRight: '4px' }} /> {listing.viewCount} views</span>
                                 <span><FaExclamationTriangle size={12} style={{ marginRight: '4px' }} /> {listing.inquiries} inquiries</span>
@@ -1431,17 +1425,73 @@ const SellerDashboard = ({ navigateTo }) => {
                                         placeholder="E.g., Prime Rice Farm with Irrigation"
                                     />
                                 </SellerDashboardStyles.FormGroup>
-                                
+
                                 <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Location*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormInput
-                                        type="text"
-                                        name="location"
-                                        value={newProperty.location}
+                                    <SellerDashboardStyles.FormLabel>Property Description*</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormTextarea
+                                        name="description"
+                                        value={newProperty.description || ''}
                                         onChange={handleNewPropertyChange}
                                         required
-                                        placeholder="E.g., Barangay Imelda, Cabanatuan, Nueva Ecija"
+                                        placeholder="Provide detailed description of the property including soil quality, accessibility, infrastructure, etc."
+                                        rows="4"
                                     />
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Property Type*</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormSelect
+                                        name="type"
+                                        value={newProperty.type || ''}
+                                        onChange={handleNewPropertyChange}
+                                        required
+                                    >
+                                        <option value="">Select property type</option>
+                                        <option value="Rice Farm">Rice Farm</option>
+                                        <option value="Corn Farm">Corn Farm</option>
+                                        <option value="Vegetable Farm">Vegetable Farm</option>
+                                        <option value="Mixed Crop Farm">Mixed Crop Farm</option>
+                                        <option value="Livestock Farm">Livestock Farm</option>
+                                        <option value="Orchard">Orchard</option>
+                                        <option value="Raw Agricultural Land">Raw Agricultural Land</option>
+                                        <option value="Other">Other</option>
+                                    </SellerDashboardStyles.FormSelect>
+                                </SellerDashboardStyles.FormGroup>
+                                
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Property Location (Map)</SellerDashboardStyles.FormLabel>
+                                    <div style={{ 
+                                        border: '1px solid #ddd', 
+                                        borderRadius: '8px', 
+                                        padding: '16px',
+                                        backgroundColor: '#f9f9f9',
+                                        minHeight: '200px'
+                                    }}>
+                                        <MapSection 
+                                            coordinates={newProperty.coordinates} 
+                                            onCoordinatesChange={(coords) => setNewProperty(prev => ({ ...prev, coordinates: coords }))}
+                                            isEditable={true}
+                                        />
+                                    </div>
+                                    <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px' }}>
+                                        Click on the map to set the property location
+                                    </small>
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Topography</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormSelect
+                                        name="topography"
+                                        value={newProperty.topography || ''}
+                                        onChange={handleNewPropertyChange}
+                                    >
+                                        <option value="">Select topography</option>
+                                        <option value="Flat">Flat</option>
+                                        <option value="Gently Rolling">Gently Rolling</option>
+                                        <option value="Rolling">Rolling</option>
+                                        <option value="Hilly">Hilly</option>
+                                        <option value="Mixed">Mixed</option>
+                                    </SellerDashboardStyles.FormSelect>
                                 </SellerDashboardStyles.FormGroup>
                                 
                                 <SellerDashboardStyles.FormRow>
@@ -1470,6 +1520,17 @@ const SellerDashboard = ({ navigateTo }) => {
                                         />
                                     </SellerDashboardStyles.FormGroup>
                                 </SellerDashboardStyles.FormRow>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Average Yield (if applicable)</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormInput
+                                        type="text"
+                                        name="averageYield"
+                                        value={newProperty.averageYield || ''}
+                                        onChange={handleNewPropertyChange}
+                                        placeholder="E.g., 120 sacks/hectare, 5 tons/hectare"
+                                    />
+                                </SellerDashboardStyles.FormGroup>
                                 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Water Rights*</SellerDashboardStyles.FormLabel>
@@ -1496,6 +1557,81 @@ const SellerDashboard = ({ navigateTo }) => {
                                         value={newProperty.suitableCrops}
                                         onChange={handleNewPropertyChange}
                                         required
+                                    />
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Amenities</SellerDashboardStyles.FormLabel>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '8px' }}>
+                                        {[
+                                            'Electricity Connection', 'Water Pump House', 'Storage Facility', 'Farm House',
+                                            'Tool Shed', 'Concrete Roads', 'Drainage System', 'Fence/Boundary Markers',
+                                            'Vehicle Access', 'Internet/Phone Signal', 'Farm Equipment', 'Greenhouse'
+                                        ].map(amenity => (
+                                            <label key={amenity} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={newProperty.amenities?.includes(amenity) || false}
+                                                    onChange={(e) => {
+                                                        const currentAmenities = newProperty.amenities || [];
+                                                        if (e.target.checked) {
+                                                            setNewProperty(prev => ({ 
+                                                                ...prev, 
+                                                                amenities: [...currentAmenities, amenity] 
+                                                            }));
+                                                        } else {
+                                                            setNewProperty(prev => ({ 
+                                                                ...prev, 
+                                                                amenities: currentAmenities.filter(a => a !== amenity) 
+                                                            }));
+                                                        }
+                                                    }}
+                                                    style={{ marginRight: '8px' }}
+                                                />
+                                                {amenity}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Price Display Settings</SellerDashboardStyles.FormLabel>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                name="displayPrice"
+                                                checked={newProperty.displayPrice || false}
+                                                onChange={(e) => setNewProperty(prev => ({ ...prev, displayPrice: e.target.checked }))}
+                                                style={{ marginRight: '8px' }}
+                                            />
+                                            <span style={{ fontSize: '14px', color: '#2C3E50' }}>Display price publicly</span>
+                                        </label>
+                                    </div>
+                                    <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                        Uncheck this if you prefer buyers to contact you for pricing information
+                                    </small>
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Restrictions/Notes</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormTextarea
+                                        name="restrictions"
+                                        value={newProperty.restrictionsText || ''}
+                                        onChange={(e) => setNewProperty(prev => ({ ...prev, restrictionsText: e.target.value }))}
+                                        placeholder="Any restrictions, zoning limitations, or special conditions buyers should know about..."
+                                        rows="3"
+                                    />
+                                </SellerDashboardStyles.FormGroup>
+
+                                <SellerDashboardStyles.FormGroup>
+                                    <SellerDashboardStyles.FormLabel>Additional Remarks</SellerDashboardStyles.FormLabel>
+                                    <SellerDashboardStyles.FormTextarea
+                                        name="remarks"
+                                        value={newProperty.remarks || ''}
+                                        onChange={handleNewPropertyChange}
+                                        placeholder="Any additional information or special remarks about the property..."
+                                        rows="3"
                                     />
                                 </SellerDashboardStyles.FormGroup>
                                 

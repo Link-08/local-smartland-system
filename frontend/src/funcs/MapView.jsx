@@ -22,30 +22,27 @@ import {
     LegendItem,
     FilterScrollContainer,
     FilterGrid,
-    LegendContainer,
-    TemperatureRangeCard,
-    FilterTitleRow,
-    RangeDisplay,
-    SearchSortRow,
-    LoadingContainer,
-    ScrollableList,
-    EmptyListItem,
-    BarangayListItem,
-    BarangayName,
-    BarangayDetails,
-    SelectedBarangayCard,
-    BarangayCardHeader,
-    ActionButtons,
-    BarangayInfoGrid,
-    BarangayInfoItem,
-    BarangayNotes,
-    barangayInfoBoxStyle, 
-    infoLabelStyle, 
-    infoValueStyle, 
-    infoRowStyle, 
-    recommendationBoxStyle, 
-    fruitChipStyle 
-  } from './MapViewStyles';
+    LandsSection,
+    LandsHeader,
+    LandsTitle,
+    LandsCount,
+    CloseButton,
+    LandsScrollContainer,
+    LandCard,
+    LandHeader,
+    LandTitle,
+    LandType,
+    LandDetails,
+    LandInfo,
+    LandDescription,
+    LandFeatures,
+    FeatureTag,
+    LandContact,
+    ContactButton,
+    InquireButton,
+    LoadingMessage,
+    NoLandsMessage
+} from './MapViewStyles';
   
 // Import MUI components
 import Checkbox from '@mui/material/Checkbox';
@@ -424,10 +421,9 @@ const MapView = () => {
         average: null,
         lastUpdated: null
     });
-    const [sortField, setSortField] = useState('temperature');
-    const [sortOrder, setSortOrder] = useState('asc');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedSidebarBarangay, setSelectedSidebarBarangay] = useState(null);
+    const [availableLands, setAvailableLands] = useState([]);
+    const [landsLoading, setLandsLoading] = useState(false);
+    const [showLandsList, setShowLandsList] = useState(false);
     const [selectedRoadCategory, setSelectedRoadCategory] = useState('');
     const [lastWeatherFetch, setLastWeatherFetch] = useState(null);
     const [barangayColors] = useState(() => generateBarangayColors(getBarangaysArray()));
@@ -466,6 +462,66 @@ const MapView = () => {
                 return barangayColors[barangay.name] || '#2196F3';
             default:
                 return '#666666';
+        }
+    };
+
+    const mockLandsData = {
+        "Aduas Sur": [
+            {
+                id: 1,
+                title: "Agricultural Land - 2 Hectares",
+                area: "2.0 hectares",
+                price: "₱1,500,000",
+                pricePerSqm: "₱75/sqm",
+                type: "Agricultural",
+                description: "Prime agricultural land suitable for rice farming",
+                contact: "09123456789",
+                features: ["Irrigated", "Road Access", "Fertile Soil"]
+            },
+            {
+                id: 2,
+                title: "Residential Lot - 500 sqm",
+                area: "500 sqm",
+                price: "₱750,000",
+                pricePerSqm: "₱1,500/sqm",
+                type: "Residential",
+                description: "Ideal for house construction, near main road",
+                contact: "09987654321",
+                features: ["Titled", "Near School", "Electricity Available"]
+            }
+        ],
+        "Aduas Norte": [
+            {
+                id: 3,
+                title: "Farm Land - 1.5 Hectares",
+                area: "1.5 hectares",
+                price: "₱1,200,000",
+                pricePerSqm: "₱80/sqm",
+                type: "Agricultural",
+                description: "Good for vegetable farming, with water source",
+                contact: "09111222333",
+                features: ["Water Source", "Fertile Soil", "Titled"]
+            }
+        ]
+        // Add more barangays and their land listings here
+    };
+
+    const fetchAvailableLands = async (barangayName) => {
+        setLandsLoading(true);
+        try {
+            // Replace this with actual API call
+            // const response = await fetch(`/api/lands/${barangayName}`);
+            // const lands = await response.json();
+            
+            // Using mock data for now
+            const lands = mockLandsData[barangayName] || [];
+            setAvailableLands(lands);
+            setShowLandsList(lands.length > 0);
+        } catch (error) {
+            console.error('Error fetching lands data:', error);
+            setAvailableLands([]);
+        } finally {
+            setLandsLoading(false);
         }
     };
 
@@ -592,9 +648,14 @@ const MapView = () => {
                 color: barangayColors[selectedValue] || '#666666',
                 opacity: 0.7
             }]);
+            
+            // NEW: Fetch available lands for the selected barangay
+            fetchAvailableLands(selectedValue);
         } else {
             setBarangayInfo(null);
             setHighlightedAreas([]);
+            setAvailableLands([]);
+            setShowLandsList(false);
         }
     };
 
@@ -765,6 +826,15 @@ const MapView = () => {
         }
     }, [filters.showAllBarangays, filters.soilType, filters.elevation, filters.temperature, filters.roads]);
 
+    useEffect(() => {
+        if (filters.selectedBarangay && barangayData[filters.selectedBarangay]) {
+            fetchAvailableLands(filters.selectedBarangay);
+        } else {
+            setAvailableLands([]);
+            setShowLandsList(false);
+        }
+    }, [filters.selectedBarangay]);
+
     const MapClickHandler = () => {
         useMapEvents({
             click: (e) => {
@@ -776,25 +846,41 @@ const MapView = () => {
                 
                 // Check if clicked within any barangay circle
                 let foundBarangay = false;
-                barangays.forEach((name) => {
-                    const data = barangayData[name];
+                barangays.forEach((barangay) => {
+                    const data = barangayData[barangay.name];
                     const distance = calculateDistance(
                         e.latlng.lat, e.latlng.lng,
                         data.center[0], data.center[1]
                     );
                     
                     // If within radius, select this barangay
-                    if (distance <= data.radius / 1000) { // Convert radius from meters to km
-                        setFilters(prev => ({ ...prev, selectedBarangay: name }));
-                        handleBarangaySelect({ target: { value: name } });
+                    if (distance <= data.radius / 1000) {
+                        // FIX: Update filters state first, then call handleBarangaySelect
+                        setFilters(prev => ({ 
+                            ...prev, 
+                            selectedBarangay: barangay.name,
+                            showAllBarangays: false 
+                        }));
+                        
+                        // Create a synthetic event object for handleBarangaySelect
+                        const syntheticEvent = {
+                            target: { value: barangay.name }
+                        };
+                        handleBarangaySelect(syntheticEvent);
                         foundBarangay = true;
                     }
                 });
                 
                 // Clear selection if clicked outside all barangays
                 if (!foundBarangay && filters.selectedBarangay) {
-                    setFilters(prev => ({ ...prev, selectedBarangay: '' }));
+                    setFilters(prev => ({ 
+                        ...prev, 
+                        selectedBarangay: '',
+                        showAllBarangays: false 
+                    }));
                     setBarangayInfo(null);
+                    setAvailableLands([]);
+                    setShowLandsList(false);
                 }
             }
         });
@@ -1096,32 +1182,35 @@ const MapView = () => {
                       cursor: 'pointer'
                     }}
                     onClick={() => {
-                      // Reset all states while maintaining controlled components
-                      setFilters({
-                        soilType: false,
-                        fruits: false,
-                        elevation: false,
-                        temperature: false,
-                        irrigation: false,
-                        roads: false,
-                        showAllBarangays: false,
-                        selectedBarangay: '',
-                        // Reset all crop selection states
-                        selectedCrop_Calamansi: false,
-                        selectedCrop_Corn: false,
-                        selectedCrop_Eggplant: false,
-                        selectedCrop_Rice: false,
-                        selectedCrop_Onion: false
-                      });
-                      setBarangayInfo(null);
-                      setHighlightedAreas([]);
-                      setSelectedRoadCategory('');
-                      setSelectedIrrigationCategory('');
-                      setSelectedLocation({
-                        lat: CabanatuanLatLng.lat,
-                        lng: CabanatuanLatLng.lng,
-                        name: "Cabanatuan, Nueva Ecija"
-                      });
+                        // Reset all states while maintaining controlled components
+                        setFilters({
+                            soilType: false,
+                            fruits: false,
+                            elevation: false,
+                            temperature: false,
+                            irrigation: false,
+                            roads: false,
+                            showAllBarangays: false,
+                            selectedBarangay: '',
+                            // Reset all crop selection states
+                            selectedCrop_Calamansi: false,
+                            selectedCrop_Corn: false,
+                            selectedCrop_Eggplant: false,
+                            selectedCrop_Rice: false,
+                            selectedCrop_Onion: false
+                        });
+                        setBarangayInfo(null);
+                        setHighlightedAreas([]);
+                        setSelectedRoadCategory('');
+                        setSelectedIrrigationCategory('');
+                        setSelectedLocation({
+                            lat: CabanatuanLatLng.lat,
+                            lng: CabanatuanLatLng.lng,
+                            name: "Cabanatuan, Nueva Ecija"
+                        });
+                        // NEW: Reset lands data
+                        setAvailableLands([]);
+                        setShowLandsList(false);
                     }}
                   >
                     Remove Filters
@@ -1574,6 +1663,66 @@ const MapView = () => {
                         </div>
                     </FilterGroup>
                 )}
+
+                {showLandsList && (
+                    <LandsSection>
+                        <LandsHeader>
+                            <LandsTitle>
+                                Available Lands in {filters.selectedBarangay}
+                                <LandsCount>({availableLands.length} listings)</LandsCount>
+                            </LandsTitle>
+                            <CloseButton onClick={() => setShowLandsList(false)}>×</CloseButton>
+                        </LandsHeader>
+                        
+                        <LandsScrollContainer>
+                            {landsLoading ? (
+                                <LoadingMessage>Loading available lands...</LoadingMessage>
+                            ) : availableLands.length > 0 ? (
+                                availableLands.map(land => (
+                                    <LandCard key={land.id}>
+                                        <LandHeader>
+                                            <LandTitle>{land.title}</LandTitle>
+                                            <LandType type={land.type}>{land.type}</LandType>
+                                        </LandHeader>
+                                        
+                                        <LandDetails>
+                                            <LandInfo>
+                                                <strong>Area:</strong> {land.area}
+                                            </LandInfo>
+                                            <LandInfo>
+                                                <strong>Price:</strong> {land.price}
+                                            </LandInfo>
+                                            <LandInfo>
+                                                <strong>Per sqm:</strong> {land.pricePerSqm}
+                                            </LandInfo>
+                                        </LandDetails>
+                                        
+                                        <LandDescription>{land.description}</LandDescription>
+                                        
+                                        <LandFeatures>
+                                            {land.features.map(feature => (
+                                                <FeatureTag key={feature}>{feature}</FeatureTag>
+                                            ))}
+                                        </LandFeatures>
+                                        
+                                        <LandContact>
+                                            <ContactButton href={`tel:${land.contact}`}>
+                                                📞 {land.contact}
+                                            </ContactButton>
+                                            <InquireButton>
+                                                💬 Send Inquiry
+                                            </InquireButton>
+                                        </LandContact>
+                                    </LandCard>
+                                ))
+                            ) : (
+                                <NoLandsMessage>
+                                    No lands currently listed for sale in this barangay.
+                                </NoLandsMessage>
+                            )}
+                        </LandsScrollContainer>
+                    </LandsSection>
+                )}
       
                 <FilterGroup>
                   <FilterTitle>Select Barangay:</FilterTitle>
@@ -1590,13 +1739,16 @@ const MapView = () => {
                       cursor: 'pointer'
                     }}
                     onClick={() => {
-                      setFilters(prev => ({ 
-                        ...prev, 
-                        showAllBarangays: true, 
-                        selectedBarangay: '' 
-                      }));
-                      setBarangayInfo(null);
-                      setHighlightedAreas([]);
+                        setFilters(prev => ({ 
+                            ...prev, 
+                            showAllBarangays: true, 
+                            selectedBarangay: '' 
+                        }));
+                        setBarangayInfo(null);
+                        setHighlightedAreas([]);
+                        // ADD: Clear lands when showing all barangays
+                        setAvailableLands([]);
+                        setShowLandsList(false);
                     }}
                   >
                     Show All Barangays
@@ -1614,7 +1766,9 @@ const MapView = () => {
                   </Select>
                 </FilterGroup>
                 <Divider />
-              </FilterScrollContainer>
+                </FilterScrollContainer>
+              
+                
             </FilterSection>
           </Container>
         </>
