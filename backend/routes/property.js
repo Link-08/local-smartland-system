@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Property, User } = require('../models');
+const { auth } = require('../middleware/auth');
 
 // Get all properties
 router.get('/', async (req, res) => {
@@ -15,7 +16,36 @@ router.get('/', async (req, res) => {
             }]
         });
         
-        res.json(properties);
+        // Format properties to hide prices from buyers when displayPrice is false
+        const formattedProperties = properties.map(property => ({
+            id: property.id,
+            title: property.title,
+            description: property.description,
+            price: property.displayPrice ? property.price : null, // Hide price if displayPrice is false
+            showPrice: property.displayPrice, // Add showPrice field for frontend compatibility
+            location: property.location,
+            acres: property.acres,
+            waterRights: property.waterRights,
+            suitableCrops: property.suitableCrops,
+            type: property.type,
+            topography: property.topography,
+            averageYield: property.averageYield,
+            amenities: property.amenities,
+            restrictionsText: property.restrictionsText,
+            remarks: property.remarks,
+            image: property.image,
+            images: property.images,
+            barangay: property.barangay,
+            barangayData: property.barangayData,
+            viewCount: property.viewCount,
+            inquiries: property.inquiries,
+            status: property.status,
+            createdAt: property.createdAt,
+            updatedAt: property.updatedAt,
+            seller: property.seller
+        }));
+        
+        res.json(formattedProperties);
     } catch (error) {
         console.error('Error fetching properties:', error);
         res.status(500).json({ error: 'Failed to fetch properties' });
@@ -39,7 +69,36 @@ router.get('/seller/:sellerId', async (req, res) => {
             }]
         });
         
-        res.json(properties);
+        // Format properties to hide prices from buyers when displayPrice is false
+        const formattedProperties = properties.map(property => ({
+            id: property.id,
+            title: property.title,
+            description: property.description,
+            price: property.displayPrice ? property.price : null, // Hide price if displayPrice is false
+            showPrice: property.displayPrice, // Add showPrice field for frontend compatibility
+            location: property.location,
+            acres: property.acres,
+            waterRights: property.waterRights,
+            suitableCrops: property.suitableCrops,
+            type: property.type,
+            topography: property.topography,
+            averageYield: property.averageYield,
+            amenities: property.amenities,
+            restrictionsText: property.restrictionsText,
+            remarks: property.remarks,
+            image: property.image,
+            images: property.images,
+            barangay: property.barangay,
+            barangayData: property.barangayData,
+            viewCount: property.viewCount,
+            inquiries: property.inquiries,
+            status: property.status,
+            createdAt: property.createdAt,
+            updatedAt: property.updatedAt,
+            seller: property.seller
+        }));
+        
+        res.json(formattedProperties);
     } catch (error) {
         console.error('Error fetching seller properties:', error);
         res.status(500).json({ error: 'Failed to fetch seller properties' });
@@ -66,7 +125,36 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Property not found or not available' });
         }
         
-        res.json(property);
+        // Format property to hide price from buyers when displayPrice is false
+        const formattedProperty = {
+            id: property.id,
+            title: property.title,
+            description: property.description,
+            price: property.displayPrice ? property.price : null, // Hide price if displayPrice is false
+            showPrice: property.displayPrice, // Add showPrice field for frontend compatibility
+            location: property.location,
+            acres: property.acres,
+            waterRights: property.waterRights,
+            suitableCrops: property.suitableCrops,
+            type: property.type,
+            topography: property.topography,
+            averageYield: property.averageYield,
+            amenities: property.amenities,
+            restrictionsText: property.restrictionsText,
+            remarks: property.remarks,
+            image: property.image,
+            images: property.images,
+            barangay: property.barangay,
+            barangayData: property.barangayData,
+            viewCount: property.viewCount,
+            inquiries: property.inquiries,
+            status: property.status,
+            createdAt: property.createdAt,
+            updatedAt: property.updatedAt,
+            seller: property.seller
+        };
+        
+        res.json(formattedProperty);
     } catch (error) {
         console.error('Error fetching property:', error);
         res.status(500).json({ error: 'Failed to fetch property' });

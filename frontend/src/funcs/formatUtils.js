@@ -6,9 +6,9 @@
  * @returns {string}
  */
 export function formatPrice(value) {
-  if (value === null || value === undefined || value === '') return '';
+  if (value === null || value === undefined || value === '') return 'Price on Request';
   const num = typeof value === 'string' ? parseFloat(value.toString().replace(/[^0-9.]/g, '')) : value;
-  if (isNaN(num)) return '';
+  if (isNaN(num)) return 'Price on Request';
   return `₱${num.toLocaleString('en-PH', { maximumFractionDigits: 0 })}`;
 }
 

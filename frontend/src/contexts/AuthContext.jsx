@@ -83,6 +83,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       setIsAuthenticated(true);
+      
+      // Dispatch login event
+      window.dispatchEvent(new CustomEvent('auth:login', { detail: { user } }));
+      
       return user;
     } catch (error) {
       console.error('Login error:', error);
@@ -109,6 +113,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       setIsAuthenticated(true);
+      
+      // Dispatch login event (same as login since user is now authenticated)
+      window.dispatchEvent(new CustomEvent('auth:login', { detail: { user } }));
+      
       return user;
     } catch (error) {
       console.error('Registration error:', error);
@@ -123,51 +131,37 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+    
+    // Dispatch logout event
+    window.dispatchEvent(new CustomEvent('auth:logout'));
   };
 
   const updateUser = async () => {
     try {
-      console.log('updateUser function called');
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found in localStorage');
-        throw new Error('No authentication token found');
-      }
-
-      console.log('Fetching updated user data for ID:', user.id);
+      // Fetch updated user data from server
       const response = await axios.get(`${API_URL}/auth/profile`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      console.log('Received user data from server:', response.data);
-
-      // Create a new user object with all the necessary fields
-      const updatedUserData = {
-        id: response.data.id,
-        email: response.data.email,
-        role: response.data.role,
-        firstName: response.data.firstName,
-        lastName: response.data.lastName,
-        phone: response.data.phone,
-        username: response.data.username,
-        avatar: response.data.avatar,
-        createdAt: response.data.createdAt
+      const updatedUserData = response.data;
+      
+      // Combine with existing user data
+      const combinedUserData = {
+        ...user,
+        ...updatedUserData
       };
-      console.log('Combined user data:', updatedUserData);
-
-      // Update localStorage first
-      localStorage.setItem('user', JSON.stringify(updatedUserData));
-      console.log('Updated user data in localStorage');
       
-      // Then update the state
-      setUser(updatedUserData);
-      console.log('Updated user state in context');
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(combinedUserData));
       
-      return updatedUserData;
+      // Update state
+      setUser(combinedUserData);
+      
+      return combinedUserData;
     } catch (error) {
-      console.error('Error in updateUser:', error);
-      throw error;
+      console.error('Error updating user:', error);
+      return user;
     }
   };
 

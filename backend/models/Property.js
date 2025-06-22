@@ -64,6 +64,29 @@ module.exports = (sequelize) => {
     image: {
       type: DataTypes.STRING
     },
+    images: {
+      type: DataTypes.TEXT,
+      get() {
+        const rawValue = this.getDataValue('images');
+        return rawValue ? JSON.parse(rawValue) : [];
+      },
+      set(value) {
+        this.setDataValue('images', JSON.stringify(value));
+      }
+    },
+    barangay: {
+      type: DataTypes.STRING
+    },
+    barangayData: {
+      type: DataTypes.TEXT,
+      get() {
+        const rawValue = this.getDataValue('barangayData');
+        return rawValue ? JSON.parse(rawValue) : null;
+      },
+      set(value) {
+        this.setDataValue('barangayData', JSON.stringify(value));
+      }
+    },
     viewCount: {
       type: DataTypes.INTEGER,
       defaultValue: 0

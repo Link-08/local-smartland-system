@@ -30,7 +30,6 @@ const Navbar = () => {
     // Listen for auth:logout event
     useEffect(() => {
         const handleLogout = () => {
-            logout();
             navigate('/');
         };
 
@@ -38,7 +37,7 @@ const Navbar = () => {
         return () => {
             window.removeEventListener('auth:logout', handleLogout);
         };
-    }, [logout, navigate]);
+    }, [navigate]);
 
     // Define menu items based on user role
     const getMenuItems = () => {

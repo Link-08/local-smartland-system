@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FaCamera, FaUser, FaSignOutAlt, FaFileAlt, FaTags, 
-  FaSearch, FaBuilding, FaChartLine, FaMapMarkerAlt, 
+  FaSearch, FaBuilding, FaMapMarkerAlt, 
   FaBed, FaBath, FaRulerCombined, FaRegClock,
   FaArrowRight, FaChevronRight, FaArrowUp, FaArrowDown,
   FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse,
-  FaEdit, FaTrash, FaPlus, FaMoneyBillWave, FaChartBar,
-  FaExclamationTriangle, FaCheck, FaEye, FaList, FaThLarge, FaFilter, FaHome, FaStar, FaTint, FaAngleDown, FaRegCalendarAlt, FaTimes, FaChevronLeft
+  FaEdit, FaTrash, FaPlus, FaChartBar,
+  FaExclamationTriangle, FaCheck, FaEye, FaList, FaThLarge, FaFilter, FaHome, FaStar, FaTint, FaAngleDown, FaRegCalendarAlt, FaTimes, FaChevronLeft, FaImage, FaInfoCircle, FaUpload, FaMountain, FaCircleNotch
 } from 'react-icons/fa';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { DashboardStyles } from "./BuyerDashboardStyles";
 import { SellerDashboardStyles } from "./SellerDashboardStyles.jsx";
 import { useAuth } from '../contexts/AuthContext';
 import api from '../config/axios';
-import PriceCalculatorTool from "./PriceCalculatorTool";
-import MarketAnalysisTool from "./MarketAnalysisTool";
 import { formatPrice, formatDate } from './formatUtils';
 import styled from 'styled-components';
 import * as PreviewModalStyles from './PreviewModalStyles';
+import barangaysData from './barangays.json';
 
 const iconMap = {
     FaExclamationTriangle: <FaExclamationTriangle />,
@@ -35,7 +35,8 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const SellerDashboard = ({ navigateTo }) => {
+const SellerDashboard = () => {
+    const navigate = useNavigate();
     // Use AuthContext for the signed-in seller
     const { user, logout, fetchUser, setUser, updateUser } = useAuth();
     
@@ -68,6 +69,7 @@ const SellerDashboard = ({ navigateTo }) => {
         waterRights: '',
         suitableCrops: '',
         image: '',
+        images: [],
         status: 'active',
         displayPrice: true,
         type: '',
@@ -76,13 +78,18 @@ const SellerDashboard = ({ navigateTo }) => {
         amenities: [],
         restrictionsText: '',
         remarks: '',
-        coordinates: null
+        coordinates: null,
+        barangay: '',
+        barangayData: null
     });
     const [formErrors, setFormErrors] = useState({});
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [activeToolModal, setActiveToolModal] = useState(null);
-    const [toolModalOpen, setToolModalOpen] = useState(false);
+    const [imageUploadLoading, setImageUploadLoading] = useState(false);
+    const [uploadedImageUrl, setUploadedImageUrl] = useState('');
+    const [imagePreview, setImagePreview] = useState(null);
+    const [imagePreviews, setImagePreviews] = useState([]);
+    const [selectedBarangay, setSelectedBarangay] = useState(null);
     
     // State for UI interactions
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -138,6 +145,7 @@ const SellerDashboard = ({ navigateTo }) => {
                 username: username,
                 password: '',
                 confirmPassword: '',
+                currentPassword: '', // Initialize currentPassword as empty string
                 avatar: user.avatar || 'NA'
             });
         }
@@ -150,11 +158,9 @@ const SellerDashboard = ({ navigateTo }) => {
             
             try {
                 setLoading(true);
-                console.log('Fetching initial user data for ID:', user.id);
                 
                 // Fetch the complete user profile
                 const response = await api.get(`/api/auth/profile`);
-                console.log('Received initial user data:', response.data);
                 
                 // Initialize user profile with the fetched data
                 setUserProfile({
@@ -215,12 +221,6 @@ const SellerDashboard = ({ navigateTo }) => {
             value: metrics.totalViews?.toString() || '0',
             trend: metrics.trendViews || '0%',
             isPositive: metrics.trendViews?.includes('+') || false
-        },
-        {
-            title: 'Total Inquiries',
-            value: metrics.totalInquiries?.toString() || '0',
-            trend: metrics.trendInquiries || '0%',
-            isPositive: metrics.trendInquiries?.includes('+') || false
         },
         {
             title: 'Average Time to Sale',
@@ -403,6 +403,7 @@ const SellerDashboard = ({ navigateTo }) => {
                 username: sellerData.username || '', // Always use latest username
                 password: '',
                 confirmPassword: '',
+                currentPassword: '', // Initialize currentPassword as empty string
                 avatar: sellerData.avatar || 'NA'
             });
             setEditProfileOpen(true);
@@ -474,18 +475,14 @@ const SellerDashboard = ({ navigateTo }) => {
         try {
             const { firstName, lastName, email, phone, username, password, confirmPassword, currentPassword } = userProfile;
             
-            // Handle password change if any password field is filled
-            if (password || confirmPassword || currentPassword) {
+            // Handle password change only if user actually enters a new password
+            if (password && password.trim() !== '') {
                 // Check if all password fields are filled
-                if (!currentPassword) {
+                if (!currentPassword || currentPassword.trim() === '') {
                     alert("Current password is required!");
                     return;
                 }
-                if (!password) {
-                    alert("New password is required!");
-                    return;
-                }
-                if (!confirmPassword) {
+                if (!confirmPassword || confirmPassword.trim() === '') {
                     alert("Please confirm your new password!");
                     return;
                 }
@@ -524,8 +521,8 @@ const SellerDashboard = ({ navigateTo }) => {
                         // Log out the user after successful password change
                         if (logout) {
                             await logout();
-                            if (navigateTo) {
-                                navigateTo('login');
+                            if (navigate) {
+                                navigate('login');
                             }
                         }
                         return;
@@ -538,9 +535,6 @@ const SellerDashboard = ({ navigateTo }) => {
             }
             
             // Handle profile update
-            console.log('Starting profile update with data:', { firstName, lastName, email, phone, username });
-            console.log('Current user:', user);
-            
             const response = await api.put(`/api/auth/profile`, {
                 firstName,
                 lastName,
@@ -548,19 +542,13 @@ const SellerDashboard = ({ navigateTo }) => {
                 username
             });
             
-            console.log('Profile update API response:', response.data);
-            
             if (response.data && response.data.profile) {
-                console.log('Profile update successful, updating user state...');
-                
                 // Record the profile update activity
                 await recordActivity('profile_updated', `Profile updated for ${firstName} ${lastName}`);
                 
                 // Update the user in AuthContext
                 if (updateUser) {
-                    console.log('Calling updateUser function...');
                     const updatedUser = await updateUser();
-                    console.log('Received updated user data:', updatedUser);
                 
                 // Update local state with the complete user data
                     const newProfile = {
@@ -569,7 +557,6 @@ const SellerDashboard = ({ navigateTo }) => {
                     confirmPassword: '',
                     currentPassword: ''
                     };
-                    console.log('Setting new user profile:', newProfile);
                     setUserProfile(newProfile);
                     
                     // Force a re-render
@@ -617,67 +604,113 @@ const SellerDashboard = ({ navigateTo }) => {
             const formData = new FormData();
             formData.append('avatar', file);
 
-            console.log('Uploading file:', {
-                name: file.name,
-                type: file.type,
-                size: file.size
-            });
-
             const response = await api.post('/api/auth/profile/image', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            console.log('Upload response:', response.data);
-            console.log('API base URL:', api.defaults.baseURL);
-
             if (response.data && response.data.user) {
-                const updatedUser = response.data.user;
-                console.log('Updated user data:', updatedUser);
-                console.log('Avatar URL:', updatedUser.avatar);
-
-                // Update the user profile with the new avatar URL
-                setUserProfile(prev => {
-                    const newProfile = {
-                        ...prev,
-                        ...updatedUser,
-                        password: '',
-                        confirmPassword: '',
-                        currentPassword: ''
-                    };
-                    console.log('New user profile:', newProfile);
-                    return newProfile;
-                });
-
-                // Update the global user context
                 if (updateUser) {
                     await updateUser();
                 }
-
-                // Force a re-render
-                setLastUpdate(Date.now());
+                setUserProfile(prev => ({
+                        ...prev,
+                    ...response.data.user,
+                        password: '',
+                        confirmPassword: '',
+                        currentPassword: ''
+                }));
                 alert('Profile image updated successfully!');
-            } else {
-                throw new Error('Invalid response format from server');
             }
         } catch (error) {
             console.error('Avatar upload error:', error);
-            console.error('Error details:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
-            });
             alert('Failed to upload profile image: ' + (error.response?.data?.error || error.message));
         } finally {
             setIsUploading(false);
         }
     };
 
-    const handlePreviewListing = (listing) => {
-        // Record the view when a listing is previewed
-        recordPropertyView(listing.id);
+    // Handle property image upload - now supports multiple files
+    const handlePropertyImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        // Validate each file
+        for (const file of files) {
+            // Validate file type
+            if (!file.type.match(/^image\/(jpg|jpeg|png|gif|webp)$/)) {
+                alert(`Please select a valid image file (JPG, JPEG, PNG, GIF, or WebP) for ${file.name}`);
+                return;
+            }
+
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`File size must be less than 10MB for ${file.name}`);
+                return;
+            }
+        }
+
+        try {
+            setImageUploadLoading(true);
+            const formData = new FormData();
+            
+            // Append all files to formData
+            files.forEach(file => {
+                formData.append('images', file);
+            });
+
+            const response = await api.post('/api/properties/image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data && response.data.success) {
+                const uploadedImages = response.data.images.map(img => img.imageUrl);
+                
+                // Update the property with all uploaded images
+                setNewProperty(prev => ({ 
+                    ...prev, 
+                    images: [...(prev.images || []), ...uploadedImages],
+                    image: uploadedImages[0] // Set the first image as the main image
+                }));
+                
+                // Create preview URLs for immediate display
+                const previewUrls = files.map(file => URL.createObjectURL(file));
+                setImagePreviews(prev => [...prev, ...previewUrls]);
+                
+                alert(`Successfully uploaded ${files.length} image(s)!`);
+            }
+        } catch (error) {
+            console.error('Property image upload error:', error);
+            alert('Failed to upload property images: ' + (error.response?.data?.error || error.message));
+        } finally {
+            setImageUploadLoading(false);
+        }
+    };
+
+    // Handle image preview click
+    const handleImagePreviewClick = () => {
+        document.getElementById('property-image-upload').click();
+    };
+
+    // Handle barangay selection
+    const handleBarangayChange = (e) => {
+        const selectedBarangayName = e.target.value;
+        const barangayData = barangaysData.find(barangay => barangay.name === selectedBarangayName);
         
+        setSelectedBarangay(barangayData);
+        setNewProperty(prev => ({
+            ...prev,
+            barangay: selectedBarangayName,
+            barangayData: barangayData,
+            coordinates: barangayData ? barangayData.center : prev.coordinates,
+            location: selectedBarangayName ? `${selectedBarangayName}, Cabanatuan, Nueva Ecija` : prev.location
+        }));
+    };
+
+    const handlePreviewListing = (listing) => {
         const previewData = {
             ...listing,
             images: listing.images || [listing.image || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef'],
@@ -704,7 +737,11 @@ const SellerDashboard = ({ navigateTo }) => {
             remarks: listing.remarks || '',
             status: listing.status || 'active',
             viewCount: listing.viewCount || 0,
-            inquiries: listing.inquiries || 0
+            inquiries: listing.inquiries || 0,
+            // Add barangay information
+            barangay: listing.barangay || null,
+            barangayData: listing.barangayData || null,
+            coordinates: listing.coordinates || null
         };
         
         setPreviewListing(previewData);
@@ -767,14 +804,7 @@ const SellerDashboard = ({ navigateTo }) => {
     // Function to handle logout
     const handleLogout = () => {
         logout();
-        if (navigateTo) {
-            navigateTo('home');
-        }
-    };
-
-    const handleOpenTool = (tool) => {
-        setActiveToolModal(tool);
-        setToolModalOpen(true);
+        navigate('home');
     };
 
     // Function to get status badge style
@@ -841,24 +871,10 @@ const SellerDashboard = ({ navigateTo }) => {
             const response = await api.post('/api/properties', formattedData);
             console.log('Server response:', response.data);
             
-            // Add the new listing to the state with all enhanced information
-            const newListingWithDefaults = {
-                ...response.data,
-                viewCount: 0,
-                inquiries: 0,
-                description: response.data.description || '',
-                waterRights: response.data.waterRights || 'Not specified',
-                suitableCrops: response.data.suitableCrops || 'Various crops',
-                type: response.data.type || 'Agricultural Land',
-                topography: response.data.topography || 'Flat to rolling',
-                averageYield: response.data.averageYield || 'Not specified',
-                amenities: Array.isArray(response.data.amenities) ? response.data.amenities : [],
-                restrictionsText: response.data.restrictionsText || '',
-                remarks: response.data.remarks || '',
-                displayPrice: response.data.displayPrice !== undefined ? response.data.displayPrice : true
-            };
+            // Add the new listing to the state. The server response is the single source of truth.
+            const newListing = response.data;
             
-            setSellerListings(prevListings => [newListingWithDefaults, ...prevListings]); // Add to beginning for immediate visibility
+            setSellerListings(prevListings => [newListing, ...prevListings]); // Add to beginning for immediate visibility
             setAddNewOpen(false);
             
             // Record the property creation activity
@@ -876,6 +892,7 @@ const SellerDashboard = ({ navigateTo }) => {
                 waterRights: '',
                 suitableCrops: '',
                 image: '',
+                images: [],
                 status: 'active',
                 displayPrice: true,
                 type: '',
@@ -884,8 +901,15 @@ const SellerDashboard = ({ navigateTo }) => {
                 amenities: [],
                 restrictionsText: '',
                 remarks: '',
-                coordinates: null
+                coordinates: null,
+                barangay: '',
+                barangayData: null
             });
+            
+            // Clear image previews and related state
+            setImagePreviews([]);
+            setImagePreview(null);
+            setUploadedImageUrl('');
         } catch (error) {
             console.error('Error creating new listing:', error);
             console.error('Error details:', {
@@ -963,12 +987,8 @@ const SellerDashboard = ({ navigateTo }) => {
 
     // Add handlers for preview actions
     const handleContact = () => {
-        if (previewListing) {
-            // Record the inquiry when a user contacts the seller
-            recordPropertyInquiry(previewListing.id);
-            // TODO: Implement actual contact functionality
-            alert('Contact form will be implemented here');
-        }
+        // Contact functionality will be implemented in future updates
+        alert('Contact functionality coming soon!');
     };
 
     const handleShare = () => {
@@ -981,7 +1001,7 @@ const SellerDashboard = ({ navigateTo }) => {
         alert('Property saved to favorites');
     };
 
-    const MapSection = ({ coordinates, onCoordinatesChange, isEditable = false }) => {
+    const MapSection = ({ coordinates, onCoordinatesChange, isEditable = false, barangayData = null }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [markerCoordinates, setMarkerCoordinates] = useState([15.4917, 120.9679]);
         const [tempCoordinates, setTempCoordinates] = useState([15.4917, 120.9679]);
@@ -1033,6 +1053,30 @@ const SellerDashboard = ({ navigateTo }) => {
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
+                        
+                        {/* Barangay radius circle */}
+                        {barangayData && barangayData.center && barangayData.radius && (
+                            <Circle
+                                center={barangayData.center}
+                                radius={barangayData.radius}
+                                pathOptions={{
+                                    color: '#3498db',
+                                    fillColor: '#3498db',
+                                    fillOpacity: 0.2,
+                                    weight: 2
+                                }}
+                            >
+                                <Popup>
+                                    <div>
+                                        <strong>{barangayData.name}</strong><br />
+                                        Radius: {barangayData.radius}m<br />
+                                        Elevation: {barangayData.elevation}m<br />
+                                        {barangayData.soilType && `Soil: ${barangayData.soilType}`}
+                                    </div>
+                                </Popup>
+                            </Circle>
+                        )}
+                        
                         <Marker 
                             position={markerCoordinates}
                             draggable={isEditing}
@@ -1121,48 +1165,8 @@ const SellerDashboard = ({ navigateTo }) => {
     };
 
     const handleCoordinatesChange = async (newCoordinates) => {
-        if (!previewListing) return;
-        try {
-            // Format the coordinates as a string
-            const coordinatesString = newCoordinates.join(',');
-            // Update only the coordinates field in the database
-            const response = await api.put(`/api/properties/${previewListing.id}`, {
-                ...previewListing,
-                coordinates: coordinatesString
-            });
-            if (response.data) {
-                // Update the local state for the preview modal
-                setPreviewListing(prev => ({
-                    ...prev,
-                    coordinates: coordinatesString
-                }));
-                // Update the listings list
-                setSellerListings(prevListings => 
-                    prevListings.map(listing => 
-                        listing.id === previewListing.id 
-                            ? { 
-                                ...listing, 
-                                coordinates: coordinatesString
-                            }
-                            : listing
-                    )
-                );
-                alert('Map location updated successfully!');
-            } else {
-                throw new Error('No data received from server');
-            }
-        } catch (error) {
-            console.error('Error updating coordinates:', error);
-            let errorMessage = 'Failed to update map location. ';
-            if (error.response) {
-                errorMessage += `Server responded with ${error.response.status}: ${error.response.data?.message || 'Unknown error'}`;
-            } else if (error.request) {
-                errorMessage += 'No response received from server. Please check your connection.';
-            } else {
-                errorMessage += error.message;
-            }
-            alert(errorMessage);
-        }
+        // Coordinates field doesn't exist in the database, so we'll just show a message
+        alert('Map location editing is not available at this time.');
     };
 
     // Add confirmation dialog for closing edit mode
@@ -1194,14 +1198,26 @@ const SellerDashboard = ({ navigateTo }) => {
             // Record the sale
             await recordPropertySale(listingId, daysToSale);
             
-            // Update the listing status locally
-            setSellerListings(prevListings => 
-                prevListings.map(listing => 
-                    listing.id === listingId 
-                        ? { ...listing, status: 'sold' }
-                        : listing
-                )
-            );
+            // Fetch the updated property data from the server to ensure consistency
+            try {
+                const updatedPropertyResponse = await api.get(`/api/properties/${listingId}`);
+                const updatedProperty = updatedPropertyResponse.data;
+                
+                // Update the listing with the fresh data from the server
+                setSellerListings(prevListings => 
+                    prevListings.map(listing => 
+                        listing.id === listingId ? updatedProperty : listing
+                    )
+                );
+            } catch (fetchError) {
+                console.warn('Could not fetch updated property data, using local update:', fetchError);
+                // Fallback to local update if server fetch fails
+                setSellerListings(prevListings => 
+                    prevListings.map(listing => 
+                        listing.id === listingId ? { ...listing, status: 'sold' } : listing
+                    )
+                );
+            }
             
             // Record the property sale activity
             if (listing) {
@@ -1243,7 +1259,7 @@ const SellerDashboard = ({ navigateTo }) => {
                         <FaChartBar size={20} style={{ marginRight: 8 }} /> Performance Metrics
                     </DashboardStyles.SectionTitle>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
                         {performanceMetrics.map((metric, index) => (
                             <DashboardStyles.StatCard key={index}>
                                 <DashboardStyles.StatCardTitle>{metric.title}</DashboardStyles.StatCardTitle>
@@ -1349,8 +1365,26 @@ const SellerDashboard = ({ navigateTo }) => {
                                     padding: '12px', 
                                     borderRadius: '8px', 
                                     margin: '12px 0',
-                                    border: '1px solid #e9ecef'
+                                    border: '1px solid #e9ecef',
+                                    position: 'relative'
                                 }}>
+                                    {/* Sold indicator for sold properties */}
+                                    {(listing.status || 'active') === 'sold' && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-8px',
+                                            right: '12px',
+                                            backgroundColor: '#3498db',
+                                            color: 'white',
+                                            padding: '4px 8px',
+                                            borderRadius: '12px',
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                        }}>
+                                            SOLD
+                                        </div>
+                                    )}
                                     <div style={{ 
                                         display: 'grid', 
                                         gridTemplateColumns: '1fr 1fr', 
@@ -1464,7 +1498,6 @@ const SellerDashboard = ({ navigateTo }) => {
                                     color: '#7f8c8d'
                                 }}>
                                 <span><FaEye size={12} style={{ marginRight: '4px' }} /> {listing.viewCount || 0} views</span>
-                                <span><FaExclamationTriangle size={12} style={{ marginRight: '4px' }} /> {listing.inquiries || 0} inquiries</span>
                                 <span><FaRegClock size={12} style={{ marginRight: '4px' }} /> Listed: {formatDate(listing.createdAt)}</span>
                                 </div>
                                 
@@ -1624,115 +1657,6 @@ const SellerDashboard = ({ navigateTo }) => {
                         </DashboardStyles.ProfileActions>
                         </DashboardStyles.ProfileSection>
                         
-                        {/* Seller Tools Section */}
-                        <div style={{ 
-                        backgroundColor: '#fff',
-                        borderRadius: '12px',
-                        padding: '20px',
-                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-                        marginBottom: '24px'
-                        }}>
-                        <h3 style={{ 
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#2C3E50',
-                            marginTop: '0',
-                            marginBottom: '16px'
-                        }}>Seller Tools</h3>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <div 
-                            style={{ 
-                                display: 'flex',
-                                alignItems: 'center',
-                                padding: '12px',
-                                borderRadius: '8px',
-                                background: 'rgba(52, 152, 219, 0.1)',
-                                cursor: 'pointer'
-                            }}
-                            onClick={() => handleOpenTool('priceCalculator')}
-                            >
-                            <div style={{ 
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '8px',
-                                background: '#3498db',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                marginRight: '12px'
-                            }}>
-                                <FaMoneyBillWave size={20} />
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: '600', color: '#2C3E50', marginBottom: '4px' }}>Price Calculator</div>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}>Estimate optimal pricing for your property</div>
-                            </div>
-                            </div>
-                            
-                            <div 
-                            style={{ 
-                                display: 'flex',
-                                alignItems: 'center',
-                                padding: '12px',
-                                borderRadius: '8px',
-                                background: 'rgba(46, 204, 113, 0.1)',
-                                cursor: 'pointer'
-                            }}
-                            onClick={() => handleOpenTool('marketAnalysis')}
-                            >
-                            <div style={{ 
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '8px',
-                                background: '#2ecc71',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                marginRight: '12px'
-                            }}>
-                                <FaChartLine size={20} />
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: '600', color: '#2C3E50', marginBottom: '4px' }}>Market Analysis</div>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}>Research comparable properties and trends</div>
-                            </div>
-                            </div>
-                            
-                            <div 
-                            style={{ 
-                                display: 'flex',
-                                alignItems: 'center',
-                                padding: '12px',
-                                borderRadius: '8px',
-                                background: 'rgba(243, 156, 18, 0.1)',
-                                cursor: 'pointer'
-                            }}
-                            onClick={() => handleOpenTool('listingEnhancement')}
-                            >
-                            <div style={{ 
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '8px',
-                                background: '#f39c12',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                marginRight: '12px'
-                            }}>
-                                <FaWarehouse size={20} />
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: '600', color: '#2C3E50', marginBottom: '4px' }}>Listing Enhancement</div>
-                                <div style={{ fontSize: '13px', color: '#7f8c8d' }}>Get tips to improve your property listings</div>
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                        
                         {/* Recent Activity Section */}
                         <DashboardStyles.RecentActivitySection>
                             <DashboardStyles.RecentActivityTitle>Recent Activity</DashboardStyles.RecentActivityTitle>
@@ -1761,20 +1685,105 @@ const SellerDashboard = ({ navigateTo }) => {
                 {/* Add New Property Modal */}
                 {addNewOpen && (
                     <SellerDashboardStyles.ModalOverlay>
-                        <SellerDashboardStyles.ModalContainer>
-                            <SellerDashboardStyles.ModalHeader>
-                                <SellerDashboardStyles.ModalTitle>
+                        <SellerDashboardStyles.ImprovedModalContainer>
+                            <SellerDashboardStyles.ImprovedModalHeader>
+                                <SellerDashboardStyles.ImprovedModalTitle>
+                                    <FaHome size={24} />
                                     Add New Property Listing
-                                </SellerDashboardStyles.ModalTitle>
-                                <SellerDashboardStyles.ModalCloseButton onClick={() => setAddNewOpen(false)}>
+                                </SellerDashboardStyles.ImprovedModalTitle>
+                                <SellerDashboardStyles.ImprovedModalCloseButton onClick={() => setAddNewOpen(false)}>
                                     ×
-                                </SellerDashboardStyles.ModalCloseButton>
-                            </SellerDashboardStyles.ModalHeader>
+                                </SellerDashboardStyles.ImprovedModalCloseButton>
+                            </SellerDashboardStyles.ImprovedModalHeader>
                             
+                            <SellerDashboardStyles.ImprovedModalContent>
                             <form onSubmit={handleNewPropertySubmit}>
+                                    {/* Image Upload Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaImage size={20} />
+                                            Property Images
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.ImageUploadSection 
+                                            className={imagePreviews.length > 0 ? 'has-image' : ''}
+                                            onClick={handleImagePreviewClick}
+                                        >
+                                            {imagePreviews.length > 0 ? (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+                                                    {imagePreviews.map((preview, index) => (
+                                                        <SellerDashboardStyles.ImagePreview key={index}>
+                                                            <SellerDashboardStyles.ImagePreviewImg 
+                                                                src={preview} 
+                                                                alt={`Property preview ${index + 1}`} 
+                                                            />
+                                                        </SellerDashboardStyles.ImagePreview>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ textAlign: 'center' }}>
+                                                    <FaImage size={48} style={{ color: '#3498db', marginBottom: '16px' }} />
+                                                    <SellerDashboardStyles.ImageUploadText>
+                                                        Click to upload property images
+                                                    </SellerDashboardStyles.ImageUploadText>
+                                                    <SellerDashboardStyles.ImageUploadText>
+                                                        JPG, PNG, GIF, WebP up to 10MB each
+                                                    </SellerDashboardStyles.ImageUploadText>
+                                                    <SellerDashboardStyles.ImageUploadText>
+                                                        You can select multiple images
+                                                    </SellerDashboardStyles.ImageUploadText>
+                                                </div>
+                                            )}
+                                            
+                                            <SellerDashboardStyles.ImageUploadButton>
+                                                {imageUploadLoading ? (
+                                                    <>
+                                                        <SellerDashboardStyles.LoadingSpinner />
+                                                        Uploading...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaUpload size={16} />
+                                                        {imagePreviews.length > 0 ? 'Add More Images' : 'Choose Images'}
+                                                    </>
+                                                )}
+                                                <input
+                                                    id="property-image-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={handlePropertyImageUpload}
+                                                    style={{ display: 'none' }}
+                                                />
+                                            </SellerDashboardStyles.ImageUploadButton>
+                                        </SellerDashboardStyles.ImageUploadSection>
+                                        
+                                        {/* Show uploaded image count */}
+                                        {newProperty.images && newProperty.images.length > 0 && (
+                                            <div style={{ 
+                                                marginTop: '12px', 
+                                                padding: '8px 12px', 
+                                                backgroundColor: 'rgba(39, 174, 96, 0.1)', 
+                                                borderRadius: '6px',
+                                                border: '1px solid rgba(39, 174, 96, 0.3)',
+                                                fontSize: '14px',
+                                                color: '#27ae60'
+                                            }}>
+                                                ✓ {newProperty.images.length} image(s) uploaded successfully
+                                            </div>
+                                        )}
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Basic Information Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaInfoCircle size={20} />
+                                            Basic Information
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Property Title*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormInput
+                                            <SellerDashboardStyles.ImprovedFormInput
                                         type="text"
                                         name="title"
                                         value={newProperty.title}
@@ -1786,7 +1795,7 @@ const SellerDashboard = ({ navigateTo }) => {
 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Property Description*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormTextarea
+                                            <SellerDashboardStyles.ImprovedFormTextarea
                                         name="description"
                                         value={newProperty.description || ''}
                                         onChange={handleNewPropertyChange}
@@ -1798,7 +1807,7 @@ const SellerDashboard = ({ navigateTo }) => {
 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Property Type*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormSelect
+                                            <SellerDashboardStyles.ImprovedFormSelect
                                         name="type"
                                         value={newProperty.type || ''}
                                         onChange={handleNewPropertyChange}
@@ -1813,49 +1822,97 @@ const SellerDashboard = ({ navigateTo }) => {
                                         <option value="Orchard">Orchard</option>
                                         <option value="Raw Agricultural Land">Raw Agricultural Land</option>
                                         <option value="Other">Other</option>
-                                    </SellerDashboardStyles.FormSelect>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
                                 </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Location & Map Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaMapMarkerAlt size={20} />
+                                            Location & Map
+                                        </SellerDashboardStyles.FormSectionTitle>
                                 
                                 <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Property Location (Map)</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.FormLabel>Barangay*</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="barangay"
+                                                value={newProperty.barangay || ''}
+                                                onChange={handleBarangayChange}
+                                                required
+                                            >
+                                                <option value="">Select a barangay</option>
+                                                {barangaysData.map(barangay => (
+                                                    <option key={barangay.name} value={barangay.name}>
+                                                        {barangay.name}
+                                                    </option>
+                                                ))}
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                            {selectedBarangay && (
                                     <div style={{ 
-                                        border: '1px solid #ddd', 
+                                                    marginTop: '8px', 
+                                                    padding: '12px', 
+                                                    backgroundColor: 'rgba(52, 152, 219, 0.1)', 
                                         borderRadius: '8px', 
-                                        padding: '16px',
-                                        backgroundColor: '#f9f9f9',
-                                        minHeight: '200px'
+                                                    border: '1px solid rgba(52, 152, 219, 0.3)'
+                                                }}>
+                                                    <div style={{ fontSize: '14px', color: '#ecf0f1', marginBottom: '4px' }}>
+                                                        <strong>Barangay Information:</strong>
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: '#bdc3c7' }}>
+                                                        <div>Elevation: {selectedBarangay.elevation}m</div>
+                                                        <div>Radius: {selectedBarangay.radius}m</div>
+                                                        {selectedBarangay.soilType && (
+                                                            <div>Soil Type: {selectedBarangay.soilType}</div>
+                                                        )}
+                                                        <div style={{ marginTop: '8px' }}>
+                                                            <strong>Crop Suitability:</strong>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px', marginTop: '4px' }}>
+                                                                {Object.entries(selectedBarangay.fruits).map(([crop, suitability]) => (
+                                                                    <div key={crop} style={{ fontSize: '11px' }}>
+                                                                        {crop}: {suitability || 'Not specified'}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </SellerDashboardStyles.FormGroup>
+                                        
+                                        <div style={{ 
+                                            border: '2px solid rgba(255, 255, 255, 0.1)', 
+                                            borderRadius: '12px', 
+                                            padding: '20px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                            minHeight: '250px'
                                     }}>
                                         <MapSection 
                                             coordinates={newProperty.coordinates} 
                                             onCoordinatesChange={(coords) => setNewProperty(prev => ({ ...prev, coordinates: coords }))}
                                             isEditable={true}
+                                                barangayData={selectedBarangay}
                                         />
                                     </div>
-                                    <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px' }}>
-                                        Click on the map to set the property location
+                                        <small style={{ color: '#95a5a6', fontSize: '12px', marginTop: '8px', display: 'block' }}>
+                                            {selectedBarangay 
+                                                ? `Map shows ${selectedBarangay.name} with ${selectedBarangay.radius}m radius. Click on the map to set the property location.`
+                                                : 'Select a barangay to see its area on the map, then click to set the property location.'
+                                            }
                                     </small>
-                                </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
 
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Topography</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormSelect
-                                        name="topography"
-                                        value={newProperty.topography || ''}
-                                        onChange={handleNewPropertyChange}
-                                    >
-                                        <option value="">Select topography</option>
-                                        <option value="Flat">Flat</option>
-                                        <option value="Gently Rolling">Gently Rolling</option>
-                                        <option value="Rolling">Rolling</option>
-                                        <option value="Hilly">Hilly</option>
-                                        <option value="Mixed">Mixed</option>
-                                    </SellerDashboardStyles.FormSelect>
-                                </SellerDashboardStyles.FormGroup>
+                                    {/* Property Details Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaRulerCombined size={20} />
+                                            Property Details
+                                        </SellerDashboardStyles.FormSectionTitle>
                                 
                                 <SellerDashboardStyles.FormRow>
                                     <SellerDashboardStyles.FormGroup>
                                         <SellerDashboardStyles.FormLabel>Price (₱)*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                                <SellerDashboardStyles.ImprovedFormInput
                                             type="text"
                                             name="price"
                                             value={newProperty.price}
@@ -1867,7 +1924,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                     
                                     <SellerDashboardStyles.FormGroup>
                                         <SellerDashboardStyles.FormLabel>Size (Hectares)*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
+                                                <SellerDashboardStyles.ImprovedFormInput
                                             type="number"
                                             step="0.1"
                                             name="acres"
@@ -1879,9 +1936,25 @@ const SellerDashboard = ({ navigateTo }) => {
                                     </SellerDashboardStyles.FormGroup>
                                 </SellerDashboardStyles.FormRow>
 
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Topography</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="topography"
+                                                value={newProperty.topography || ''}
+                                                onChange={handleNewPropertyChange}
+                                            >
+                                                <option value="">Select topography</option>
+                                                <option value="Flat">Flat</option>
+                                                <option value="Gently Rolling">Gently Rolling</option>
+                                                <option value="Rolling">Rolling</option>
+                                                <option value="Hilly">Hilly</option>
+                                                <option value="Mixed">Mixed</option>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                        </SellerDashboardStyles.FormGroup>
+
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Average Yield (if applicable)</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormInput
+                                            <SellerDashboardStyles.ImprovedFormInput
                                         type="text"
                                         name="averageYield"
                                         value={newProperty.averageYield || ''}
@@ -1889,10 +1962,18 @@ const SellerDashboard = ({ navigateTo }) => {
                                         placeholder="E.g., 120 sacks/hectare, 5 tons/hectare"
                                     />
                                 </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Agricultural Details Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaSeedling size={20} />
+                                            Agricultural Details
+                                        </SellerDashboardStyles.FormSectionTitle>
                                 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Water Rights*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormSelect
+                                            <SellerDashboardStyles.ImprovedFormSelect
                                         name="waterRights"
                                         value={newProperty.waterRights}
                                         onChange={handleNewPropertyChange}
@@ -1905,7 +1986,7 @@ const SellerDashboard = ({ navigateTo }) => {
                                         <option value="Rain-fed Only">Rain-fed Only</option>
                                         <option value="Deep Well + Rainwater Collection">Deep Well + Rainwater Collection</option>
                                         <option value="River Access">River Access</option>
-                                    </SellerDashboardStyles.FormSelect>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
                                 </SellerDashboardStyles.FormGroup>
                                 
                                 <SellerDashboardStyles.FormGroup>
@@ -1917,16 +1998,22 @@ const SellerDashboard = ({ navigateTo }) => {
                                         required
                                     />
                                 </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
 
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Amenities</SellerDashboardStyles.FormLabel>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '8px' }}>
+                                    {/* Amenities Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaBuilding size={20} />
+                                            Amenities & Infrastructure
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.AmenitiesGrid>
                                         {[
                                             'Electricity Connection', 'Water Pump House', 'Storage Facility', 'Farm House',
                                             'Tool Shed', 'Concrete Roads', 'Drainage System', 'Fence/Boundary Markers',
                                             'Vehicle Access', 'Internet/Phone Signal', 'Farm Equipment', 'Greenhouse'
                                         ].map(amenity => (
-                                            <label key={amenity} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                                                <SellerDashboardStyles.AmenityCheckbox key={amenity}>
                                                 <input
                                                     type="checkbox"
                                                     checked={newProperty.amenities?.includes(amenity) || false}
@@ -1944,13 +2031,19 @@ const SellerDashboard = ({ navigateTo }) => {
                                                             }));
                                                         }
                                                     }}
-                                                    style={{ marginRight: '8px' }}
                                                 />
                                                 {amenity}
-                                            </label>
-                                        ))}
-                                    </div>
-                                </SellerDashboardStyles.FormGroup>
+                                                </SellerDashboardStyles.AmenityCheckbox>
+                                            ))}
+                                        </SellerDashboardStyles.AmenitiesGrid>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Additional Information Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaFileAlt size={20} />
+                                            Additional Information
+                                        </SellerDashboardStyles.FormSectionTitle>
 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Price Display Settings</SellerDashboardStyles.FormLabel>
@@ -1961,19 +2054,19 @@ const SellerDashboard = ({ navigateTo }) => {
                                                 name="displayPrice"
                                                 checked={newProperty.displayPrice || false}
                                                 onChange={(e) => setNewProperty(prev => ({ ...prev, displayPrice: e.target.checked }))}
-                                                style={{ marginRight: '8px' }}
+                                                        style={{ marginRight: '8px', accentColor: '#3498db' }}
                                             />
-                                            <span style={{ fontSize: '14px', color: '#2C3E50' }}>Display price publicly</span>
+                                                    <span style={{ fontSize: '14px', color: '#ecf0f1' }}>Display price publicly</span>
                                         </label>
                                     </div>
-                                    <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                            <small style={{ color: '#95a5a6', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                                         Uncheck this if you prefer buyers to contact you for pricing information
                                     </small>
                                 </SellerDashboardStyles.FormGroup>
 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Restrictions/Notes</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormTextarea
+                                            <SellerDashboardStyles.ImprovedFormTextarea
                                         name="restrictions"
                                         value={newProperty.restrictionsText || ''}
                                         onChange={(e) => setNewProperty(prev => ({ ...prev, restrictionsText: e.target.value }))}
@@ -1984,7 +2077,7 @@ const SellerDashboard = ({ navigateTo }) => {
 
                                 <SellerDashboardStyles.FormGroup>
                                     <SellerDashboardStyles.FormLabel>Additional Remarks</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormTextarea
+                                            <SellerDashboardStyles.ImprovedFormTextarea
                                         name="remarks"
                                         value={newProperty.remarks || ''}
                                         onChange={handleNewPropertyChange}
@@ -1992,281 +2085,485 @@ const SellerDashboard = ({ navigateTo }) => {
                                         rows="3"
                                     />
                                 </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
                                 
-                                <SellerDashboardStyles.FormActions>
-                                    <SellerDashboardStyles.FormCancelButton
+                                    <SellerDashboardStyles.ImprovedFormActions>
+                                        <SellerDashboardStyles.ImprovedFormCancelButton
                                         type="button"
                                         onClick={() => setAddNewOpen(false)}
                                     >
                                         Cancel
-                                    </SellerDashboardStyles.FormCancelButton>
-                                    
-                                    <SellerDashboardStyles.FormSubmitButton type="submit">
-                                        Add Property
-                                    </SellerDashboardStyles.FormSubmitButton>
-                                </SellerDashboardStyles.FormActions>
+                                        </SellerDashboardStyles.ImprovedFormCancelButton>
+                                        
+                                        <SellerDashboardStyles.ImprovedFormSubmitButton 
+                                            type="submit"
+                                            disabled={imageUploadLoading}
+                                        >
+                                            {imageUploadLoading ? (
+                                                <>
+                                                    <SellerDashboardStyles.LoadingSpinner />
+                                                    Creating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaPlus size={16} />
+                                                    Create Property Listing
+                                                </>
+                                            )}
+                                        </SellerDashboardStyles.ImprovedFormSubmitButton>
+                                    </SellerDashboardStyles.ImprovedFormActions>
                             </form>
-                        </SellerDashboardStyles.ModalContainer>
+                            </SellerDashboardStyles.ImprovedModalContent>
+                        </SellerDashboardStyles.ImprovedModalContainer>
                     </SellerDashboardStyles.ModalOverlay>
                 )}
 
                 {editPropertyOpen && (
                     <SellerDashboardStyles.ModalOverlay>
-                        <SellerDashboardStyles.ModalContainer>
-                            <SellerDashboardStyles.ModalHeader>
-                                <SellerDashboardStyles.ModalTitle>
+                        <SellerDashboardStyles.ImprovedModalContainer>
+                            <SellerDashboardStyles.ImprovedModalHeader>
+                                <SellerDashboardStyles.ImprovedModalTitle>
+                                    <FaEdit size={24} />
                                     Edit Property Listing
-                                </SellerDashboardStyles.ModalTitle>
-                                <SellerDashboardStyles.ModalCloseButton onClick={() => setEditPropertyOpen(false)}>
+                                </SellerDashboardStyles.ImprovedModalTitle>
+                                <SellerDashboardStyles.ImprovedModalCloseButton onClick={() => setEditPropertyOpen(false)}>
                                     ×
-                                </SellerDashboardStyles.ModalCloseButton>
-                            </SellerDashboardStyles.ModalHeader>
+                                </SellerDashboardStyles.ImprovedModalCloseButton>
+                            </SellerDashboardStyles.ImprovedModalHeader>
                             
-                            <form onSubmit={handleEditPropertySubmit}>
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Property Title*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormInput
-                                        type="text"
-                                        name="title"
-                                        value={editProperty.title}
-                                        onChange={handleEditPropertyChange}
-                                        required
-                                        placeholder="E.g., Prime Rice Farm with Irrigation"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Description</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormTextarea
-                                        name="description"
-                                        value={editProperty.description || ''}
-                                        onChange={handleEditPropertyChange}
-                                        placeholder="Provide a detailed description of the property, its features, and what makes it special..."
-                                        rows="3"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Location*</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormInput
-                                        type="text"
-                                        name="location"
-                                        value={editProperty.location}
-                                        onChange={handleEditPropertyChange}
-                                        required
-                                        placeholder="E.g., Barangay Imelda, Cabanatuan, Nueva Ecija"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormRow>
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Price (₱)*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
-                                            type="text"
-                                            name="price"
-                                            value={editProperty.price}
-                                            onChange={handleEditPropertyChange}
-                                            required
-                                            placeholder="E.g., 8,750,000"
-                                        />
-                                    </SellerDashboardStyles.FormGroup>
-                                    
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Size (Hectares)*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormInput
-                                            type="number"
-                                            step="0.1"
-                                            name="acres"
-                                            value={editProperty.acres}
-                                            onChange={handleEditPropertyChange}
-                                            required
-                                            placeholder="E.g., 5.2"
-                                        />
-                                    </SellerDashboardStyles.FormGroup>
-                                </SellerDashboardStyles.FormRow>
-                                
-                                <SellerDashboardStyles.FormRow>
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Property Type</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormSelect
-                                            name="type"
-                                            value={editProperty.type || ''}
-                                            onChange={handleEditPropertyChange}
+                            <SellerDashboardStyles.ImprovedModalContent>
+                                <form onSubmit={handleEditPropertySubmit}>
+                                    {/* Image Upload Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaImage size={20} />
+                                            Property Images
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.ImageUploadSection 
+                                            className={editProperty.images && editProperty.images.length > 0 ? 'has-image' : ''}
+                                            onClick={handleImagePreviewClick}
                                         >
-                                            <option value="">Select property type</option>
-                                            <option value="Rice Farm">Rice Farm</option>
-                                            <option value="Corn Farm">Corn Farm</option>
-                                            <option value="Mixed Crop Farm">Mixed Crop Farm</option>
-                                            <option value="Vegetable Farm">Vegetable Farm</option>
-                                            <option value="Fruit Orchard">Fruit Orchard</option>
-                                            <option value="Livestock Farm">Livestock Farm</option>
-                                            <option value="Agricultural Land">Agricultural Land</option>
-                                            <option value="Commercial Farm">Commercial Farm</option>
-                                        </SellerDashboardStyles.FormSelect>
-                                    </SellerDashboardStyles.FormGroup>
-                                    
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Topography</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormSelect
-                                            name="topography"
-                                            value={editProperty.topography || ''}
-                                            onChange={handleEditPropertyChange}
-                                        >
-                                            <option value="">Select topography</option>
-                                            <option value="Flat">Flat</option>
-                                            <option value="Rolling Hills">Rolling Hills</option>
-                                            <option value="Hilly">Hilly</option>
-                                            <option value="Mountainous">Mountainous</option>
-                                            <option value="Valley">Valley</option>
-                                            <option value="Plateau">Plateau</option>
-                                        </SellerDashboardStyles.FormSelect>
-                                    </SellerDashboardStyles.FormGroup>
-                                </SellerDashboardStyles.FormRow>
-                                
-                                <SellerDashboardStyles.FormRow>
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Water Rights*</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormSelect
-                                            name="waterRights"
-                                            value={editProperty.waterRights}
-                                            onChange={handleEditPropertyChange}
-                                            required
-                                        >
-                                            <option value="NIA Irrigation">NIA Irrigation</option>
-                                            <option value="Deep Well">Deep Well</option>
-                                            <option value="Creek Access">Creek Access</option>
-                                            <option value="Rain-fed Only">Rain-fed Only</option>
-                                            <option value="Deep Well + Rainwater Collection">Deep Well + Rainwater Collection</option>
-                                            <option value="River Access">River Access</option>
-                                        </SellerDashboardStyles.FormSelect>
-                                    </SellerDashboardStyles.FormGroup>
-                                    
-                                    <SellerDashboardStyles.FormGroup>
-                                        <SellerDashboardStyles.FormLabel>Status</SellerDashboardStyles.FormLabel>
-                                        <SellerDashboardStyles.FormSelect
-                                            name="status"
-                                            value={editProperty.status}
-                                            onChange={handleEditPropertyChange}
-                                            required
-                                        >
-                                            <option value="active">Active</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="sold">Sold</option>
-                                        </SellerDashboardStyles.FormSelect>
-                                    </SellerDashboardStyles.FormGroup>
-                                </SellerDashboardStyles.FormRow>
-                                
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Average Yield</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormInput
-                                        type="text"
-                                        name="averageYield"
-                                        value={editProperty.averageYield || ''}
-                                        onChange={handleEditPropertyChange}
-                                        placeholder="E.g., 120 sacks/hectare, 5 tons/hectare"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Suitable Crops*</SellerDashboardStyles.FormLabel>
-                                    <CropSelector
-                                        name="suitableCrops"
-                                        value={editProperty.suitableCrops}
-                                        onChange={handleEditPropertyChange}
-                                        required
-                                        placeholder="E.g., Rice, Corn, Vegetables"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
-
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Amenities</SellerDashboardStyles.FormLabel>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '8px' }}>
-                                        {[
-                                            'Electricity Connection', 'Water Pump House', 'Storage Facility', 'Farm House',
-                                            'Tool Shed', 'Concrete Roads', 'Drainage System', 'Fence/Boundary Markers',
-                                            'Vehicle Access', 'Internet/Phone Signal', 'Farm Equipment', 'Greenhouse'
-                                        ].map(amenity => (
-                                            <label key={amenity} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                                            {editProperty.images && editProperty.images.length > 0 ? (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+                                                    {editProperty.images.map((image, index) => (
+                                                        <SellerDashboardStyles.ImagePreview key={index}>
+                                                            <SellerDashboardStyles.ImagePreviewImg 
+                                                                src={image} 
+                                                                alt={`Property image ${index + 1}`} 
+                                                            />
+                                                        </SellerDashboardStyles.ImagePreview>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ textAlign: 'center' }}>
+                                                    <FaImage size={48} style={{ color: '#3498db', marginBottom: '16px' }} />
+                                                    <SellerDashboardStyles.ImageUploadText>
+                                                        Click to upload property images
+                                                    </SellerDashboardStyles.ImageUploadText>
+                                                    <SellerDashboardStyles.ImageUploadText>
+                                                        JPG, PNG, GIF, WebP up to 10MB each
+                                                    </SellerDashboardStyles.ImageUploadText>
+                                                    <SellerDashboardStyles.ImageUploadText>
+                                                        You can select multiple images
+                                                    </SellerDashboardStyles.ImageUploadText>
+                                                </div>
+                                            )}
+                                            
+                                            <SellerDashboardStyles.ImageUploadButton>
+                                                {imageUploadLoading ? (
+                                                    <>
+                                                        <SellerDashboardStyles.LoadingSpinner />
+                                                        Uploading...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaUpload size={16} />
+                                                        {editProperty.images && editProperty.images.length > 0 ? 'Add More Images' : 'Choose Images'}
+                                                    </>
+                                                )}
                                                 <input
-                                                    type="checkbox"
-                                                    checked={editProperty.amenities?.includes(amenity) || false}
-                                                    onChange={(e) => {
-                                                        const currentAmenities = editProperty.amenities || [];
-                                                        if (e.target.checked) {
-                                                            setEditProperty(prev => ({ 
-                                                                ...prev, 
-                                                                amenities: [...currentAmenities, amenity] 
-                                                            }));
-                                                        } else {
-                                                            setEditProperty(prev => ({ 
-                                                                ...prev, 
-                                                                amenities: currentAmenities.filter(a => a !== amenity) 
-                                                            }));
-                                                        }
-                                                    }}
-                                                    style={{ marginRight: '8px' }}
+                                                    id="edit-property-image-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={handlePropertyImageUpload}
+                                                    style={{ display: 'none' }}
                                                 />
-                                                {amenity}
-                                            </label>
-                                        ))}
-                                    </div>
-                                </SellerDashboardStyles.FormGroup>
+                                            </SellerDashboardStyles.ImageUploadButton>
+                                        </SellerDashboardStyles.ImageUploadSection>
+                                        
+                                        {/* Show uploaded image count */}
+                                        {editProperty.images && editProperty.images.length > 0 && (
+                                            <div style={{ 
+                                                marginTop: '12px', 
+                                                padding: '8px 12px', 
+                                                backgroundColor: 'rgba(39, 174, 96, 0.1)', 
+                                                borderRadius: '6px',
+                                                border: '1px solid rgba(39, 174, 96, 0.3)',
+                                                fontSize: '14px',
+                                                color: '#27ae60'
+                                            }}>
+                                                ✓ {editProperty.images.length} image(s) uploaded successfully
+                                            </div>
+                                        )}
+                                    </SellerDashboardStyles.FormSection>
 
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Price Display Settings</SellerDashboardStyles.FormLabel>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                                            <input
-                                                type="checkbox"
-                                                name="displayPrice"
-                                                checked={editProperty.displayPrice || false}
-                                                onChange={(e) => setEditProperty(prev => ({ ...prev, displayPrice: e.target.checked }))}
-                                                style={{ marginRight: '8px' }}
+                                    {/* Basic Information Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaInfoCircle size={20} />
+                                            Basic Information
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Property Title*</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormInput
+                                                type="text"
+                                                name="title"
+                                                value={editProperty.title}
+                                                onChange={handleEditPropertyChange}
+                                                required
+                                                placeholder="E.g., Prime Rice Farm with Irrigation"
                                             />
-                                            <span style={{ fontSize: '14px', color: '#2C3E50' }}>Display price publicly</span>
-                                        </label>
-                                    </div>
-                                    <small style={{ color: '#7f8c8d', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                                        Uncheck this if you prefer buyers to contact you for pricing information
-                                    </small>
-                                </SellerDashboardStyles.FormGroup>
+                                        </SellerDashboardStyles.FormGroup>
 
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Restrictions/Notes</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormTextarea
-                                        name="restrictionsText"
-                                        value={editProperty.restrictionsText || ''}
-                                        onChange={handleEditPropertyChange}
-                                        placeholder="Any restrictions, zoning limitations, or special conditions buyers should know about..."
-                                        rows="3"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Property Description*</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormTextarea
+                                                name="description"
+                                                value={editProperty.description || ''}
+                                                onChange={handleEditPropertyChange}
+                                                required
+                                                placeholder="Provide detailed description of the property including soil quality, accessibility, infrastructure, etc."
+                                                rows="4"
+                                            />
+                                        </SellerDashboardStyles.FormGroup>
 
-                                <SellerDashboardStyles.FormGroup>
-                                    <SellerDashboardStyles.FormLabel>Additional Remarks</SellerDashboardStyles.FormLabel>
-                                    <SellerDashboardStyles.FormTextarea
-                                        name="remarks"
-                                        value={editProperty.remarks || ''}
-                                        onChange={handleEditPropertyChange}
-                                        placeholder="Any additional information or special remarks about the property..."
-                                        rows="3"
-                                    />
-                                </SellerDashboardStyles.FormGroup>
-                                
-                                <SellerDashboardStyles.FormActions>
-                                    <SellerDashboardStyles.FormCancelButton
-                                        type="button"
-                                        onClick={() => setEditPropertyOpen(false)}
-                                    >
-                                        Cancel
-                                    </SellerDashboardStyles.FormCancelButton>
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Property Type*</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="type"
+                                                value={editProperty.type || ''}
+                                                onChange={handleEditPropertyChange}
+                                                required
+                                            >
+                                                <option value="">Select property type</option>
+                                                <option value="Rice Farm">Rice Farm</option>
+                                                <option value="Corn Farm">Corn Farm</option>
+                                                <option value="Vegetable Farm">Vegetable Farm</option>
+                                                <option value="Mixed Crop Farm">Mixed Crop Farm</option>
+                                                <option value="Livestock Farm">Livestock Farm</option>
+                                                <option value="Orchard">Orchard</option>
+                                                <option value="Raw Agricultural Land">Raw Agricultural Land</option>
+                                                <option value="Other">Other</option>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                        </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Location & Map Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaMapMarkerAlt size={20} />
+                                            Location & Map
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Barangay*</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="barangay"
+                                                value={editProperty.barangay || ''}
+                                                onChange={handleBarangayChange}
+                                                required
+                                            >
+                                                <option value="">Select a barangay</option>
+                                                {barangaysData.map(barangay => (
+                                                    <option key={barangay.name} value={barangay.name}>
+                                                        {barangay.name}
+                                                    </option>
+                                                ))}
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                            {selectedBarangay && (
+                                                <div style={{ 
+                                                    marginTop: '8px', 
+                                                    padding: '12px', 
+                                                    backgroundColor: 'rgba(52, 152, 219, 0.1)', 
+                                                    borderRadius: '8px', 
+                                                    border: '1px solid rgba(52, 152, 219, 0.3)'
+                                                }}>
+                                                    <div style={{ fontSize: '14px', color: '#ecf0f1', marginBottom: '4px' }}>
+                                                        <strong>Barangay Information:</strong>
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: '#bdc3c7' }}>
+                                                        <div>Elevation: {selectedBarangay.elevation}m</div>
+                                                        <div>Radius: {selectedBarangay.radius}m</div>
+                                                        {selectedBarangay.soilType && (
+                                                            <div>Soil Type: {selectedBarangay.soilType}</div>
+                                                        )}
+                                                        <div style={{ marginTop: '8px' }}>
+                                                            <strong>Crop Suitability:</strong>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px', marginTop: '4px' }}>
+                                                                {Object.entries(selectedBarangay.fruits).map(([crop, suitability]) => (
+                                                                    <div key={crop} style={{ fontSize: '11px' }}>
+                                                                        {crop}: {suitability || 'Not specified'}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </SellerDashboardStyles.FormGroup>
+                                        
+                                        <div style={{ 
+                                            border: '2px solid rgba(255, 255, 255, 0.1)', 
+                                            borderRadius: '12px', 
+                                            padding: '20px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                            minHeight: '250px'
+                                        }}>
+                                            <MapSection 
+                                                coordinates={editProperty.coordinates} 
+                                                onCoordinatesChange={(coords) => setEditProperty(prev => ({ ...prev, coordinates: coords }))}
+                                                isEditable={true}
+                                                barangayData={selectedBarangay}
+                                            />
+                                        </div>
+                                        <small style={{ color: '#95a5a6', fontSize: '12px', marginTop: '8px', display: 'block' }}>
+                                            {selectedBarangay 
+                                                ? `Map shows ${selectedBarangay.name} with ${selectedBarangay.radius}m radius. Click on the map to set the property location.`
+                                                : 'Select a barangay to see its area on the map, then click to set the property location.'
+                                            }
+                                        </small>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Property Details Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaRulerCombined size={20} />
+                                            Property Details
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.FormRow>
+                                            <SellerDashboardStyles.FormGroup>
+                                                <SellerDashboardStyles.FormLabel>Price (₱)*</SellerDashboardStyles.FormLabel>
+                                                <SellerDashboardStyles.ImprovedFormInput
+                                                    type="text"
+                                                    name="price"
+                                                    value={editProperty.price}
+                                                    onChange={handleEditPropertyChange}
+                                                    required
+                                                    placeholder="E.g., 8,750,000"
+                                                />
+                                            </SellerDashboardStyles.FormGroup>
+                                            
+                                            <SellerDashboardStyles.FormGroup>
+                                                <SellerDashboardStyles.FormLabel>Size (Hectares)*</SellerDashboardStyles.FormLabel>
+                                                <SellerDashboardStyles.ImprovedFormInput
+                                                    type="number"
+                                                    step="0.1"
+                                                    name="acres"
+                                                    value={editProperty.acres}
+                                                    onChange={handleEditPropertyChange}
+                                                    required
+                                                    placeholder="E.g., 5.2"
+                                                />
+                                            </SellerDashboardStyles.FormGroup>
+                                        </SellerDashboardStyles.FormRow>
+
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Topography</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="topography"
+                                                value={editProperty.topography || ''}
+                                                onChange={handleEditPropertyChange}
+                                            >
+                                                <option value="">Select topography</option>
+                                                <option value="Flat">Flat</option>
+                                                <option value="Gently Rolling">Gently Rolling</option>
+                                                <option value="Rolling">Rolling</option>
+                                                <option value="Hilly">Hilly</option>
+                                                <option value="Mixed">Mixed</option>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                        </SellerDashboardStyles.FormGroup>
+
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Average Yield (if applicable)</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormInput
+                                                type="text"
+                                                name="averageYield"
+                                                value={editProperty.averageYield || ''}
+                                                onChange={handleEditPropertyChange}
+                                                placeholder="E.g., 120 sacks/hectare, 5 tons/hectare"
+                                            />
+                                        </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Agricultural Details Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaSeedling size={20} />
+                                            Agricultural Details
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Water Rights*</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="waterRights"
+                                                value={editProperty.waterRights}
+                                                onChange={handleEditPropertyChange}
+                                                required
+                                            >
+                                                <option value="">Select water source</option>
+                                                <option value="NIA Irrigation">NIA Irrigation</option>
+                                                <option value="Deep Well">Deep Well</option>
+                                                <option value="Creek Access">Creek Access</option>
+                                                <option value="Rain-fed Only">Rain-fed Only</option>
+                                                <option value="Deep Well + Rainwater Collection">Deep Well + Rainwater Collection</option>
+                                                <option value="River Access">River Access</option>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                        </SellerDashboardStyles.FormGroup>
+                                        
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Suitable Crops*</SellerDashboardStyles.FormLabel>
+                                            <CropSelector
+                                                name="suitableCrops"
+                                                value={editProperty.suitableCrops}
+                                                onChange={handleEditPropertyChange}
+                                                required
+                                            />
+                                        </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Amenities Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaBuilding size={20} />
+                                            Amenities & Infrastructure
+                                        </SellerDashboardStyles.FormSectionTitle>
+                                        
+                                        <SellerDashboardStyles.AmenitiesGrid>
+                                            {[
+                                                'Electricity Connection', 'Water Pump House', 'Storage Facility', 'Farm House',
+                                                'Tool Shed', 'Concrete Roads', 'Drainage System', 'Fence/Boundary Markers',
+                                                'Vehicle Access', 'Internet/Phone Signal', 'Farm Equipment', 'Greenhouse'
+                                            ].map(amenity => (
+                                                <SellerDashboardStyles.AmenityCheckbox key={amenity}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editProperty.amenities?.includes(amenity) || false}
+                                                        onChange={(e) => {
+                                                            const currentAmenities = editProperty.amenities || [];
+                                                            if (e.target.checked) {
+                                                                setEditProperty(prev => ({ 
+                                                                    ...prev, 
+                                                                    amenities: [...currentAmenities, amenity] 
+                                                                }));
+                                                            } else {
+                                                                setEditProperty(prev => ({ 
+                                                                    ...prev, 
+                                                                    amenities: currentAmenities.filter(a => a !== amenity) 
+                                                                }));
+                                                            }
+                                                        }}
+                                                    />
+                                                    {amenity}
+                                                </SellerDashboardStyles.AmenityCheckbox>
+                                            ))}
+                                        </SellerDashboardStyles.AmenitiesGrid>
+                                    </SellerDashboardStyles.FormSection>
+
+                                    {/* Additional Information Section */}
+                                    <SellerDashboardStyles.FormSection>
+                                        <SellerDashboardStyles.FormSectionTitle>
+                                            <FaFileAlt size={20} />
+                                            Additional Information
+                                        </SellerDashboardStyles.FormSectionTitle>
+
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Status</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormSelect
+                                                name="status"
+                                                value={editProperty.status}
+                                                onChange={handleEditPropertyChange}
+                                                required
+                                            >
+                                                <option value="active">Active</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="sold">Sold</option>
+                                            </SellerDashboardStyles.ImprovedFormSelect>
+                                        </SellerDashboardStyles.FormGroup>
+
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Price Display Settings</SellerDashboardStyles.FormLabel>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="displayPrice"
+                                                        checked={editProperty.displayPrice || false}
+                                                        onChange={(e) => setEditProperty(prev => ({ ...prev, displayPrice: e.target.checked }))}
+                                                        style={{ marginRight: '8px', accentColor: '#3498db' }}
+                                                    />
+                                                    <span style={{ fontSize: '14px', color: '#ecf0f1' }}>Display price publicly</span>
+                                                </label>
+                                            </div>
+                                            <small style={{ color: '#95a5a6', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                                Uncheck this if you prefer buyers to contact you for pricing information
+                                            </small>
+                                        </SellerDashboardStyles.FormGroup>
+
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Restrictions/Notes</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormTextarea
+                                                name="restrictionsText"
+                                                value={editProperty.restrictionsText || ''}
+                                                onChange={handleEditPropertyChange}
+                                                placeholder="Any restrictions, zoning limitations, or special conditions buyers should know about..."
+                                                rows="3"
+                                            />
+                                        </SellerDashboardStyles.FormGroup>
+
+                                        <SellerDashboardStyles.FormGroup>
+                                            <SellerDashboardStyles.FormLabel>Additional Remarks</SellerDashboardStyles.FormLabel>
+                                            <SellerDashboardStyles.ImprovedFormTextarea
+                                                name="remarks"
+                                                value={editProperty.remarks || ''}
+                                                onChange={handleEditPropertyChange}
+                                                placeholder="Any additional information or special remarks about the property..."
+                                                rows="3"
+                                            />
+                                        </SellerDashboardStyles.FormGroup>
+                                    </SellerDashboardStyles.FormSection>
                                     
-                                    <SellerDashboardStyles.FormSubmitButton type="submit">
-                                        Update Property
-                                    </SellerDashboardStyles.FormSubmitButton>
-                                </SellerDashboardStyles.FormActions>
-                            </form>
-                        </SellerDashboardStyles.ModalContainer>
+                                    <SellerDashboardStyles.ImprovedFormActions>
+                                        <SellerDashboardStyles.ImprovedFormCancelButton
+                                            type="button"
+                                            onClick={() => setEditPropertyOpen(false)}
+                                        >
+                                            Cancel
+                                        </SellerDashboardStyles.ImprovedFormCancelButton>
+                                        
+                                        <SellerDashboardStyles.ImprovedFormSubmitButton 
+                                            type="submit"
+                                            disabled={imageUploadLoading}
+                                        >
+                                            {imageUploadLoading ? (
+                                                <>
+                                                    <SellerDashboardStyles.LoadingSpinner />
+                                                    Updating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaEdit size={16} />
+                                                    Update Property Listing
+                                                </>
+                                            )}
+                                        </SellerDashboardStyles.ImprovedFormSubmitButton>
+                                    </SellerDashboardStyles.ImprovedFormActions>
+                                </form>
+                            </SellerDashboardStyles.ImprovedModalContent>
+                        </SellerDashboardStyles.ImprovedModalContainer>
                     </SellerDashboardStyles.ModalOverlay>
                 )}
 
@@ -2478,104 +2775,6 @@ const SellerDashboard = ({ navigateTo }) => {
                     </DashboardStyles.ModalOverlay>
                 )}
 
-                {/* Seller Tools Modal */}
-                {toolModalOpen && (
-                    <SellerDashboardStyles.ModalOverlay>
-                        <SellerDashboardStyles.ModalContainer>
-                        <SellerDashboardStyles.ModalHeader>
-                            <SellerDashboardStyles.ModalTitle>
-                            {activeToolModal === 'priceCalculator' && 'Property Price Calculator'}
-                            {activeToolModal === 'marketAnalysis' && 'Market Analysis Tool'}
-                            {activeToolModal === 'listingEnhancement' && 'Listing Enhancement Tips'}
-                            </SellerDashboardStyles.ModalTitle>
-                            <SellerDashboardStyles.ModalCloseButton onClick={() => setToolModalOpen(false)}>
-                            ×
-                            </SellerDashboardStyles.ModalCloseButton>
-                        </SellerDashboardStyles.ModalHeader>
-                        {activeToolModal === 'priceCalculator' && <PriceCalculatorTool />}
-                        {activeToolModal === 'marketAnalysis' && <MarketAnalysisTool />}
-                        {activeToolModal === 'listingEnhancement' && (
-                            <SellerDashboardStyles.ToolContainer>
-                            <p style={{ fontSize: '15px', color: '#34495E', lineHeight: '1.5' }}>
-                                Use these expert tips to optimize your listings and attract more potential buyers.
-                            </p>
-                            
-                            <SellerDashboardStyles.TipCard $accentColor="#3498db">
-                                <SellerDashboardStyles.TipTitle>
-                                <FaCamera /> Quality Photography
-                                </SellerDashboardStyles.TipTitle>
-                                <SellerDashboardStyles.TipText>
-                                Properties with professional photos receive 2x more views. Include images of:
-                                <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
-                                    <li>Land boundaries and infrastructure</li>
-                                    <li>Water sources and irrigation systems</li>
-                                    <li>Current crops or vegetation (if any)</li>
-                                    <li>Access roads and surrounding areas</li>
-                                    <li>Panoramic views that show the full property</li>
-                                </ul>
-                                </SellerDashboardStyles.TipText>
-                            </SellerDashboardStyles.TipCard>
-                            
-                            <SellerDashboardStyles.TipCard $accentColor="#2ecc71" $bgColor="rgba(46, 204, 113, 0.1)">
-                                <SellerDashboardStyles.TipTitle>
-                                <FaFileAlt /> Detailed Descriptions
-                                </SellerDashboardStyles.TipTitle>
-                                <SellerDashboardStyles.TipText>
-                                Be specific about soil quality, water rights, and productive capacity. Mention:
-                                <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
-                                    <li>Specific soil types and quality</li>
-                                    <li>Reliable water sources and irrigation details</li>
-                                    <li>Current and potential crops suitable for the land</li>
-                                    <li>Recent improvements or infrastructure</li>
-                                    <li>Historical yield data if available</li>
-                                </ul>
-                                </SellerDashboardStyles.TipText>
-                            </SellerDashboardStyles.TipCard>
-                            
-                            <SellerDashboardStyles.TipCard $accentColor="#f39c12" $bgColor="rgba(243, 156, 18, 0.1)">
-                                <SellerDashboardStyles.TipTitle>
-                                <FaTags /> Strategic Pricing
-                                </SellerDashboardStyles.TipTitle>
-                                <SellerDashboardStyles.TipText>
-                                Properties priced within 5% of market value sell 30% faster. Consider:
-                                <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
-                                    <li>Recent sales of comparable properties in your area</li>
-                                    <li>Current market trends for agricultural land</li>
-                                    <li>Special features that add value (water rights, road access)</li>
-                                    <li>Setting a price slightly below a round number (e.g. ₱8,975,000 instead of ₱9,000,000)</li>
-                                </ul>
-                                </SellerDashboardStyles.TipText>
-                            </SellerDashboardStyles.TipCard>
-                            
-                            <SellerDashboardStyles.TipCard $accentColor="#9b59b6" $bgColor="rgba(155, 89, 182, 0.1)">
-                                <SellerDashboardStyles.TipTitle>
-                                <FaRegClock /> Response Time
-                                </SellerDashboardStyles.TipTitle>
-                                <SellerDashboardStyles.TipText>
-                                Responding within 24 hours increases conversion by 40%. Make sure to:
-                                <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
-                                    <li>Set up notifications for new inquiries</li>
-                                    <li>Prepare answers to common questions in advance</li>
-                                    <li>Schedule property viewings promptly</li>
-                                    <li>Follow up with interested buyers within 48 hours</li>
-                                </ul>
-                                </SellerDashboardStyles.TipText>
-                            </SellerDashboardStyles.TipCard>
-                            
-                            <SellerDashboardStyles.FormActions>
-                                <SellerDashboardStyles.FormCancelButton onClick={() => setToolModalOpen(false)}>
-                                Close
-                                </SellerDashboardStyles.FormCancelButton>
-                                <SellerDashboardStyles.FormSubmitButton>
-                                Apply to Listings
-                                </SellerDashboardStyles.FormSubmitButton>
-                            </SellerDashboardStyles.FormActions>
-                            </SellerDashboardStyles.ToolContainer>
-                        )}
-                        </SellerDashboardStyles.ModalContainer>
-                    </SellerDashboardStyles.ModalOverlay>
-                )}
-
                 {previewModalOpen && previewListing && (
                     <PreviewModalStyles.PreviewModal>
                         <PreviewModalStyles.PreviewContent>
@@ -2765,10 +2964,35 @@ const SellerDashboard = ({ navigateTo }) => {
                                     <PreviewModalStyles.Section>
                                         <PreviewModalStyles.SectionTitle>Location</PreviewModalStyles.SectionTitle>
                                         <MapSection 
-                                            coordinates={previewListing.coordinates} 
+                                            coordinates={previewListing.barangayData?.center || previewListing.coordinates} 
                                             onCoordinatesChange={handleCoordinatesChange}
-                                            isEditable={true}
+                                            isEditable={false}
+                                            barangayData={previewListing.barangayData}
                                         />
+                                        {previewListing.barangay && (
+                                            <div style={{
+                                                marginTop: '12px',
+                                                padding: '12px',
+                                                backgroundColor: 'rgba(44, 62, 80, 0.7)',
+                                                borderRadius: '8px',
+                                                border: '1px solid rgba(52, 152, 219, 0.5)',
+                                                color: '#ecf0f1'
+                                            }}>
+                                                <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                                                    <FaMapMarkerAlt style={{ marginRight: '8px' }} />
+                                                    Barangay: {previewListing.barangay}
+                                                </div>
+                                                {previewListing.barangayData && (
+                                                    <div style={{ fontSize: '13px', lineHeight: '1.8' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}><FaMountain style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} /> Elevation: {previewListing.barangayData.elevation}m</div>
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}><FaCircleNotch style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} /> Radius: {previewListing.barangayData.radius}m</div>
+                                                        {previewListing.barangayData.soilType && (
+                                                            <div style={{ display: 'flex', alignItems: 'center' }}><FaSeedling style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />Soil Type: {previewListing.barangayData.soilType}</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </PreviewModalStyles.Section>
                                 </PreviewModalStyles.ContentGrid>
                             </PreviewModalStyles.MainContent>

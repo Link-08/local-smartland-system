@@ -11,9 +11,7 @@ const logger = {
                 userAgent: req?.headers['user-agent']
             };
 
-            console.log('Creating log:', logData);
             const log = await Log.create(logData);
-            console.log('Log created:', log.id);
             return log;
         } catch (error) {
             console.error('Error creating log:', error);

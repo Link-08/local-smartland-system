@@ -3,6 +3,7 @@ const router = express.Router();
 const { Property, User, Log } = require('../models');
 const { Op } = require('sequelize');
 const { auth } = require('../middleware/auth');
+const sequelize = require('../config/database');
 
 // Apply auth middleware to all routes
 router.use(auth);
@@ -156,8 +157,12 @@ router.get('/metrics/:id', async (req, res) => {
             where: { sellerId: req.params.id }
         });
 
-        // Calculate metrics with trend analysis
+        // Get property IDs for this seller
+        const propertyIds = properties.map(prop => prop.id);
+
+        // Count views from property viewCount field (updated when buyers click on properties)
         const totalViews = properties.reduce((sum, prop) => sum + (prop.viewCount || 0), 0);
+
         const totalInquiries = properties.reduce((sum, prop) => sum + (prop.inquiries || 0), 0);
         const activeProperties = properties.filter(p => p.status === 'active').length;
         const soldProperties = properties.filter(p => p.status === 'sold');
@@ -370,6 +375,7 @@ router.get('/properties/:id', async (req, res) => {
             title: property.title,
             description: property.description,
             price: property.price,
+            showPrice: true,
             location: property.location,
             acres: property.acres,
             waterRights: property.waterRights,
@@ -380,6 +386,17 @@ router.get('/properties/:id', async (req, res) => {
             status: property.status,
             createdAt: property.createdAt,
             updatedAt: property.updatedAt,
+            // Add missing fields for quick information and preview modal
+            type: property.type,
+            topography: property.topography,
+            averageYield: property.averageYield,
+            amenities: property.amenities,
+            restrictionsText: property.restrictionsText,
+            remarks: property.remarks,
+            displayPrice: property.displayPrice,
+            barangay: property.barangay,
+            barangayData: property.barangayData,
+            coordinates: property.coordinates,
             seller: {
                 firstName: property.seller.firstName,
                 lastName: property.seller.lastName,

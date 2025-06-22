@@ -495,8 +495,9 @@ export const DashboardStyles = {
     
     PropertyActions: styled.div`
         display: flex;
-        justify-content: space-between;
-        margin-top: auto;
+        justify-content: flex-start;
+        margin-top: 10px;
+        gap: 8px;
     `,
     
     ProfileSection: styled.div`

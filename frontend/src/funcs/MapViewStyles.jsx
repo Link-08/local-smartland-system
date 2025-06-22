@@ -425,95 +425,74 @@ export const ClearButton = muiStyled('button')(({ theme }) => ({
 }));
 
 export const LandsSection = styled.div`
-    position: fixed;
-    top: 100px;
-    right: 420px; // Position to the left of FilterSection
-    width: 350px;
-    height: calc(100vh - 40vh);
-    background: linear-gradient(145deg, #2c3e50, #34495e);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    backdrop-filter: blur(10px);
+	background: rgba(30, 42, 54, 0.95);
+	backdrop-filter: blur(8px);
+	color: #fff;
+	padding: 0;
+	border-radius: 8px;
+    width: 100%;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 export const LandsHeader = styled.div`
-    padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 export const LandsTitle = styled.h3`
-    color: #fff;
-    margin: 0;
-    font-size: 1.2em;
-    font-weight: 600;
+	margin: 0;
+	font-size: 1.2rem;
+	font-weight: 600;
 `;
 
 export const LandsCount = styled.span`
-    color: #bdc3c7;
-    font-size: 0.9em;
-    font-weight: normal;
-    display: block;
-    margin-top: 4px;
+	font-size: 0.9rem;
+	font-weight: 400;
+	color: #bdc3c7;
+	margin-left: 8px;
 `;
 
 export const CloseButton = styled.button`
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-    
-    &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
+	background: none;
+	border: none;
+	color: #fff;
+	font-size: 1.5rem;
+	cursor: pointer;
+	padding: 0;
+	line-height: 1;
+
+	&:hover {
+		color: #e74c3c;
+	}
 `;
 
 export const LandsScrollContainer = styled.div`
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 10px 20px;
-    
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    &::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 3px;
-    }
+	flex-grow: 1;
+	overflow-y: auto;
+	padding: 16px;
+	max-height: 60vh;
 `;
 
 export const LandCard = styled.div`
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
-    
-    &:hover {
-        background: rgba(255, 255, 255, 0.12);
-        transform: translateY(-2px);
-    }
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 8px;
+	padding: 16px;
+	margin-bottom: 16px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	transition: all 0.2s ease;
+	
+	&:hover {
+		background: rgba(255, 255, 255, 0.12);
+		transform: translateY(-2px);
+	}
 `;
 
 export const LandHeader = styled.div`

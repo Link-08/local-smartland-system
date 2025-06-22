@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import "leaflet/dist/leaflet.css";
 import L from 'leaflet';
 import axios from 'axios';
+import api from '../api';
 // Import styled components from MapViewStyles
 import { 
     GlobalStyles,
@@ -428,6 +429,7 @@ const MapView = () => {
     const [lastWeatherFetch, setLastWeatherFetch] = useState(null);
     const [barangayColors] = useState(() => generateBarangayColors(getBarangaysArray()));
     const [selectedIrrigationCategory, setSelectedIrrigationCategory] = useState('');
+    const [allProperties, setAllProperties] = useState([]);
 
     // Move getBarangayColor inside the component
     const getBarangayColor = (barangay, filterType, barangayColors) => {
@@ -465,63 +467,53 @@ const MapView = () => {
         }
     };
 
-    const mockLandsData = {
-        "Aduas Sur": [
-            {
-                id: 1,
-                title: "Agricultural Land - 2 Hectares",
-                area: "2.0 hectares",
-                price: "₱1,500,000",
-                pricePerSqm: "₱75/sqm",
-                type: "Agricultural",
-                description: "Prime agricultural land suitable for rice farming",
-                contact: "09123456789",
-                features: ["Irrigated", "Road Access", "Fertile Soil"]
-            },
-            {
-                id: 2,
-                title: "Residential Lot - 500 sqm",
-                area: "500 sqm",
-                price: "₱750,000",
-                pricePerSqm: "₱1,500/sqm",
-                type: "Residential",
-                description: "Ideal for house construction, near main road",
-                contact: "09987654321",
-                features: ["Titled", "Near School", "Electricity Available"]
-            }
-        ],
-        "Aduas Norte": [
-            {
-                id: 3,
-                title: "Farm Land - 1.5 Hectares",
-                area: "1.5 hectares",
-                price: "₱1,200,000",
-                pricePerSqm: "₱80/sqm",
-                type: "Agricultural",
-                description: "Good for vegetable farming, with water source",
-                contact: "09111222333",
-                features: ["Water Source", "Fertile Soil", "Titled"]
-            }
-        ]
-        // Add more barangays and their land listings here
-    };
-
     const fetchAvailableLands = async (barangayName) => {
         setLandsLoading(true);
         try {
-            // Replace this with actual API call
-            // const response = await fetch(`/api/lands/${barangayName}`);
-            // const lands = await response.json();
-            
-            // Using mock data for now
-            const lands = mockLandsData[barangayName] || [];
+            // Use the new API endpoint to fetch properties by barangay
+            const response = await api.get(`/api/properties/by-barangay/${encodeURIComponent(barangayName)}`);
+            const lands = response.data || [];
             setAvailableLands(lands);
             setShowLandsList(lands.length > 0);
+            
+            if (lands.length === 0) {
+                console.log(`No properties found for barangay: ${barangayName}`);
+            }
         } catch (error) {
             console.error('Error fetching lands data:', error);
             setAvailableLands([]);
+            setShowLandsList(false);
+            
+            // Show user-friendly error message
+            if (error.response?.status === 404) {
+                console.log(`No properties found for barangay: ${barangayName}`);
+            } else {
+                console.error('Network error or server issue when fetching properties');
+            }
         } finally {
             setLandsLoading(false);
+        }
+    };
+
+    const fetchAllProperties = async () => {
+        try {
+            const response = await api.get('/api/properties');
+            const properties = response.data || [];
+            setAllProperties(properties);
+            
+            if (properties.length === 0) {
+                console.log('No properties found in the system');
+            }
+        } catch (error) {
+            console.error('Error fetching all properties:', error);
+            setAllProperties([]);
+            
+            // Show user-friendly error message
+            if (error.response?.status === 401) {
+                console.error('Authentication required to view properties');
+            } else {
+                console.error('Network error or server issue when fetching all properties');
+            }
         }
     };
 
@@ -1695,22 +1687,40 @@ const MapView = () => {
                                             <LandInfo>
                                                 <strong>Per sqm:</strong> {land.pricePerSqm}
                                             </LandInfo>
+                                            {land.suitableCrops && (
+                                                <LandInfo>
+                                                    <strong>Suitable Crops:</strong> {land.suitableCrops}
+                                                </LandInfo>
+                                            )}
+                                            {land.topography && (
+                                                <LandInfo>
+                                                    <strong>Topography:</strong> {land.topography}
+                                                </LandInfo>
+                                            )}
                                         </LandDetails>
                                         
                                         <LandDescription>{land.description}</LandDescription>
                                         
                                         <LandFeatures>
-                                            {land.features.map(feature => (
-                                                <FeatureTag key={feature}>{feature}</FeatureTag>
-                                            ))}
+                                            {land.features && land.features.length > 0 ? (
+                                                land.features.map(feature => (
+                                                    <FeatureTag key={feature}>{feature}</FeatureTag>
+                                                ))
+                                            ) : (
+                                                <span style={{ color: '#95a5a6', fontStyle: 'italic' }}>
+                                                    No specific features listed
+                                                </span>
+                                            )}
                                         </LandFeatures>
                                         
                                         <LandContact>
                                             <ContactButton href={`tel:${land.contact}`}>
                                                 📞 {land.contact}
                                             </ContactButton>
-                                            <InquireButton>
-                                                💬 Send Inquiry
+                                            <InquireButton 
+                                                href={`mailto:${land.seller?.email || 'contact@smartland.com'}?subject=Inquiry about ${land.title}&body=Hello,%0D%0A%0D%0AI am interested in your property: ${land.title}%0D%0A%0D%0APlease provide more information about this listing.%0D%0A%0D%0AThank you.`}
+                                            >
+                                                📧 Email
                                             </InquireButton>
                                         </LandContact>
                                     </LandCard>
@@ -1723,7 +1733,153 @@ const MapView = () => {
                         </LandsScrollContainer>
                     </LandsSection>
                 )}
-      
+
+                {filters.showAllBarangays && allProperties.length > 0 && (
+                    <div style={{
+                        background: 'rgba(30, 42, 54, 0.95)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#fff',
+                        borderRadius: '8px',
+                        width: '100%',
+                        marginTop: '20px',
+                        marginBottom: '20px',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '16px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        }}>
+                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600 }}>
+                                All Available Properties
+                                <span style={{ fontSize: '0.9rem', fontWeight: 400, color: '#bdc3c7', marginLeft: '8px' }}>
+                                    ({allProperties.length} listings)
+                                </span>
+                            </h3>
+                        </div>
+                        
+                        <div style={{ overflowY: 'auto', padding: '16px', maxHeight: '60vh' }}>
+                            {(() => {
+                                // Group properties by barangay
+                                const propertiesByBarangay = {};
+                                allProperties.forEach(property => {
+                                    const barangay = property.barangay || 'Unknown Barangay';
+                                    if (!propertiesByBarangay[barangay]) {
+                                        propertiesByBarangay[barangay] = [];
+                                    }
+                                    propertiesByBarangay[barangay].push(property);
+                                });
+
+                                return Object.entries(propertiesByBarangay).map(([barangay, properties]) => (
+                                    <div key={barangay} style={{
+                                        marginBottom: '20px',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                                        borderRadius: '8px',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{
+                                            padding: '12px 16px',
+                                            backgroundColor: 'rgba(82, 95, 127, 0.2)',
+                                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                            fontWeight: 'bold',
+                                            color: '#ecf0f1',
+                                            fontSize: '16px',
+                                        }}>
+                                            📍 {barangay} ({properties.length} {properties.length === 1 ? 'listing' : 'listings'})
+                                        </div>
+                                        
+                                        <div style={{ padding: '8px' }}>
+                                            {properties.map(property => (
+                                                <div key={property.id} style={{
+                                                    padding: '12px',
+                                                    margin: '8px',
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                    borderRadius: '6px',
+                                                }}>
+                                                    <div style={{
+                                                        fontWeight: '600',
+                                                        color: '#3498db',
+                                                        marginBottom: '10px',
+                                                        fontSize: '16px'
+                                                    }}>
+                                                        {property.title}
+                                                    </div>
+                                                    
+                                                    <div style={{
+                                                        fontSize: '13px',
+                                                        color: '#2c3e50',
+                                                        marginBottom: '8px',
+                                                        lineHeight: '1.4'
+                                                    }}>
+                                                        <div><strong>Area:</strong> {property.area || `${property.acres} hectares`}</div>
+                                                        <div><strong>Price:</strong> {property.showPrice ? (property.price ? `₱${Number(property.price).toLocaleString('en-US')}` : 'N/A') : 'Price on Request'}</div>
+                                                        <div><strong>Type:</strong> {property.type}</div>
+                                                        {property.suitableCrops && (
+                                                            <div><strong>Suitable Crops:</strong> {property.suitableCrops}</div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div style={{
+                                                        fontSize: '13px',
+                                                        color: '#bdc3c7',
+                                                        marginBottom: '12px',
+                                                        lineHeight: '1.5',
+                                                        fontStyle: 'italic',
+                                                    }}>
+                                                        {property.description}
+                                                    </div>
+                                                    
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        gap: '10px',
+                                                        flexWrap: 'wrap',
+                                                        marginTop: '12px'
+                                                    }}>
+                                                        <a 
+                                                            href={`tel:${property.contact || property.seller?.phone || ''}`}
+                                                            style={{
+                                                                padding: '6px 12px',
+                                                                backgroundColor: '#27ae60',
+                                                                color: 'white',
+                                                                textDecoration: 'none',
+                                                                borderRadius: '4px',
+                                                                fontSize: '12px',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px'
+                                                            }}
+                                                        >
+                                                            📞 Call
+                                                        </a>
+                                                        <a 
+                                                            href={`mailto:${property.seller?.email || 'contact@smartland.com'}?subject=Inquiry about ${property.title}&body=Hello,%0D%0A%0D%0AI am interested in your property: ${property.title}%0D%0A%0D%0APlease provide more information about this listing.%0D%0A%0D%0AThank you.`}
+                                                            style={{
+                                                                padding: '6px 12px',
+                                                                backgroundColor: '#3498db',
+                                                                color: 'white',
+                                                                textDecoration: 'none',
+                                                                borderRadius: '4px',
+                                                                fontSize: '12px',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px'
+                                                            }}
+                                                        >
+                                                            📧 Email
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+                    </div>
+                )}
                 <FilterGroup>
                   <FilterTitle>Select Barangay:</FilterTitle>
                   <button
@@ -1746,7 +1902,8 @@ const MapView = () => {
                         }));
                         setBarangayInfo(null);
                         setHighlightedAreas([]);
-                        // ADD: Clear lands when showing all barangays
+                        // Fetch all properties when showing all barangays
+                        fetchAllProperties();
                         setAvailableLands([]);
                         setShowLandsList(false);
                     }}

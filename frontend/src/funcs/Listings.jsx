@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { ListingStyles } from './ListingsStyles';
 import { formatPrice, formatDate } from './formatUtils';
 import api from '../api';
-import { FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaStar, FaList, FaRegCalendarAlt } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaStar, FaList, FaRegCalendarAlt, FaHeart } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -16,7 +16,7 @@ const getSellerInfo = (sellerKey) => {
         profileImage: '/api/placeholder/40/40',
         rating: 4.5,
         listings: 12,
-        memberSince: '2018-01-01',
+        createdAt: '2018-01-01',
         }
     };
     return sellerProfiles[sellerKey] || {
@@ -24,7 +24,7 @@ const getSellerInfo = (sellerKey) => {
         profileImage: '/api/placeholder/40/40',
         rating: 0,
         listings: 0,
-        memberSince: '2024-01-01',
+        createdAt: '2024-01-01',
     };
 };
 
@@ -37,6 +37,19 @@ L.Icon.Default.mergeOptions({
 });
 
 const ListingPage = ({ property }) => {
+    // Add CSS for loading animation
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
+    
     const { id } = useParams();
     const [listing, setListing] = useState(property ? {
         ...property,
@@ -46,7 +59,7 @@ const ListingPage = ({ property }) => {
             profileImage: property.sellerAvatar || '/api/placeholder/40/40',
             rating: 0,
             listings: 0,
-            memberSince: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
         },
         amenities: property.amenities || [],
         restrictions: property.restrictions || [],
@@ -58,6 +71,10 @@ const ListingPage = ({ property }) => {
     const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [contactModalOpen, setContactModalOpen] = useState(false);
+    
+    // State for favorite status tracking
+    const [favoriteStatus, setFavoriteStatus] = useState(false);
+    const [checkingFavorite, setCheckingFavorite] = useState(false);
 
     // Default coordinates for Cabanatuan, Nueva Ecija
     const defaultCenter = [15.4910, 120.9679];
@@ -93,38 +110,29 @@ const ListingPage = ({ property }) => {
         const fetchProperty = async () => {
             try {
                 setLoading(true);
-                const response = await api.get(`/api/properties/${id}`);
+                const response = await api.get(`/api/properties/public/${id}`);
                 const propertyData = response.data;
+                
+                // Check favorite status when property loads
+                checkFavoriteStatus(propertyData.id);
                 
                 setListing({
                     ...propertyData,
-                    images: propertyData.images || [propertyData.image || '/api/placeholder/800/500'],
-                    seller: {
-                        name: `${propertyData.seller?.firstName} ${propertyData.seller?.lastName}`,
-                        profileImage: propertyData.seller?.avatar || '/api/placeholder/40/40',
-                        rating: propertyData.seller?.rating || 0,
-                        listings: propertyData.seller?.listings || 0,
-                        memberSince: propertyData.seller?.memberSince || new Date().toISOString(),
-                    },
-                    amenities: propertyData.amenities || [],
-                    restrictions: propertyData.restrictions || [],
-                    views: propertyData.views || 0,
-                    saved: propertyData.saved || 0,
-                    showPrice: propertyData.showPrice !== false // Default to true if not specified
+                    images: propertyData.images || [propertyData.image || "/api/placeholder/800/500"],
+                    saved: propertyData.saved || 0
                 });
             } catch (err) {
                 console.error('Error fetching property:', err);
-                setError('Failed to load property details. Please try again later.');
+                setError('Failed to load property details');
             } finally {
                 setLoading(false);
             }
         };
 
-        // Only fetch if we don't have property data and we have an ID
-        if (!property && id) {
+        if (id) {
             fetchProperty();
         }
-    }, [id, property]);
+    }, [id]);
     
     const handlePrevImage = () => {
         setActiveImageIndex(prev => 
@@ -155,14 +163,30 @@ const ListingPage = ({ property }) => {
         }
 
         try {
-            const response = await api.post(`/api/favorites/${listing.id}`);
-            if (response.status === 201) {
-                // Update the saved count in the UI
-                setListing(prev => ({
-                    ...prev,
-                    saved: prev.saved + 1
-                }));
-                alert('Property saved to favorites');
+            if (favoriteStatus) {
+                // Remove from favorites
+                const response = await api.delete(`/api/favorites/${listing.id}`);
+                if (response.status === 200) {
+                    setFavoriteStatus(false);
+                    // Update the saved count in the UI
+                    setListing(prev => ({
+                        ...prev,
+                        saved: Math.max(0, prev.saved - 1)
+                    }));
+                    alert('Property removed from favorites');
+                }
+            } else {
+                // Add to favorites
+                const response = await api.post(`/api/favorites/${listing.id}`);
+                if (response.status === 201) {
+                    setFavoriteStatus(true);
+                    // Update the saved count in the UI
+                    setListing(prev => ({
+                        ...prev,
+                        saved: prev.saved + 1
+                    }));
+                    alert('Property saved to favorites');
+                }
             }
         } catch (error) {
             if (error.response?.status === 400) {
@@ -182,6 +206,22 @@ const ListingPage = ({ property }) => {
     
     const closeContactModal = () => {
         setContactModalOpen(false);
+    };
+
+    // Function to check if a property is favorited
+    const checkFavoriteStatus = async (propertyId) => {
+        if (!propertyId) return;
+        
+        setCheckingFavorite(true);
+        try {
+            const response = await api.get(`/api/favorites/check/${propertyId}`);
+            setFavoriteStatus(response.data.isFavorite);
+        } catch (error) {
+            console.error('Error checking favorite status:', error);
+            setFavoriteStatus(false);
+        } finally {
+            setCheckingFavorite(false);
+        }
     };
 
     if (loading) {
@@ -399,7 +439,7 @@ const ListingPage = ({ property }) => {
                         </ListingStyles.StatItem>
                         <ListingStyles.StatItem>
                         <ListingStyles.StatValue>
-                            {new Date(listing.seller.memberSince).getFullYear()}
+                            {new Date(listing.seller.createdAt).getFullYear()}
                         </ListingStyles.StatValue>
                         <ListingStyles.StatLabel>Member Since</ListingStyles.StatLabel>
                         </ListingStyles.StatItem>
@@ -415,8 +455,33 @@ const ListingPage = ({ property }) => {
                         <ListingStyles.ShareButton onClick={handleShare}>
                         Share Listing
                         </ListingStyles.ShareButton>
-                        <ListingStyles.SaveButton onClick={handleSave}>
-                        Save to Favorites
+                        <ListingStyles.SaveButton 
+                            onClick={handleSave}
+                            disabled={checkingFavorite}
+                            style={{
+                                opacity: checkingFavorite ? 0.7 : 1,
+                                cursor: checkingFavorite ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            {checkingFavorite ? (
+                                <>
+                                    <div style={{ 
+                                        width: '16px', 
+                                        height: '16px', 
+                                        border: '2px solid white', 
+                                        borderTop: '2px solid transparent', 
+                                        borderRadius: '50%', 
+                                        animation: 'spin 1s linear infinite',
+                                        marginRight: '8px'
+                                    }}></div>
+                                    Checking...
+                                </>
+                            ) : (
+                                <>
+                                    <FaHeart style={{ marginRight: '8px' }} />
+                                    {favoriteStatus ? 'Remove from Favorites' : 'Save to Favorites'}
+                                </>
+                            )}
                         </ListingStyles.SaveButton>
                     </ListingStyles.ActionButtons>
                     </ListingStyles.ActionCard>

@@ -41,11 +41,8 @@ const Login = ({ onClose }) => {
         setLoginError("");
         
         try {
-            console.log('Attempting login with:', loginData.email);
-            
             // Call login with email and password
             const user = await login(loginData.email, loginData.password);
-            console.log('Login successful');
             
             // Role-based redirection
             if (user.role === 'buyer') {

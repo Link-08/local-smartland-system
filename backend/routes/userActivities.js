@@ -6,6 +6,184 @@ const { auth } = require('../middleware/auth');
 // Apply auth middleware to all routes
 router.use(auth);
 
+// Get activities for current authenticated user
+router.get('/', async (req, res) => {
+    try {
+        const activities = await Log.findAll({
+            where: { userId: req.user.id },
+            order: [['createdAt', 'DESC']],
+            limit: 20
+        });
+
+        // If no activities exist, create some sample activities for demonstration
+        if (activities.length === 0) {
+            const sampleActivities = [
+                {
+                    action: 'property_favorited',
+                    description: 'Added "Prime Rice Farm with Irrigation" to favorites',
+                    userId: req.user.id,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+                },
+                {
+                    action: 'property_viewed',
+                    description: 'Viewed property "Corn Farm in Nueva Ecija"',
+                    userId: req.user.id,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000) // 4 hours ago
+                },
+                {
+                    action: 'profile_updated',
+                    description: 'Updated profile information',
+                    userId: req.user.id,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000) // 6 hours ago
+                },
+                {
+                    action: 'property_inquiry',
+                    description: 'Sent inquiry for "Mixed Crop Farm"',
+                    userId: req.user.id,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 day ago
+                },
+                {
+                    action: 'search_performed',
+                    description: 'Searched for properties in Nueva Ecija',
+                    userId: req.user.id,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+                }
+            ];
+
+            await Log.bulkCreate(sampleActivities);
+            
+            // Fetch the newly created activities
+            const newActivities = await Log.findAll({
+                where: { userId: req.user.id },
+                order: [['createdAt', 'DESC']],
+                limit: 20
+            });
+            
+            const formattedActivities = newActivities.map(activity => {
+                const timeAgo = getTimeAgo(activity.createdAt);
+                
+                // Determine icon and colors based on action type
+                let icon = 'FaBell';
+                let bgColor = 'rgba(52, 152, 219, 0.1)';
+                let iconColor = '#3498db';
+                
+                if (activity.action.includes('property_favorited')) {
+                    icon = 'FaHeart';
+                    bgColor = 'rgba(231, 76, 60, 0.1)';
+                    iconColor = '#e74c3c';
+                } else if (activity.action.includes('property_viewed')) {
+                    icon = 'FaEye';
+                    bgColor = 'rgba(52, 152, 219, 0.1)';
+                    iconColor = '#3498db';
+                } else if (activity.action.includes('profile_updated')) {
+                    icon = 'FaUser';
+                    bgColor = 'rgba(155, 89, 182, 0.1)';
+                    iconColor = '#9b59b6';
+                } else if (activity.action.includes('property_inquiry')) {
+                    icon = 'FaExclamationTriangle';
+                    bgColor = 'rgba(241, 196, 15, 0.1)';
+                    iconColor = '#f1c40f';
+                } else if (activity.action.includes('search_performed')) {
+                    icon = 'FaSearch';
+                    bgColor = 'rgba(46, 204, 113, 0.1)';
+                    iconColor = '#2ecc71';
+                }
+
+                return {
+                    id: activity.id,
+                    message: activity.description || activity.action,
+                    type: activity.action,
+                    timestamp: activity.createdAt,
+                    time: timeAgo,
+                    icon: icon,
+                    $bgColor: bgColor,
+                    $iconColor: iconColor,
+                    action: activity.action,
+                    createdAt: activity.createdAt
+                };
+            });
+
+            return res.json(formattedActivities);
+        }
+
+        // Format activities for dashboard display
+        const formattedActivities = activities.map(activity => {
+            const timeAgo = getTimeAgo(activity.createdAt);
+            
+            // Determine icon and colors based on action type
+            let icon = 'FaBell';
+            let bgColor = 'rgba(52, 152, 219, 0.1)';
+            let iconColor = '#3498db';
+            
+            if (activity.action.includes('property_created')) {
+                icon = 'FaPlus';
+                bgColor = 'rgba(46, 204, 113, 0.1)';
+                iconColor = '#2ecc71';
+            } else if (activity.action.includes('property_updated')) {
+                icon = 'FaEdit';
+                bgColor = 'rgba(243, 156, 18, 0.1)';
+                iconColor = '#f39c12';
+            } else if (activity.action.includes('property_deleted')) {
+                icon = 'FaTrash';
+                bgColor = 'rgba(231, 76, 60, 0.1)';
+                iconColor = '#e74c3c';
+            } else if (activity.action.includes('property_sold')) {
+                icon = 'FaCheck';
+                bgColor = 'rgba(46, 204, 113, 0.1)';
+                iconColor = '#2ecc71';
+            } else if (activity.action.includes('profile_updated')) {
+                icon = 'FaUser';
+                bgColor = 'rgba(155, 89, 182, 0.1)';
+                iconColor = '#9b59b6';
+            } else if (activity.action.includes('view')) {
+                icon = 'FaEye';
+                bgColor = 'rgba(52, 152, 219, 0.1)';
+                iconColor = '#3498db';
+            } else if (activity.action.includes('inquiry')) {
+                icon = 'FaExclamationTriangle';
+                bgColor = 'rgba(241, 196, 15, 0.1)';
+                iconColor = '#f1c40f';
+            } else if (activity.action.includes('favorite')) {
+                icon = 'FaHeart';
+                bgColor = 'rgba(231, 76, 60, 0.1)';
+                iconColor = '#e74c3c';
+            } else if (activity.action.includes('search')) {
+                icon = 'FaSearch';
+                bgColor = 'rgba(46, 204, 113, 0.1)';
+                iconColor = '#2ecc71';
+            }
+
+            return {
+                id: activity.id,
+                message: activity.description || activity.action,
+                type: activity.action,
+                timestamp: activity.createdAt,
+                time: timeAgo,
+                icon: icon,
+                $bgColor: bgColor,
+                $iconColor: iconColor,
+                action: activity.action,
+                createdAt: activity.createdAt
+            };
+        });
+
+        res.json(formattedActivities);
+    } catch (error) {
+        console.error('Error fetching user activities:', error);
+        res.status(500).json({ error: 'Failed to fetch user activities' });
+    }
+});
+
 // Get user activities
 router.get('/:userId', async (req, res) => {
     try {

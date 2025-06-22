@@ -102,24 +102,46 @@ router.post('/register', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received:', {
+      body: req.body,
+      headers: req.headers
+    });
+    
     const { email, password } = req.body;
 
+    // Validate required fields
+    if (!email || !password) {
+      console.log('Missing required fields:', { email: !!email, password: !!password });
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    console.log('Looking for user with email:', email);
+    
     // Check if user exists
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      console.log('User not found with email:', email);
       return res.status(400).json({ error: 'Invalid credentials' });
     }
+
+    console.log('User found:', { id: user.id, email: user.email, role: user.role, isActive: user.isActive });
 
     // Check if user is active
     if (!user.isActive) {
+      console.log('User account is deactivated:', user.id);
       return res.status(400).json({ error: 'Account is deactivated' });
     }
 
+    console.log('Verifying password...');
+    
     // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+      console.log('Invalid password for user:', user.id);
       return res.status(400).json({ error: 'Invalid credentials' });
     }
+
+    console.log('Password verified successfully');
 
     // Generate JWT token
     const token = jwt.sign(
@@ -127,6 +149,8 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1h' }
     );
+
+    console.log('Login successful for user:', user.id);
 
     res.json({
       token,

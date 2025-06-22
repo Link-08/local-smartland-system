@@ -16,6 +16,7 @@ const systemRoutes = require("./routes/system");
 const favoriteRoutes = require("./routes/favorites");
 const userActivityRoutes = require("./routes/userActivities");
 const marketInsightRoutes = require("./routes/marketInsights");
+const recentlyViewedRoutes = require("./routes/recentlyViewed");
 const authRoutes = require("./routes/auth");
 
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/system", systemRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/user-activities", userActivityRoutes);
 app.use("/api/market-insights", marketInsightRoutes);
+app.use("/api/recently-viewed", recentlyViewedRoutes);
 
 // Apply maintenance mode middleware after routes
 app.use(maintenanceMode);
@@ -120,7 +122,8 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(port, async () => {
   try {
-    await sequelize.sync();
+    // Only sync without alter to ensure tables exist
+    await sequelize.sync({ force: false });
     console.log('Database synchronized successfully');
     
     // Run migrations

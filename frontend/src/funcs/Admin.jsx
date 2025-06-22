@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../config/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -137,36 +137,30 @@ const Admin = () => {
     };
 
     // Approve user
-    const handleApprove = async (userId) => {
+    const approveUser = async (userId) => {
         try {
-            console.log('Approving user:', userId);
-            const res = await api.post(`/api/admin/users/${userId}/approve`);
-            console.log('Approve response:', res.data);
-            
-            // Update local state
-            setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u));
-            
-            alert('User approved successfully');
+            const res = await api.put(`/api/admin/users/${userId}/approve`);
+            setUsers(users.map(user => 
+                user.id === userId ? { ...user, isActive: true } : user
+            ));
+            alert('User approved successfully!');
         } catch (error) {
-            console.error('Failed to approve user:', error);
-            alert('Failed to approve user. Please try again.');
+            console.error('Error approving user:', error);
+            alert('Failed to approve user');
         }
     };
 
     // Reject user
-    const handleReject = async (userId, reason = "Application did not meet requirements") => {
+    const rejectUser = async (userId) => {
         try {
-            console.log('Rejecting user:', userId);
-            const res = await api.post(`/api/admin/users/${userId}/reject`, { reason });
-            console.log('Reject response:', res.data);
-            
-            // Update local state
-            setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u));
-            
-            alert('User rejected successfully');
+            const res = await api.put(`/api/admin/users/${userId}/reject`);
+            setUsers(users.map(user => 
+                user.id === userId ? { ...user, isActive: false } : user
+            ));
+            alert('User rejected successfully!');
         } catch (error) {
-            console.error('Failed to reject user:', error);
-            alert('Failed to reject user. Please try again.');
+            console.error('Error rejecting user:', error);
+            alert('Failed to reject user');
         }
     };
 
@@ -246,10 +240,10 @@ const Admin = () => {
                 </ImageContainer>
 
                 <ModalActions>
-                    <RejectButton onClick={() => handleReject(selectedUser.id)}>
+                    <RejectButton onClick={() => rejectUser(selectedUser.id)}>
                     Reject
                     </RejectButton>
-                    <ApproveButton onClick={() => handleApprove(selectedUser.id)}>
+                    <ApproveButton onClick={() => approveUser(selectedUser.id)}>
                     Approve
                     </ApproveButton>
                 </ModalActions>
@@ -365,13 +359,13 @@ const Admin = () => {
                         </ViewButton>
                         
                                             {!user.isActive && (
-                            <ApproveButton onClick={() => handleApprove(user.id)}>
+                            <ApproveButton onClick={() => approveUser(user.id)}>
                                                     Activate
                             </ApproveButton>
                                             )}
                                             
                                             {user.isActive && (
-                            <RejectButton onClick={() => handleReject(user.id)}>
+                            <RejectButton onClick={() => rejectUser(user.id)}>
                                                     Deactivate
                             </RejectButton>
                         )}

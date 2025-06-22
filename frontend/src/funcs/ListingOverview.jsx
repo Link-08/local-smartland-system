@@ -1,10 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { ListingOverviewStyles as S } from './ListingOverviewStyles';
-import { FaList, FaThLarge, FaSearch, FaFilter, FaHome, FaEye, FaStar, FaTree, FaTint, FaSeedling, FaMapMarkerAlt, FaRulerCombined, FaChevronLeft, FaChevronRight, FaAngleDown, FaRegCalendarAlt, FaTimes, FaUser, FaPhone, FaEnvelope, FaHeart, FaShare, FaCheck, FaWater, FaTractor, FaBuilding, FaChartBar, FaWarehouse } from 'react-icons/fa';
+import { FaList, FaThLarge, FaSearch, FaFilter, FaHome, FaEye, FaStar, FaTree, FaTint, FaSeedling, FaMapMarkerAlt, FaRulerCombined, FaChevronLeft, FaChevronRight, FaAngleDown, FaRegCalendarAlt, FaTimes, FaUser, FaPhone, FaEnvelope, FaHeart, FaShare, FaCheck, FaWater, FaTractor, FaBuilding, FaChartBar, FaWarehouse, FaExclamationTriangle, FaMountain, FaCircleNotch } from 'react-icons/fa';
 import { formatPrice, formatDate } from './formatUtils';
 import api from '../api';
+import "leaflet/dist/leaflet.css";
+import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import barangaysData from './barangays.json';
+
+// Fix Leaflet icon issues
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const ListingOverview = ({ navigateTo }) => {
+    // Add CSS for loading animation
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
+    
     // State for filters and view
     const [viewMode, setViewMode] = useState('grid');
     const [showFilters, setShowFilters] = useState(false);
@@ -27,6 +52,12 @@ const ListingOverview = ({ navigateTo }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     
+    // New filter states for additional property fields
+    const [selectedPropertyType, setSelectedPropertyType] = useState('All Types');
+    const [selectedTopography, setSelectedTopography] = useState('All Topography');
+    const [selectedAmenities, setSelectedAmenities] = useState([]);
+    const [hasRestrictions, setHasRestrictions] = useState(false);
+    
     // Transform and enhance the property data
     const [listingsData, setListingsData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -34,70 +65,97 @@ const ListingOverview = ({ navigateTo }) => {
     const [barangayOptions, setBarangayOptions] = useState(['All Barangays']);
     const [cropTypes, setCropTypes] = useState([]);
     const [fruitTypes, setFruitTypes] = useState([]);
+    const [propertyTypeOptions, setPropertyTypeOptions] = useState(['All Types']);
+    const [topographyOptions, setTopographyOptions] = useState(['All Topography']);
+    const [amenityOptions, setAmenityOptions] = useState([]);
+    
+    // State for favorite status tracking
+    const [favoriteStatus, setFavoriteStatus] = useState({});
+    const [checkingFavorite, setCheckingFavorite] = useState({});
+
+    // Fetch properties from the server
+    const fetchProperties = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get('/api/properties');
+            const properties = response.data;
+            
+            // Extract unique barangays from properties
+            const uniqueBarangays = ['All Barangays', ...new Set(properties.map(prop => prop.location.split(',')[0].trim()))];
+            setBarangayOptions(uniqueBarangays);
+
+            // Extract unique crops and fruits
+            const allCrops = properties.flatMap(prop => 
+                prop.suitableCrops ? prop.suitableCrops.split(',').map(crop => crop.trim()) : []
+            );
+            setCropTypes([...new Set(allCrops)]);
+            setFruitTypes([...new Set(allCrops)]); // Using same data for now, can be separated if needed
+            
+            // Extract unique property types and topography
+            const uniquePropertyTypes = ['All Types', ...new Set(properties.map(prop => prop.type).filter(Boolean))];
+            const uniqueTopography = ['All Topography', ...new Set(properties.map(prop => prop.topography).filter(Boolean))];
+            
+            // Extract unique amenities
+            const allAmenities = properties.flatMap(prop => 
+                prop.amenities ? (Array.isArray(prop.amenities) ? prop.amenities : [prop.amenities]) : []
+            );
+            const uniqueAmenities = [...new Set(allAmenities)];
+            
+            setPropertyTypeOptions(uniquePropertyTypes);
+            setTopographyOptions(uniqueTopography);
+            setAmenityOptions(uniqueAmenities);
+            
+            const enhancedListings = properties.map(property => ({
+                ...property,
+                id: property.id,
+                title: property.title,
+                location: property.location,
+                price: property.showPrice ? `₱${property.price.toLocaleString()}` : 'Price on Request',
+                pricePerSqm: property.showPrice ? `₱${Math.round(property.price / property.acres).toLocaleString()}` : 'N/A',
+                size: `${property.acres.toLocaleString()} hectares`,
+                category: property.category || 'Agricultural',
+                features: property.features || '',
+                crops: property.suitableCrops ? property.suitableCrops.split(',').map(crop => crop.trim()) : [],
+                fruits: property.suitableCrops ? property.suitableCrops.split(',').map(crop => crop.trim()) : [],
+                hasIrrigation: property.waterRights?.toLowerCase().includes('irrigation') || false,
+                isFeatured: property.isFeatured || false,
+                imageUrl: property.image || "/api/placeholder/400/320",
+                images: property.images || [
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500",
+                    "/api/placeholder/800/500"
+                ],
+                sellerName: property.seller && (property.seller.firstName || property.seller.lastName)
+                    ? [property.seller.firstName, property.seller.lastName].filter(Boolean).join(' ')
+                    : "Unknown Seller",
+                sellerAvatar: property.seller?.avatar 
+                    ? (property.seller.avatar.startsWith('http') 
+                        ? property.seller.avatar 
+                        : `${api.defaults.baseURL}${property.seller.avatar}`)
+                    : `${api.defaults.baseURL}/api/placeholder/50/50`,
+                postedDate: new Date(property.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                type: property.type || 'Agricultural Land',
+                topography: property.topography || 'Flat to rolling',
+                averageYield: property.averageYield || 'Not specified',
+                amenities: property.amenities || [],
+                restrictionsText: property.restrictionsText || '',
+                hasRestrictions: Boolean(property.restrictionsText && property.restrictionsText.trim()),
+                remarks: property.remarks || '',
+                barangay: property.barangay || null,
+                barangayData: property.barangayData || null
+            }));
+            
+            setListingsData(enhancedListings);
+        } catch (err) {
+            console.error('Error fetching properties:', err);
+            setError('Failed to load properties. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchProperties = async () => {
-            try {
-                setLoading(true);
-                const response = await api.get('/api/properties');
-                const properties = response.data;
-                
-                // Extract unique barangays from properties
-                const uniqueBarangays = ['All Barangays', ...new Set(properties.map(prop => prop.location.split(',')[0].trim()))];
-                setBarangayOptions(uniqueBarangays);
-
-                // Extract unique crops and fruits
-                const allCrops = properties.flatMap(prop => 
-                    prop.suitableCrops ? prop.suitableCrops.split(',').map(crop => crop.trim()) : []
-                );
-                setCropTypes([...new Set(allCrops)]);
-                setFruitTypes([...new Set(allCrops)]); // Using same data for now, can be separated if needed
-                
-                const enhancedListings = properties.map(property => ({
-                    ...property,
-                    id: property.id,
-                    title: property.title,
-                    location: property.location,
-                    price: `₱${property.price.toLocaleString()}`,
-                    pricePerSqm: `₱${Math.round(property.price / property.acres).toLocaleString()}`,
-                    size: `${property.acres.toLocaleString()} hectares`,
-                    category: property.category || 'Agricultural',
-                    features: property.features || '',
-                    crops: property.suitableCrops ? property.suitableCrops.split(',').map(crop => crop.trim()) : [],
-                    fruits: property.suitableCrops ? property.suitableCrops.split(',').map(crop => crop.trim()) : [],
-                    hasIrrigation: property.waterRights?.toLowerCase().includes('irrigation') || false,
-                    isFeatured: property.isFeatured || false,
-                    imageUrl: property.image || "/api/placeholder/400/320",
-                    images: property.images || [
-                        "/api/placeholder/800/500",
-                        "/api/placeholder/800/500",
-                        "/api/placeholder/800/500",
-                        "/api/placeholder/800/500"
-                    ],
-                    sellerName: property.seller && (property.seller.firstName || property.seller.lastName)
-                        ? [property.seller.firstName, property.seller.lastName].filter(Boolean).join(' ')
-                        : "Unknown Seller",
-                    sellerAvatar: property.seller?.avatar 
-                        ? (property.seller.avatar.startsWith('http') 
-                            ? property.seller.avatar 
-                            : `${api.defaults.baseURL}${property.seller.avatar}`)
-                        : `${api.defaults.baseURL}/api/placeholder/50/50`,
-                    postedDate: new Date(property.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                    type: property.type || 'Unknown Type',
-                    topography: property.topography || 'Unknown Topography',
-                    averageYield: property.averageYield || 'Not specified',
-                    amenities: property.amenities || []
-                }));
-                
-                setListingsData(enhancedListings);
-            } catch (err) {
-                console.error('Error fetching properties:', err);
-                setError('Failed to load properties. Please try again later.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchProperties();
     }, []);
 
@@ -116,6 +174,25 @@ const ListingOverview = ({ navigateTo }) => {
             setSelectedFruits(selectedFruits.filter(item => item !== fruit));
         } else {
             setSelectedFruits([...selectedFruits, fruit]);
+        }
+    };
+
+    // Handle property type selection
+    const handlePropertyTypeChange = (type) => {
+        setSelectedPropertyType(type);
+    };
+
+    // Handle topography selection
+    const handleTopographyChange = (topography) => {
+        setSelectedTopography(topography);
+    };
+
+    // Handle amenity checkbox changes
+    const handleAmenityChange = (amenity) => {
+        if (selectedAmenities.includes(amenity)) {
+            setSelectedAmenities(selectedAmenities.filter(item => item !== amenity));
+        } else {
+            setSelectedAmenities([...selectedAmenities, amenity]);
         }
     };
 
@@ -177,6 +254,30 @@ const ListingOverview = ({ navigateTo }) => {
             filtered = filtered.filter(listing => listing.hasIrrigation);
         }
 
+        // Filter by property type
+        if (selectedPropertyType !== 'All Types') {
+            filtered = filtered.filter(listing => listing.type === selectedPropertyType);
+        }
+
+        // Filter by topography
+        if (selectedTopography !== 'All Topography') {
+            filtered = filtered.filter(listing => listing.topography === selectedTopography);
+        }
+
+        // Filter by amenities
+        if (selectedAmenities.length > 0) {
+            filtered = filtered.filter(listing => 
+                selectedAmenities.some(amenity => 
+                    listing.amenities && listing.amenities.includes(amenity)
+                )
+            );
+        }
+
+        // Filter by restrictions
+        if (hasRestrictions) {
+            filtered = filtered.filter(listing => listing.hasRestrictions);
+        }
+
         // Apply search term
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
@@ -204,8 +305,10 @@ const ListingOverview = ({ navigateTo }) => {
         setHasIrrigation(false);
         setSearchTerm('');
         setActiveCategory('all');
-        
-        // Reset listings to original data
+        setSelectedPropertyType('All Types');
+        setSelectedTopography('All Topography');
+        setSelectedAmenities([]);
+        setHasRestrictions(false);
         fetchProperties();
     };
 
@@ -336,6 +439,17 @@ const ListingOverview = ({ navigateTo }) => {
                         />
                         {listing.isFeatured && <S.ListingBadge type="featured">Featured</S.ListingBadge>}
                         {listing.hasIrrigation && <S.ListingBadge style={{ right: 12, left: 'auto' }}>Irrigated</S.ListingBadge>}
+                        {listing.hasRestrictions && (
+                            <S.ListingBadge style={{ 
+                                right: listing.hasIrrigation ? 80 : 12, 
+                                left: 'auto',
+                                backgroundColor: '#e74c3c',
+                                color: 'white'
+                            }}>
+                                <FaExclamationTriangle style={{ marginRight: 4 }} />
+                                Restrictions
+                            </S.ListingBadge>
+                        )}
                     </S.ListingImageContainer>
                     
                     <S.ListingContent>
@@ -345,7 +459,9 @@ const ListingOverview = ({ navigateTo }) => {
                             {listing.location}
                         </S.ListingLocation>
                         
-                        <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
+                        <S.ListingPrice>
+                            {listing.showPrice ? formatPrice(listing.price) : 'Price on Request'}
+                        </S.ListingPrice>
                         
                         <S.ListingSpecs>
                             <S.ListingSpecItem>
@@ -396,6 +512,17 @@ const ListingOverview = ({ navigateTo }) => {
                                     }}>
                                         <FaChartBar size={12} style={{ color: '#6c757d' }} />
                                         <span style={{ fontWeight: '500', color: '#495057' }}>Avg Yield: {listing.averageYield}</span>
+                                    </div>
+                                )}
+                                {listing.hasRestrictions && (
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '4px',
+                                        gridColumn: '1 / -1'
+                                    }}>
+                                        <FaExclamationTriangle size={12} style={{ color: '#e74c3c' }} />
+                                        <span style={{ fontWeight: '500', color: '#e74c3c' }}>Has Restrictions</span>
                                     </div>
                                 )}
                             </div>
@@ -529,6 +656,17 @@ const ListingOverview = ({ navigateTo }) => {
                         />
                         {listing.isFeatured && <S.ListingBadge type="featured">Featured</S.ListingBadge>}
                         {listing.hasIrrigation && <S.ListingBadge style={{ right: 12, left: 'auto' }}>Irrigated</S.ListingBadge>}
+                        {listing.hasRestrictions && (
+                            <S.ListingBadge style={{ 
+                                right: listing.hasIrrigation ? 80 : 12, 
+                                left: 'auto',
+                                backgroundColor: '#e74c3c',
+                                color: 'white'
+                            }}>
+                                <FaExclamationTriangle style={{ marginRight: 4 }} />
+                                Restrictions
+                            </S.ListingBadge>
+                        )}
                     </S.ListingImageContainerHorizontal>
                     
                     <S.ListingContentHorizontal>
@@ -588,6 +726,17 @@ const ListingOverview = ({ navigateTo }) => {
                                         }}>
                                             <FaChartBar size={12} style={{ color: '#6c757d' }} />
                                             <span style={{ fontWeight: '500', color: '#495057' }}>Avg Yield: {listing.averageYield}</span>
+                                        </div>
+                                    )}
+                                    {listing.hasRestrictions && (
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '4px',
+                                            gridColumn: '1 / -1'
+                                        }}>
+                                            <FaExclamationTriangle size={12} style={{ color: '#e74c3c' }} />
+                                            <span style={{ fontWeight: '500', color: '#e74c3c' }}>Has Restrictions</span>
                                         </div>
                                     )}
                                 </div>
@@ -657,7 +806,9 @@ const ListingOverview = ({ navigateTo }) => {
                         </div>
                         
                         <div>
-                            <S.ListingPrice>{formatPrice(listing.price)}</S.ListingPrice>
+                            <S.ListingPrice>
+                                {listing.showPrice ? formatPrice(listing.price) : 'Price on Request'}
+                            </S.ListingPrice>
                             
                             <S.ListingFooter>
                                 <S.ListingSellerInfo>
@@ -728,6 +879,19 @@ const ListingOverview = ({ navigateTo }) => {
         setSelectedProperty(property);
         setPropertyModalOpen(true);
         setActiveImageIndex(0);
+        // Check favorite status when modal opens
+        checkFavoriteStatus(property.id);
+        // Record property view in recently viewed system
+        recordPropertyView(property.id);
+    };
+
+    // Function to record property view
+    const recordPropertyView = async (propertyId) => {
+        try {
+            await api.post('/api/recently-viewed/record', { propertyId });
+        } catch (error) {
+            console.error('Error recording property view:', error);
+        }
     };
 
     const closePropertyModal = () => {
@@ -765,10 +929,24 @@ const ListingOverview = ({ navigateTo }) => {
             return;
         }
 
+        const propertyId = selectedProperty.id;
+        const isCurrentlyFavorited = favoriteStatus[propertyId];
+
         try {
-            const response = await api.post(`/api/favorites/${selectedProperty.id}`);
-            if (response.status === 201) {
-                alert('Property saved to favorites');
+            if (isCurrentlyFavorited) {
+                // Remove from favorites
+                const response = await api.delete(`/api/favorites/${propertyId}`);
+                if (response.status === 200) {
+                    setFavoriteStatus(prev => ({ ...prev, [propertyId]: false }));
+                    alert('Property removed from favorites');
+                }
+            } else {
+                // Add to favorites
+                const response = await api.post(`/api/favorites/${propertyId}`);
+                if (response.status === 201) {
+                    setFavoriteStatus(prev => ({ ...prev, [propertyId]: true }));
+                    alert('Property saved to favorites');
+                }
             }
         } catch (error) {
             if (error.response?.status === 400) {
@@ -802,6 +980,25 @@ const ListingOverview = ({ navigateTo }) => {
 
     const closeContactModal = () => {
         setContactModalOpen(false);
+    };
+
+    // Function to check if a property is favorited
+    const checkFavoriteStatus = async (propertyId) => {
+        if (!propertyId) return;
+        
+        setCheckingFavorite(prev => ({ ...prev, [propertyId]: true }));
+        try {
+            const response = await api.get(`/api/favorites/check/${propertyId}`);
+            setFavoriteStatus(prev => ({ 
+                ...prev, 
+                [propertyId]: response.data.isFavorite 
+            }));
+        } catch (error) {
+            console.error('Error checking favorite status:', error);
+            setFavoriteStatus(prev => ({ ...prev, [propertyId]: false }));
+        } finally {
+            setCheckingFavorite(prev => ({ ...prev, [propertyId]: false }));
+        }
     };
 
     const filteredListings = filterListingsByCategory(filterListingsBySearch(listingsData));
@@ -989,6 +1186,72 @@ const ListingOverview = ({ navigateTo }) => {
                                     <S.CheckboxLabel htmlFor="irrigation">
                                         <FaTint style={{ marginRight: 4 }} />
                                         Has Irrigation System
+                                    </S.CheckboxLabel>
+                                </S.CheckboxGroup>
+                            </S.FilterGroup>
+                            
+                            {/* Property Type Filter */}
+                            <S.FilterGroup>
+                                <S.FilterLabel>Property Type</S.FilterLabel>
+                                <S.FilterSelect 
+                                    value={selectedPropertyType}
+                                    onChange={(e) => handlePropertyTypeChange(e.target.value)}
+                                >
+                                    {propertyTypeOptions.map((type, index) => (
+                                        <option key={index} value={type}>{type}</option>
+                                    ))}
+                                </S.FilterSelect>
+                            </S.FilterGroup>
+                            
+                            {/* Topography Filter */}
+                            <S.FilterGroup>
+                                <S.FilterLabel>Topography</S.FilterLabel>
+                                <S.FilterSelect 
+                                    value={selectedTopography}
+                                    onChange={(e) => handleTopographyChange(e.target.value)}
+                                >
+                                    {topographyOptions.map((topography, index) => (
+                                        <option key={index} value={topography}>{topography}</option>
+                                    ))}
+                                </S.FilterSelect>
+                            </S.FilterGroup>
+                            
+                            {/* Amenities Filter */}
+                            {amenityOptions.length > 0 && (
+                                <S.FilterGroup>
+                                    <S.FilterLabel>
+                                        <FaBuilding style={{ marginRight: 4 }} />
+                                        Amenities
+                                    </S.FilterLabel>
+                                    <S.CheckboxContainer>
+                                        {amenityOptions.map((amenity, index) => (
+                                            <S.CheckboxGroup key={index}>
+                                                <S.FilterInput 
+                                                    type="checkbox"
+                                                    id={`amenity-${index}`}
+                                                    checked={selectedAmenities.includes(amenity)}
+                                                    onChange={() => handleAmenityChange(amenity)}
+                                                />
+                                                <S.CheckboxLabel htmlFor={`amenity-${index}`}>{amenity}</S.CheckboxLabel>
+                                            </S.CheckboxGroup>
+                                        ))}
+                                    </S.CheckboxContainer>
+                                </S.FilterGroup>
+                            )}
+                            
+                            {/* Restrictions Filter */}
+                            <S.FilterGroup>
+                                <S.FilterLabel>Property Status</S.FilterLabel>
+                                <S.CheckboxGroup>
+                                    <S.FilterInput 
+                                        type="checkbox"
+                                        id="restrictions"
+                                        checked={hasRestrictions}
+                                        onChange={() => setHasRestrictions(!hasRestrictions)}
+                                    />
+                                    <S.CheckboxLabel htmlFor="restrictions">
+                                        <FaExclamationTriangle style={{ marginRight: 4 }} />
+                                        Has Restrictions
                                     </S.CheckboxLabel>
                                 </S.CheckboxGroup>
                             </S.FilterGroup>
@@ -1324,7 +1587,47 @@ const ListingOverview = ({ navigateTo }) => {
                                                 fontWeight: '600',
                                                 color: '#2c3e50'
                                             }}>
-                                                {selectedProperty.pricePerSqm}
+                                                {selectedProperty.showPrice ? selectedProperty.pricePerSqm : 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            background: '#f8f9fa',
+                                            padding: '16px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: '#7f8c8d',
+                                                marginBottom: '4px'
+                                            }}>
+                                                Property Type
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50'
+                                            }}>
+                                                {selectedProperty.type || 'Not specified'}
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            background: '#f8f9fa',
+                                            padding: '16px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: '#7f8c8d',
+                                                marginBottom: '4px'
+                                            }}>
+                                                Topography
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50'
+                                            }}>
+                                                {selectedProperty.topography || 'Not specified'}
                                             </div>
                                         </div>
                                         <div style={{
@@ -1367,6 +1670,56 @@ const ListingOverview = ({ navigateTo }) => {
                                                 {selectedProperty.postedDate}
                                             </div>
                                         </div>
+                                        {selectedProperty.averageYield && (
+                                            <div style={{
+                                                background: '#f8f9fa',
+                                                padding: '16px',
+                                                borderRadius: '8px',
+                                                gridColumn: '1 / -1'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '14px',
+                                                    color: '#7f8c8d',
+                                                    marginBottom: '4px'
+                                                }}>
+                                                    Average Yield
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '18px',
+                                                    fontWeight: '600',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    {selectedProperty.averageYield}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedProperty.hasRestrictions && (
+                                            <div style={{
+                                                background: '#fff5f5',
+                                                padding: '16px',
+                                                borderRadius: '8px',
+                                                gridColumn: '1 / -1',
+                                                border: '1px solid #fed7d7'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '14px',
+                                                    color: '#e53e3e',
+                                                    marginBottom: '4px',
+                                                    display: 'flex',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <FaExclamationTriangle style={{ marginRight: '6px' }} />
+                                                    Property Restrictions
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '16px',
+                                                    fontWeight: '600',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    {selectedProperty.restrictionsText || 'This property has restrictions. Please contact the seller for details.'}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Description */}
@@ -1464,6 +1817,173 @@ const ListingOverview = ({ navigateTo }) => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Remarks */}
+                                    {selectedProperty.remarks && (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <h4 style={{
+                                                fontSize: '18px',
+                                                fontWeight: '600',
+                                                color: '#2c3e50',
+                                                margin: '0 0 12px 0'
+                                            }}>
+                                                Additional Remarks
+                                            </h4>
+                                            <p style={{
+                                                fontSize: '16px',
+                                                lineHeight: '1.6',
+                                                color: '#34495e',
+                                                margin: 0,
+                                                padding: '16px',
+                                                background: '#f8f9fa',
+                                                borderRadius: '8px',
+                                                border: '1px solid #e9ecef'
+                                            }}>
+                                                {selectedProperty.remarks}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Location Map */}
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <h4 style={{
+                                            fontSize: '18px',
+                                            fontWeight: '600',
+                                            color: '#2c3e50',
+                                            margin: '0 0 12px 0',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}>
+                                            <FaMapMarkerAlt style={{ marginRight: '8px', color: '#3498db' }} />
+                                            Location & Barangay
+                                        </h4>
+                                        
+                                        {/* Map Container */}
+                                        <div style={{
+                                            height: '300px',
+                                            borderRadius: '12px',
+                                            overflow: 'hidden',
+                                            border: '2px solid #e0e0e0',
+                                            marginBottom: '16px'
+                                        }}>
+                                            <MapContainer
+                                                center={selectedProperty.barangayData?.center || [15.4841, 120.9685]}
+                                                zoom={13}
+                                                style={{ height: '100%', width: '100%' }}
+                                                zoomControl={true}
+                                            >
+                                                <TileLayer
+                                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                />
+                                                
+                                                {/* Property Marker */}
+                                                {(selectedProperty.coordinates || selectedProperty.barangayData?.center) && (
+                                                    <Marker position={selectedProperty.coordinates || selectedProperty.barangayData.center}>
+                                                        <Popup>
+                                                            <div style={{ textAlign: 'center' }}>
+                                                                <strong>{selectedProperty.title}</strong><br />
+                                                                {selectedProperty.location}
+                                                                {selectedProperty.barangay && (
+                                                                    <>
+                                                                        <br />
+                                                                        <small>Barangay: {selectedProperty.barangay}</small>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </Popup>
+                                                    </Marker>
+                                                )}
+                                                
+                                                {/* Barangay Radius Circle */}
+                                                {selectedProperty.barangayData?.center && selectedProperty.barangayData?.radius && (
+                                                    <Circle
+                                                        center={selectedProperty.barangayData.center}
+                                                        radius={selectedProperty.barangayData.radius}
+                                                        pathOptions={{
+                                                            color: '#3498db',
+                                                            fillColor: '#3498db',
+                                                            fillOpacity: 0.2,
+                                                            weight: 2,
+                                                            dashArray: '5, 5'
+                                                        }}
+                                                    >
+                                                        <Popup>
+                                                            <div style={{ 
+                                                                color: '#333',
+                                                                padding: '8px',
+                                                                maxWidth: '250px'
+                                                            }}>
+                                                                <h3 style={{ 
+                                                                    margin: '0 0 8px 0',
+                                                                    fontSize: '1.1em',
+                                                                    color: '#2C3E50',
+                                                                    borderBottom: '1px solid #eee',
+                                                                    paddingBottom: '4px'
+                                                                }}>
+                                                                    {selectedProperty.barangay}
+                                                                </h3>
+                                                                
+                                                                <div style={{ 
+                                                                    display: 'grid',
+                                                                    gridTemplateColumns: 'auto 1fr',
+                                                                    gap: '4px 8px',
+                                                                    fontSize: '0.9em'
+                                                                }}>
+                                                                    <strong>Elevation:</strong>
+                                                                    <span>{selectedProperty.barangayData.elevation}m</span>
+                                                                    
+                                                                    <strong>Radius:</strong>
+                                                                    <span>{selectedProperty.barangayData.radius}m</span>
+                                                                    
+                                                                    {selectedProperty.barangayData.soilType && (
+                                                                        <>
+                                                                            <strong>Soil Type:</strong>
+                                                                            <span>{selectedProperty.barangayData.soilType}</span>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </Popup>
+                                                    </Circle>
+                                                )}
+                                            </MapContainer>
+                                        </div>
+                                        
+                                        {/* Barangay Information */}
+                                        {selectedProperty.barangay && (
+                                            <div style={{
+                                                padding: '16px',
+                                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                                borderRadius: '8px',
+                                                border: '1px solid rgba(52, 152, 219, 0.3)',
+                                                color: '#2c3e50'
+                                            }}>
+                                                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid rgba(52, 152, 219, 0.2)', paddingBottom: '8px' }}>
+                                                    <FaMapMarkerAlt style={{ marginRight: '8px', color: '#3498db' }} />
+                                                    Barangay: {selectedProperty.barangay}
+                                                </div>
+                                                {selectedProperty.barangayData && (
+                                                    <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                                                            <FaMountain style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />
+                                                            Elevation: {selectedProperty.barangayData.elevation}m
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                                                            <FaCircleNotch style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />
+                                                            Radius: {selectedProperty.barangayData.radius}m
+                                                        </div>
+                                                        {selectedProperty.barangayData.soilType && (
+                                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                <FaSeedling style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />
+                                                                Soil Type: {selectedProperty.barangayData.soilType}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Right Column - Seller Info & Actions */}
@@ -1653,24 +2173,35 @@ const ListingOverview = ({ navigateTo }) => {
                                         }}>
                                             <button
                                                 onClick={handleSaveProperty}
+                                                disabled={checkingFavorite[selectedProperty?.id]}
                                                 style={{
                                                     width: '100%',
-                                                    background: '#e74c3c',
+                                                    background: favoriteStatus[selectedProperty?.id] ? '#95a5a6' : '#e74c3c',
                                                     color: 'white',
                                                     border: 'none',
                                                     padding: '12px',
                                                     borderRadius: '8px',
-                                                    cursor: 'pointer',
+                                                    cursor: checkingFavorite[selectedProperty?.id] ? 'not-allowed' : 'pointer',
                                                     fontSize: '16px',
                                                     fontWeight: '500',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    gap: '8px'
+                                                    gap: '8px',
+                                                    opacity: checkingFavorite[selectedProperty?.id] ? 0.7 : 1
                                                 }}
                                             >
-                                                <FaHeart />
-                                                Save to Favorites
+                                                {checkingFavorite[selectedProperty?.id] ? (
+                                                    <>
+                                                        <div style={{ width: '16px', height: '16px', border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                                                        Checking...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaHeart />
+                                                        {favoriteStatus[selectedProperty?.id] ? 'Remove from Favorites' : 'Save to Favorites'}
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </div>

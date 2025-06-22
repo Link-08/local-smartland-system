@@ -1,17 +1,33 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     FaHome, FaUser, FaSignOutAlt, FaBell, FaHeart, 
     FaSearch, FaBuilding, FaChartLine, FaMapMarkerAlt, 
     FaBed, FaBath, FaRulerCombined, FaRegClock,
     FaArrowRight, FaChevronRight, FaArrowUp, FaArrowDown,
     FaTractor, FaTree, FaWater, FaSeedling, FaWarehouse, FaCamera,
-    FaExclamationTriangle, FaCheck, FaChevronLeft, FaTimes, FaEnvelope, FaShare, FaEye, FaChartBar
+    FaExclamationTriangle, FaCheck, FaChevronLeft, FaTimes, FaEnvelope, FaShare, FaEye, FaChartBar, FaSync, FaPlus, FaEdit, FaTrash,
+    FaPhone, FaCog, FaMountain, FaCircleNotch
   } from 'react-icons/fa';
 import { DashboardStyles } from "./BuyerDashboardStyles"
 import api from '../config/axios';
 import { useAuth } from '../contexts/AuthContext';
+import { formatPrice } from './formatUtils';
+import "leaflet/dist/leaflet.css";
+import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import barangaysData from './barangays.json';
 
-const BuyerDashboard = ({ navigateTo }) => {
+// Fix Leaflet icon issues
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+const BuyerDashboard = () => {
+    const navigate = useNavigate();
     const { user: authUser, logout, updateUser } = useAuth();
     
     // State for UI interactions
@@ -31,10 +47,18 @@ const BuyerDashboard = ({ navigateTo }) => {
     const [error, setError] = useState(null);
     
     // State for market insights and recent activities
-    const [marketInsights, setMarketInsights] = useState([]);
+    const [marketInsights, setMarketInsights] = useState({
+        totalListings: 0,
+        activeListings: 0,
+        averagePrice: 0,
+        priceRange: { min: 0, max: 0 },
+        averageAcres: 0,
+        topLocations: [],
+        cropDistribution: {},
+        optimizationTips: []
+    });
     const [recentActivities, setRecentActivities] = useState([]);
     const [loadingInsights, setLoadingInsights] = useState(true);
-    const [loadingActivities, setLoadingActivities] = useState(true);
     
     // State for edit profile
     const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -47,12 +71,21 @@ const BuyerDashboard = ({ navigateTo }) => {
         username: '',
         password: '',
         confirmPassword: '',
+        currentPassword: '',
         avatar: 'NA'
     });
     
     // State for saved properties
     const [savedProperties, setSavedProperties] = useState([]);
     const [loadingSavedProperties, setLoadingSavedProperties] = useState(true);
+    
+    // State for recently viewed properties
+    const [recentlyViewedProperties, setRecentlyViewedProperties] = useState([]);
+    const [loadingRecentlyViewed, setLoadingRecentlyViewed] = useState(true);
+    
+    // State for favorite status tracking
+    const [favoriteStatus, setFavoriteStatus] = useState({});
+    const [checkingFavorite, setCheckingFavorite] = useState({});
     
     // Update user state when authUser changes
     useEffect(() => {
@@ -63,9 +96,71 @@ const BuyerDashboard = ({ navigateTo }) => {
         } else {
             setError('No authentication token found. Please log in.');
             setLoading(false);
-            navigateTo('/login');
+            navigate('/login');
         }
-    }, [authUser, navigateTo]);
+    }, [authUser, navigate]);
+
+    // Add effect to load cached saved properties on mount
+    useEffect(() => {
+        if (authUser && authUser.id) {
+            // Load cached saved properties immediately
+            const cachedData = localStorage.getItem(`savedProperties_${authUser.id}`);
+            if (cachedData) {
+                try {
+                    const cachedProperties = JSON.parse(cachedData);
+                    setSavedProperties(cachedProperties);
+                    
+                    // Initialize favorite status for cached properties
+                    const initialFavoriteStatus = {};
+                    cachedProperties.forEach(property => {
+                        initialFavoriteStatus[property.id] = true;
+                    });
+                    setFavoriteStatus(initialFavoriteStatus);
+                    
+                    console.log('Loaded cached saved properties:', cachedProperties.length, 'properties');
+                } catch (parseError) {
+                    console.error('Error parsing cached saved properties:', parseError);
+                }
+            }
+        }
+    }, [authUser]);
+
+    // Add effect to automatically refresh saved properties on mount and navigation
+    useEffect(() => {
+        if (authUser && authUser.id && !loading) {
+            // Small delay to ensure user data is loaded first
+            const timer = setTimeout(() => {
+                refreshSavedProperties();
+            }, 100);
+            
+            return () => clearTimeout(timer);
+        }
+    }, [authUser, loading]);
+
+    // Add effect to handle authentication state changes
+    useEffect(() => {
+        const handleAuthChange = () => {
+            // If user is authenticated, refresh saved properties
+            if (authUser && authUser.id) {
+                refreshSavedProperties();
+            }
+        };
+
+        // Listen for authentication events
+        window.addEventListener('auth:login', handleAuthChange);
+        window.addEventListener('auth:logout', () => {
+            setSavedProperties([]);
+            setFavoriteStatus({});
+        });
+
+        return () => {
+            window.removeEventListener('auth:login', handleAuthChange);
+            window.removeEventListener('auth:logout', () => {
+                setSavedProperties([]);
+                setFavoriteStatus({});
+            });
+        };
+    }, [authUser]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -74,45 +169,77 @@ const BuyerDashboard = ({ navigateTo }) => {
                 setLoadingSavedProperties(true);
 
                 // Fetch user data
-                const userResponse = await api.get(`/api/users/${authUser.id}`);
+                const userResponse = await api.get('/api/auth/profile');
                 setUser(userResponse.data);
 
-                // Fetch saved properties
+                // Fetch saved properties with complete data
                 const favoritesResponse = await api.get('/api/favorites');
-                const favorites = favoritesResponse.data.map(fav => ({
-                    id: fav.property.id,
-                    title: fav.property.title,
-                    location: fav.property.location,
-                    price: fav.property.price,
-                    acres: fav.property.acres,
-                    waterRights: fav.property.waterRights,
-                    suitableCrops: fav.property.suitableCrops,
-                    image: fav.property.image || fav.property.images?.[0] || '/api/placeholder/800/500',
-                    seller: fav.property.seller
-                }));
+                
+                const favorites = favoritesResponse.data.map(fav => {
+                    // The backend now returns the complete property object directly
+                    const property = fav;
+                    return {
+                        id: property.id,
+                        title: property.title,
+                        description: property.description,
+                        location: property.location,
+                        price: property.price,
+                        acres: property.acres,
+                        waterRights: property.waterRights,
+                        suitableCrops: property.suitableCrops,
+                        type: property.type,
+                        topography: property.topography,
+                        averageYield: property.averageYield,
+                        amenities: property.amenities,
+                        restrictionsText: property.restrictionsText,
+                        remarks: property.remarks,
+                        image: property.image || property.images?.[0] || '/api/placeholder/800/500',
+                        images: property.images || [],
+                        barangay: property.barangay,
+                        barangayData: property.barangayData,
+                        seller: property.seller,
+                        createdAt: property.createdAt,
+                        updatedAt: property.updatedAt
+                    };
+                });
                 setSavedProperties(favorites);
+                
+                // Initialize favorite status for saved properties
+                const initialFavoriteStatus = {};
+                favorites.forEach(property => {
+                    initialFavoriteStatus[property.id] = true;
+                });
+                setFavoriteStatus(initialFavoriteStatus);
 
                 // Fetch market insights
                 try {
                     const insightsResponse = await api.get('/api/market-insights');
                     setMarketInsights(insightsResponse.data);
                 } catch (insightsError) {
-                    setMarketInsights([]);
+                    setMarketInsights({
+                        totalListings: 0,
+                        activeListings: 0,
+                        averagePrice: 0,
+                        priceRange: { min: 0, max: 0 },
+                        averageAcres: 0,
+                        topLocations: [],
+                        cropDistribution: {},
+                        optimizationTips: []
+                    });
                 }
                 setLoadingInsights(false);
 
                 // Fetch recent activities
                 try {
-                    const activitiesResponse = await api.get('/api/user-activities');
+                    const activitiesResponse = await api.get(`/api/user-activities/recent/${authUser.id}`);
                     setRecentActivities(activitiesResponse.data);
                 } catch (activityError) {
                     setRecentActivities([]);
                 }
-                setLoadingActivities(false);
+                setLoadingInsights(false);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
                 setLoadingInsights(false);
-                setLoadingActivities(false);
             } finally {
                 setLoading(false);
                 setLoadingSavedProperties(false);
@@ -122,19 +249,85 @@ const BuyerDashboard = ({ navigateTo }) => {
         fetchData();
     }, [authUser.id]);
 
+    // Add effect to refresh market insights when saved properties change
+    useEffect(() => {
+        if (savedProperties.length > 0) {
+            fetchMarketInsights();
+        }
+    }, [savedProperties]);
+
+    // Function to fetch market insights
+    const fetchMarketInsights = async () => {
+        try {
+            const response = await api.get('/api/market-insights');
+            setMarketInsights(response.data);
+        } catch (error) {
+            console.error('Error fetching market insights:', error);
+        }
+    };
+
+    // Add effect to fetch recently viewed properties when tab changes
+    useEffect(() => {
+        if (activeTab === 'recent' && authUser && authUser.id) {
+            fetchRecentlyViewedProperties();
+        }
+    }, [activeTab, authUser]);
+
+    // Add CSS for loading animation
+    React.useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
+
+    // Add iconMap for consistency with seller dashboard
+    const iconMap = {
+        FaExclamationTriangle: <FaExclamationTriangle />,
+        FaEye: <FaEye />,
+        FaCheck: <FaCheck />,
+        FaHeart: <FaHeart />,
+        FaUser: <FaUser />,
+        FaSearch: <FaSearch />,
+        FaPlus: <FaPlus />,
+        FaEdit: <FaEdit />,
+        FaTrash: <FaTrash />,
+        FaBell: <FaBell />
+    };
+
     // Helper function to get activity icon
     const getActivityIcon = (type) => {
         switch (type) {
             case 'view':
-                return <FaSearch />;
+            case 'property_viewed':
+                return <FaEye />;
             case 'favorite':
+            case 'property_favorited':
                 return <FaHeart />;
             case 'alert':
                 return <FaArrowDown />;
             case 'inquiry':
+            case 'property_inquiry':
                 return <FaExclamationTriangle />;
             case 'sale':
+            case 'property_sold':
                 return <FaCheck />;
+            case 'property_created':
+                return <FaPlus />;
+            case 'property_updated':
+                return <FaEdit />;
+            case 'property_deleted':
+                return <FaTrash />;
+            case 'profile_updated':
+                return <FaUser />;
+            case 'search':
+            case 'search_performed':
+                return <FaSearch />;
             default:
                 return <FaBell />;
         }
@@ -191,12 +384,12 @@ const BuyerDashboard = ({ navigateTo }) => {
     // Function to handle logout
     const handleLogout = () => {
         logout();
-        navigateTo('/login');
+        navigate('/login');
     };
     
     // Function to redirect to property listings
     const goToPropertyListings = () => {
-        navigateTo('listings');
+        navigate('/listings');
     };
 
     const handleEditProfile = () => {
@@ -208,6 +401,7 @@ const BuyerDashboard = ({ navigateTo }) => {
             username: user.username || '',
             password: '',
             confirmPassword: '',
+            currentPassword: '',
             avatar: user.avatar || 'NA'
         });
         setEditProfileOpen(true);
@@ -226,18 +420,14 @@ const BuyerDashboard = ({ navigateTo }) => {
         try {
             const { firstName, lastName, email, phone, username, password, confirmPassword, currentPassword } = userProfile;
             
-            // Handle password change if any password field is filled
-            if (password || confirmPassword || currentPassword) {
+            // Handle password change only if user actually enters a new password
+            if (password && password.trim() !== '') {
                 // Check if all password fields are filled
-                if (!currentPassword) {
+                if (!currentPassword || currentPassword.trim() === '') {
                     alert("Current password is required!");
                     return;
                 }
-                if (!password) {
-                    alert("New password is required!");
-                    return;
-                }
-                if (!confirmPassword) {
+                if (!confirmPassword || confirmPassword.trim() === '') {
                     alert("Please confirm your new password!");
                     return;
                 }
@@ -276,8 +466,8 @@ const BuyerDashboard = ({ navigateTo }) => {
                         // Log out the user after successful password change
                         if (logout) {
                             await logout();
-                            if (navigateTo) {
-                                navigateTo('login');
+                            if (navigate) {
+                                navigate('login');
                             }
                         }
                         return;
@@ -318,6 +508,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                 }));
                 
                 setEditProfileOpen(false);
+                await recordActivity('profile_updated', 'Profile information updated');
                 alert("Profile updated successfully!");
             } else {
                 throw new Error('Invalid response format from server');
@@ -383,6 +574,10 @@ const BuyerDashboard = ({ navigateTo }) => {
         setSelectedProperty(property);
         setPropertyModalOpen(true);
         setActiveImageIndex(0);
+        // Check favorite status when modal opens
+        checkFavoriteStatus(property.id);
+        // Log property view activity
+        recordActivity('property_viewed', `Viewed property "${property.title}"`);
     };
 
     const closePropertyModal = () => {
@@ -411,6 +606,22 @@ const BuyerDashboard = ({ navigateTo }) => {
         setActiveImageIndex(index);
     };
 
+    // Helper function to record activity and update recent activities
+    const recordActivity = async (action, description) => {
+        try {
+            await api.post('/api/user-activities', {
+                action,
+                description,
+                userId: authUser.id
+            });
+            // Update recent activities immediately
+            const response = await api.get(`/api/user-activities/recent/${authUser.id}`);
+            setRecentActivities(response.data);
+        } catch (error) {
+            console.error('Error logging activity:', error);
+        }
+    };
+
     const handleSaveProperty = async () => {
         if (!selectedProperty) return;
         
@@ -420,10 +631,28 @@ const BuyerDashboard = ({ navigateTo }) => {
             return;
         }
 
+        const propertyId = selectedProperty.id;
+        const isCurrentlyFavorited = favoriteStatus[propertyId];
+
         try {
-            const response = await api.post(`/api/favorites/${selectedProperty.id}`);
-            if (response.status === 201) {
-                alert('Property saved to favorites');
+            if (isCurrentlyFavorited) {
+                // Remove from favorites
+                const response = await api.delete(`/api/favorites/${propertyId}`);
+                if (response.status === 200) {
+                    setFavoriteStatus(prev => ({ ...prev, [propertyId]: false }));
+                    await refreshSavedProperties();
+                    await recordActivity('property_unfavorited', `Removed "${selectedProperty.title}" from favorites`);
+                    alert('Property removed from favorites');
+                }
+            } else {
+                // Add to favorites
+                const response = await api.post(`/api/favorites/${propertyId}`);
+                if (response.status === 201) {
+                    setFavoriteStatus(prev => ({ ...prev, [propertyId]: true }));
+                    await refreshSavedProperties();
+                    await recordActivity('property_favorited', `Added "${selectedProperty.title}" to favorites`);
+                    alert('Property saved to favorites');
+                }
             }
         } catch (error) {
             if (error.response?.status === 400) {
@@ -453,10 +682,165 @@ const BuyerDashboard = ({ navigateTo }) => {
 
     const handleContactSeller = () => {
         setContactModalOpen(true);
+        if (selectedProperty) {
+            recordActivity('property_contact', `Contacted seller about "${selectedProperty.title}"`);
+        }
     };
 
     const closeContactModal = () => {
         setContactModalOpen(false);
+    };
+
+    // Function to check if a property is favorited
+    const checkFavoriteStatus = async (propertyId) => {
+        if (!propertyId) return;
+        
+        setCheckingFavorite(prev => ({ ...prev, [propertyId]: true }));
+        try {
+            const response = await api.get(`/api/favorites/check/${propertyId}`);
+            setFavoriteStatus(prev => ({ 
+                ...prev, 
+                [propertyId]: response.data.isFavorite 
+            }));
+        } catch (error) {
+            console.error('Error checking favorite status:', error);
+            setFavoriteStatus(prev => ({ ...prev, [propertyId]: false }));
+        } finally {
+            setCheckingFavorite(prev => ({ ...prev, [propertyId]: false }));
+        }
+    };
+
+    // Function to refresh saved properties list
+    const refreshSavedProperties = async () => {
+        try {
+            setLoadingSavedProperties(true);
+            const favoritesResponse = await api.get('/api/favorites');
+            
+            const favorites = favoritesResponse.data.map(fav => {
+                // The backend now returns the complete property object directly
+                const property = fav;
+                return {
+                    id: property.id,
+                    title: property.title,
+                    description: property.description,
+                    location: property.location,
+                    price: property.price,
+                    acres: property.acres,
+                    waterRights: property.waterRights,
+                    suitableCrops: property.suitableCrops,
+                    type: property.type,
+                    topography: property.topography,
+                    averageYield: property.averageYield,
+                    amenities: property.amenities,
+                    restrictionsText: property.restrictionsText,
+                    remarks: property.remarks,
+                    image: property.image || property.images?.[0] || '/api/placeholder/800/500',
+                    images: property.images || [],
+                    barangay: property.barangay,
+                    barangayData: property.barangayData,
+                    seller: property.seller,
+                    createdAt: property.createdAt,
+                    updatedAt: property.updatedAt
+                };
+            });
+            setSavedProperties(favorites);
+            
+            // Cache saved properties in localStorage for persistence
+            if (authUser && authUser.id) {
+                localStorage.setItem(`savedProperties_${authUser.id}`, JSON.stringify(favorites));
+            }
+            
+            // Update favorite status for saved properties
+            const updatedFavoriteStatus = { ...favoriteStatus };
+            favorites.forEach(property => {
+                updatedFavoriteStatus[property.id] = true;
+            });
+            setFavoriteStatus(updatedFavoriteStatus);
+            
+            console.log('Saved properties refreshed:', favorites.length, 'properties');
+        } catch (error) {
+            console.error('Error refreshing saved properties:', error);
+            
+            // Fallback to cached data if API fails
+            if (authUser && authUser.id) {
+                const cachedData = localStorage.getItem(`savedProperties_${authUser.id}`);
+                if (cachedData) {
+                    try {
+                        const cachedProperties = JSON.parse(cachedData);
+                        setSavedProperties(cachedProperties);
+                    } catch (parseError) {
+                        console.error('Error parsing cached saved properties:', parseError);
+                    }
+                }
+            }
+        } finally {
+            setLoadingSavedProperties(false);
+        }
+    };
+
+    // Function to fetch recently viewed properties
+    const fetchRecentlyViewedProperties = async () => {
+        try {
+            setLoadingRecentlyViewed(true);
+            const response = await api.get('/api/recently-viewed');
+            
+            const recentlyViewed = response.data.map(property => ({
+                id: property.id,
+                title: property.title,
+                description: property.description,
+                location: property.location,
+                price: property.price,
+                acres: property.acres,
+                waterRights: property.waterRights,
+                suitableCrops: property.suitableCrops,
+                type: property.type,
+                topography: property.topography,
+                averageYield: property.averageYield,
+                amenities: property.amenities,
+                restrictionsText: property.restrictionsText,
+                remarks: property.remarks,
+                image: property.image || property.images?.[0] || '/api/placeholder/800/500',
+                images: property.images || [],
+                barangay: property.barangay,
+                barangayData: property.barangayData,
+                seller: property.seller,
+                createdAt: property.createdAt,
+                updatedAt: property.updatedAt,
+                viewedAt: property.viewedAt
+            }));
+            
+            setRecentlyViewedProperties(recentlyViewed);
+            
+            // Check favorite status for recently viewed properties
+            const updatedFavoriteStatus = { ...favoriteStatus };
+            for (const property of recentlyViewed) {
+                try {
+                    const favResponse = await api.get(`/api/favorites/check/${property.id}`);
+                    updatedFavoriteStatus[property.id] = favResponse.data.isFavorite;
+                } catch (error) {
+                    updatedFavoriteStatus[property.id] = false;
+                }
+            }
+            setFavoriteStatus(updatedFavoriteStatus);
+            
+            console.log('Recently viewed properties fetched:', recentlyViewed.length, 'properties');
+        } catch (error) {
+            console.error('Error fetching recently viewed properties:', error);
+            setRecentlyViewedProperties([]);
+        } finally {
+            setLoadingRecentlyViewed(false);
+        }
+    };
+
+    // Function to remove property from recently viewed
+    const removeFromRecentlyViewed = async (propertyId) => {
+        try {
+            await api.delete(`/api/recently-viewed/${propertyId}`);
+            setRecentlyViewedProperties(prev => prev.filter(property => property.id !== propertyId));
+        } catch (error) {
+            console.error('Error removing property from recently viewed:', error);
+            alert('Failed to remove property from recently viewed');
+        }
     };
 
     if (loading) {
@@ -490,7 +874,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                     <div style={{ textAlign: 'center', padding: '2rem' }}>
                         Please log in to view your dashboard.
                         <button 
-                            onClick={() => navigateTo('/login')}
+                            onClick={() => navigate('/login')}
                             style={{
                                 display: 'block',
                                 margin: '1rem auto',
@@ -528,33 +912,6 @@ const BuyerDashboard = ({ navigateTo }) => {
                         </DashboardStyles.ActionButton>
                     </DashboardStyles.WelcomeContent>
                 </DashboardStyles.WelcomeSection>
-                
-                {/* Quick Actions */}
-                <DashboardStyles.QuickActionsContainer>
-                    <DashboardStyles.QuickActionCard onClick={goToPropertyListings}>
-                        <DashboardStyles.QuickActionIcon $bgColor="#3498db" $accentColor="white">
-                            <FaSearch />
-                        </DashboardStyles.QuickActionIcon>
-                        <DashboardStyles.QuickActionTitle>Browse Properties</DashboardStyles.QuickActionTitle>
-                        <DashboardStyles.QuickActionDescription>Find your perfect agricultural property</DashboardStyles.QuickActionDescription>
-                    </DashboardStyles.QuickActionCard>
-                    
-                    <DashboardStyles.QuickActionCard onClick={() => setActiveTab('saved')}>
-                        <DashboardStyles.QuickActionIcon $bgColor="#e74c3c" $accentColor="white">
-                            <FaHeart />
-                        </DashboardStyles.QuickActionIcon>
-                        <DashboardStyles.QuickActionTitle>Saved Properties</DashboardStyles.QuickActionTitle>
-                        <DashboardStyles.QuickActionDescription>View your favorite listings</DashboardStyles.QuickActionDescription>
-                    </DashboardStyles.QuickActionCard>
-                    
-                    <DashboardStyles.QuickActionCard onClick={() => setActiveTab('alerts')}>
-                        <DashboardStyles.QuickActionIcon $bgColor="#2ecc71" $accentColor="white">
-                            <FaBell />
-                        </DashboardStyles.QuickActionIcon>
-                        <DashboardStyles.QuickActionTitle>Price Alerts</DashboardStyles.QuickActionTitle>
-                        <DashboardStyles.QuickActionDescription>Get notified of price changes</DashboardStyles.QuickActionDescription>
-                    </DashboardStyles.QuickActionCard>
-                </DashboardStyles.QuickActionsContainer>
                 
                 {/* Main Grid Content */}
                 <DashboardStyles.GridContainer>
@@ -656,7 +1013,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                             <DashboardStyles.ProfileDetailItem>
                                 <DashboardStyles.ProfileDetailLabel>Member Since</DashboardStyles.ProfileDetailLabel>
                                 <DashboardStyles.ProfileDetailValue>
-                                    {new Date(user.memberSince).toLocaleDateString()}
+                                    {new Date(user.createdAt).toLocaleDateString()}
                                 </DashboardStyles.ProfileDetailValue>
                             </DashboardStyles.ProfileDetailItem>
                         </DashboardStyles.ProfileDetails>
@@ -675,23 +1032,21 @@ const BuyerDashboard = ({ navigateTo }) => {
                         <DashboardStyles.RecentActivitySection>
                         <DashboardStyles.RecentActivityTitle>Recent Activity</DashboardStyles.RecentActivityTitle>
                         
-                        {loadingActivities ? (
-                            <div style={{ textAlign: 'center', padding: '1rem' }}>Loading activities...</div>
-                        ) : recentActivities.length > 0 ? (
+                        {recentActivities.length > 0 ? (
                             <DashboardStyles.ActivityList>
                                 {recentActivities.map(activity => (
                                     <DashboardStyles.ActivityItem key={activity.id}>
                                         <DashboardStyles.ActivityIcon 
-                                            $bgColor={activity.type === 'view' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(231, 76, 60, 0.1)'}
-                                            $iconColor={activity.type === 'view' ? '#3498db' : '#e74c3c'}
+                                            $bgColor={activity.$bgColor || 'rgba(52, 152, 219, 0.1)'}
+                                            $iconColor={activity.$iconColor || '#3498db'}
                                         >
-                                            {getActivityIcon(activity.type)}
+                                            {iconMap[activity.icon] || getActivityIcon(activity.type || activity.action)}
                                         </DashboardStyles.ActivityIcon>
                                         
                                         <DashboardStyles.ActivityContent>
-                                            <DashboardStyles.ActivityTitle>{activity.message}</DashboardStyles.ActivityTitle>
+                                            <DashboardStyles.ActivityTitle>{activity.title || activity.message}</DashboardStyles.ActivityTitle>
                                             <DashboardStyles.ActivityTime>
-                                                {new Date(activity.timestamp).toLocaleDateString()}
+                                                {activity.time || new Date(activity.timestamp || activity.createdAt).toLocaleDateString()}
                                             </DashboardStyles.ActivityTime>
                                         </DashboardStyles.ActivityContent>
                                     </DashboardStyles.ActivityItem>
@@ -711,9 +1066,6 @@ const BuyerDashboard = ({ navigateTo }) => {
                             <DashboardStyles.SectionTitle>
                                 <FaTractor size={20} style={{ marginRight: 8 }} /> Your Agricultural Properties
                             </DashboardStyles.SectionTitle>
-                            <DashboardStyles.ViewAllLink>
-                            View All <FaChevronRight size={12} />
-                            </DashboardStyles.ViewAllLink>
                         </div>
                         
                         <DashboardStyles.TabsContainer>
@@ -728,207 +1080,473 @@ const BuyerDashboard = ({ navigateTo }) => {
                             </DashboardStyles.Tab>
                         </DashboardStyles.TabsContainer>
                         
-                        {loadingSavedProperties ? (
-                            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading saved properties...</div>
-                        ) : savedProperties.length > 0 ? (
-                            savedProperties.map(property => (
-                                <DashboardStyles.PropertyCard key={property.id}>
-                                <DashboardStyles.PropertyImageContainer>
-                                    <DashboardStyles.PropertyImage 
-                                        src={property.image} 
-                                        alt={property.title}
-                                        onError={(e) => {
-                                            console.error('Error loading property image:', e);
-                                            e.target.src = `${api.defaults.baseURL}/api/placeholder/400/300`;
-                                        }}
-                                    />
-                                </DashboardStyles.PropertyImageContainer>
-                                
-                                <DashboardStyles.PropertyContent>
-                                    <DashboardStyles.PropertyTitle>{property.title}</DashboardStyles.PropertyTitle>
-                                    <DashboardStyles.PropertyLocation>
-                                    <FaMapMarkerAlt size={12} /> {property.location}
-                                    </DashboardStyles.PropertyLocation>
-                                    <DashboardStyles.PropertyPrice>{formatPrice(property.price)}</DashboardStyles.PropertyPrice>
+                        {loadingSavedProperties && activeTab === 'saved' ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <div style={{ width: '16px', height: '16px', border: '2px solid #3498db', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                                    Loading saved properties...
+                                </div>
+                            </div>
+                        ) : loadingRecentlyViewed && activeTab === 'recent' ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <div style={{ width: '16px', height: '16px', border: '2px solid #3498db', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                                    Loading recently viewed properties...
+                                </div>
+                            </div>
+                        ) : activeTab === 'saved' && savedProperties.length > 0 ? (
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+                                    Found {savedProperties.length} saved propert{savedProperties.length === 1 ? 'y' : 'ies'}
+                                </div>
+                                {savedProperties.map(property => (
+                                    <DashboardStyles.PropertyCard key={property.id}>
+                                    <DashboardStyles.PropertyImageContainer>
+                                        <DashboardStyles.PropertyImage 
+                                            src={property.image} 
+                                            alt={property.title}
+                                            onError={(e) => {
+                                                console.error('Error loading property image:', e);
+                                                e.target.src = `${api.defaults.baseURL}/api/placeholder/400/300`;
+                                            }}
+                                        />
+                                    </DashboardStyles.PropertyImageContainer>
                                     
-                                    <DashboardStyles.PropertySpecs>
-                                    <DashboardStyles.PropertySpec>
-                                        <FaRulerCombined size={14} /> {property.acres} Hectares
-                                    </DashboardStyles.PropertySpec>
-                                    <DashboardStyles.PropertySpec>
-                                        <FaWater size={14} /> {property.waterRights}
-                                    </DashboardStyles.PropertySpec>
-                                    </DashboardStyles.PropertySpecs>
-                                    
-                                    {/* Enhanced Quick Information Section */}
-                                    <div style={{ 
-                                        backgroundColor: '#f8f9fa', 
-                                        padding: '12px', 
-                                        borderRadius: '8px', 
-                                        margin: '12px 0',
-                                        border: '1px solid #e9ecef'
-                                    }}>
+                                    <DashboardStyles.PropertyContent>
+                                        <DashboardStyles.PropertyTitle>{property.title}</DashboardStyles.PropertyTitle>
+                                        <DashboardStyles.PropertyLocation>
+                                        <FaMapMarkerAlt size={12} /> {property.location}
+                                        </DashboardStyles.PropertyLocation>
+                                        <DashboardStyles.PropertyPrice>
+                                            {property.showPrice ? formatPrice(property.price) : 'Price on Request'}
+                                        </DashboardStyles.PropertyPrice>
+                                        
+                                        <DashboardStyles.PropertySpecs>
+                                        <DashboardStyles.PropertySpec>
+                                            <FaRulerCombined size={14} /> {property.acres} Hectares
+                                        </DashboardStyles.PropertySpec>
+                                        <DashboardStyles.PropertySpec>
+                                            <FaWater size={14} /> {property.waterRights}
+                                        </DashboardStyles.PropertySpec>
+                                        </DashboardStyles.PropertySpecs>
+                                        
+                                        {/* Enhanced Quick Information Section */}
                                         <div style={{ 
-                                            display: 'grid', 
-                                            gridTemplateColumns: '1fr 1fr', 
-                                            gap: '8px',
-                                            fontSize: '13px'
+                                            backgroundColor: '#f8f9fa', 
+                                            padding: '12px', 
+                                            borderRadius: '8px', 
+                                            margin: '12px 0',
+                                            border: '1px solid #e9ecef'
                                         }}>
-                                            {property.type && (
-                                                <DashboardStyles.PropertySpec>
-                                                    <FaBuilding size={14} /> <strong>{property.type}</strong>
-                                                </DashboardStyles.PropertySpec>
-                                            )}
-                                            {property.topography && (
-                                                <DashboardStyles.PropertySpec>
-                                                    <FaTractor size={14} /> <strong>{property.topography}</strong>
-                                                </DashboardStyles.PropertySpec>
-                                            )}
-                                            {property.averageYield && (
-                                                <DashboardStyles.PropertySpec style={{ gridColumn: '1 / -1' }}>
-                                                    <FaChartBar size={14} /> <strong>Avg Yield:</strong> {property.averageYield}
-                                                </DashboardStyles.PropertySpec>
+                                            <div style={{ 
+                                                display: 'grid', 
+                                                gridTemplateColumns: '1fr 1fr', 
+                                                gap: '8px',
+                                                fontSize: '13px'
+                                            }}>
+                                                {property.type && (
+                                                    <DashboardStyles.PropertySpec>
+                                                        <FaBuilding size={14} /> <strong>{property.type}</strong>
+                                                    </DashboardStyles.PropertySpec>
+                                                )}
+                                                {property.topography && (
+                                                    <DashboardStyles.PropertySpec>
+                                                        <FaTractor size={14} /> <strong>{property.topography}</strong>
+                                                    </DashboardStyles.PropertySpec>
+                                                )}
+                                                {property.averageYield && (
+                                                    <DashboardStyles.PropertySpec style={{ gridColumn: '1 / -1' }}>
+                                                        <FaChartBar size={14} /> <strong>Avg Yield:</strong> {property.averageYield}
+                                                    </DashboardStyles.PropertySpec>
+                                                )}
+                                            </div>
+                                            
+                                            {property.amenities && property.amenities.length > 0 && (
+                                                <div style={{ 
+                                                    marginTop: '8px', 
+                                                    paddingTop: '8px', 
+                                                    borderTop: '1px solid #dee2e6',
+                                                    fontSize: '12px'
+                                                }}>
+                                                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>
+                                                        <FaWarehouse size={12} style={{ marginRight: '4px' }} /> Amenities:
+                                                    </div>
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        flexWrap: 'wrap', 
+                                                        gap: '4px',
+                                                        color: '#6c757d'
+                                                    }}>
+                                                        {property.amenities.slice(0, 3).map((amenity, idx) => (
+                                                            <span key={idx} style={{ 
+                                                                backgroundColor: '#e9ecef', 
+                                                                padding: '2px 6px', 
+                                                                borderRadius: '4px',
+                                                                fontSize: '11px'
+                                                            }}>
+                                                                {amenity}
+                                                            </span>
+                                                        ))}
+                                                        {property.amenities.length > 3 && (
+                                                            <span style={{ 
+                                                                backgroundColor: '#e9ecef', 
+                                                                padding: '2px 6px', 
+                                                                borderRadius: '4px',
+                                                                fontSize: '11px',
+                                                                color: '#6c757d'
+                                                            }}>
+                                                                +{property.amenities.length - 3} more
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                         
-                                        {property.amenities && property.amenities.length > 0 && (
+                                        <DashboardStyles.SuitableCrops>
+                                            <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {property.suitableCrops}
+                                        </DashboardStyles.SuitableCrops>
+                                        
+                                        {property.restrictionsText && (
                                             <div style={{ 
-                                                marginTop: '8px', 
-                                                paddingTop: '8px', 
-                                                borderTop: '1px solid #dee2e6',
-                                                fontSize: '12px'
+                                                marginTop: '8px',
+                                                padding: '8px',
+                                                backgroundColor: '#f8d7da',
+                                                border: '1px solid #f5c6cb',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                color: '#721c24'
                                             }}>
-                                                <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>
-                                                    <FaWarehouse size={12} style={{ marginRight: '4px' }} /> Amenities:
-                                                </div>
-                                                <div style={{ 
-                                                    display: 'flex', 
-                                                    flexWrap: 'wrap', 
-                                                    gap: '4px',
-                                                    color: '#6c757d'
-                                                }}>
-                                                    {property.amenities.slice(0, 3).map((amenity, idx) => (
-                                                        <span key={idx} style={{ 
-                                                            backgroundColor: '#e9ecef', 
-                                                            padding: '2px 6px', 
-                                                            borderRadius: '4px',
-                                                            fontSize: '11px'
-                                                        }}>
-                                                            {amenity}
-                                                        </span>
-                                                    ))}
-                                                    {property.amenities.length > 3 && (
-                                                        <span style={{ 
-                                                            backgroundColor: '#e9ecef', 
-                                                            padding: '2px 6px', 
-                                                            borderRadius: '4px',
-                                                            fontSize: '11px',
-                                                            color: '#6c757d'
-                                                        }}>
-                                                            +{property.amenities.length - 3} more
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                <strong>Restrictions:</strong> {property.restrictionsText}
                                             </div>
                                         )}
-                                    </div>
-                                    
-                                    <DashboardStyles.SuitableCrops>
-                                        <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {property.suitableCrops}
-                                    </DashboardStyles.SuitableCrops>
-                                    
-                                    {property.restrictionsText && (
-                                        <div style={{ 
-                                            marginTop: '8px',
-                                            padding: '8px',
-                                            backgroundColor: '#f8d7da',
-                                            border: '1px solid #f5c6cb',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            color: '#721c24'
-                                        }}>
-                                            <strong>Restrictions:</strong> {property.restrictionsText}
-                                        </div>
-                                    )}
-                                    
-                                    {property.remarks && (
-                                        <div style={{ 
-                                            marginTop: '8px',
-                                            padding: '8px',
-                                            backgroundColor: '#fff3cd',
-                                            border: '1px solid #ffeaa7',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            color: '#856404'
-                                        }}>
-                                            <strong>Remarks:</strong> {property.remarks}
-                                        </div>
-                                    )}
-                                    
-                                    <DashboardStyles.PropertyActions>
-                                    <DashboardStyles.ActionButton $small onClick={() => openPropertyModal(property)}>
-                                        View Details
-                                    </DashboardStyles.ActionButton>
-                                    </DashboardStyles.PropertyActions>
-                                    
-                                    {/* Seller Information */}
-                                    {property.seller && (
-                                        <div style={{ 
-                                            marginTop: '12px',
-                                            padding: '8px',
-                                            backgroundColor: '#f8f9fa',
-                                            borderRadius: '6px',
-                                            border: '1px solid #e9ecef',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px'
-                                        }}>
-                                            <img
-                                                src={property.seller.avatar || '/api/placeholder/30/30'}
-                                                alt={`${property.seller.firstName || 'Seller'}`}
-                                                style={{
-                                                    width: '30px',
-                                                    height: '30px',
-                                                    borderRadius: '50%',
-                                                    objectFit: 'cover'
-                                                }}
-                                                onError={(e) => {
-                                                    console.error('Error loading seller avatar:', e);
-                                                    // Hide the broken image and show fallback
-                                                    e.target.style.display = 'none';
-                                                    const parent = e.target.parentNode;
-                                                    const fallback = document.createElement('div');
-                                                    fallback.style.cssText = `
-                                                        width: 30px;
-                                                        height: 30px;
-                                                        border-radius: 50%;
-                                                        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-                                                        display: flex;
-                                                        align-items: center;
-                                                        justify-content: center;
-                                                        color: white;
-                                                        font-weight: bold;
-                                                        font-size: 12px;
-                                                    `;
-                                                    const sellerName = `${property.seller.firstName || ''} ${property.seller.lastName || ''}`.trim();
-                                                    fallback.textContent = sellerName ? sellerName.charAt(0).toUpperCase() : '?';
-                                                    parent.insertBefore(fallback, e.target);
-                                                }}
-                                            />
-                                            <div style={{ fontSize: '12px', color: '#6c757d' }}>
-                                                <div style={{ fontWeight: '500', color: '#495057' }}>
-                                                    {property.seller.firstName} {property.seller.lastName}
-                                                </div>
-                                                <div>Property Seller</div>
+                                        
+                                        {property.remarks && (
+                                            <div style={{ 
+                                                marginTop: '8px',
+                                                padding: '8px',
+                                                backgroundColor: '#fff3cd',
+                                                border: '1px solid #ffeaa7',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                color: '#856404'
+                                            }}>
+                                                <strong>Remarks:</strong> {property.remarks}
                                             </div>
+                                        )}
+                                        
+                                        <DashboardStyles.PropertyActions>
+                                        <DashboardStyles.ActionButton $small onClick={() => openPropertyModal(property)}>
+                                            View Details
+                                        </DashboardStyles.ActionButton>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const response = await api.delete(`/api/favorites/${property.id}`);
+                                                    if (response.status === 200) {
+                                                        await refreshSavedProperties();
+                                                        alert('Property removed from favorites');
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error removing from favorites:', error);
+                                                    alert('Failed to remove property from favorites');
+                                                }
+                                            }}
+                                            style={{
+                                                background: '#95a5a6',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                            }}
+                                        >
+                                            <FaTimes size={12} />
+                                            Remove
+                                        </button>
+                                        </DashboardStyles.PropertyActions>
+                                        
+                                        {/* Seller Information */}
+                                        {property.seller && (
+                                            <div style={{ 
+                                                marginTop: '12px',
+                                                padding: '8px',
+                                                backgroundColor: '#f8f9fa',
+                                                borderRadius: '6px',
+                                                border: '1px solid #e9ecef',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px'
+                                            }}>
+                                                    <img
+                                                        src={property.seller?.avatar ? 
+                                                            (property.seller.avatar.startsWith('http') ? 
+                                                                property.seller.avatar : 
+                                                                `${api.defaults.baseURL}${property.seller.avatar}`
+                                                            ) : 
+                                                            `${api.defaults.baseURL}/api/placeholder/30/30`
+                                                        }
+                                                        alt={`${property.seller?.firstName || 'Seller'}`}
+                                                        style={{
+                                                            width: '30px',
+                                                            height: '30px',
+                                                            borderRadius: '50%',
+                                                            objectFit: 'cover'
+                                                        }}
+                                                        onError={(e) => {
+                                                            console.error('Error loading seller avatar:', e);
+                                                            e.target.src = `https://ui-avatars.com/api/?name=${property.seller?.firstName || 'Seller'}+${property.seller?.lastName || ''}&background=random&size=30`;
+                                                        }}
+                                                    />
+                                                    <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                                                        <div style={{ fontWeight: '500', color: '#495057' }}>
+                                                            {property.seller.firstName} {property.seller.lastName}
+                                                        </div>
+                                                        <div>Property Seller</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                    </DashboardStyles.PropertyContent>
+                                    </DashboardStyles.PropertyCard>
+                                ))}
+                            </div>
+                        ) : activeTab === 'recent' && recentlyViewedProperties.length > 0 ? (
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+                                    Found {recentlyViewedProperties.length} recently viewed propert{recentlyViewedProperties.length === 1 ? 'y' : 'ies'}
+                                </div>
+                                {recentlyViewedProperties.map(property => (
+                                    <DashboardStyles.PropertyCard key={property.id}>
+                                    <DashboardStyles.PropertyImageContainer>
+                                        <DashboardStyles.PropertyImage 
+                                            src={property.image} 
+                                            alt={property.title}
+                                            onError={(e) => {
+                                                console.error('Error loading property image:', e);
+                                                e.target.src = `${api.defaults.baseURL}/api/placeholder/400/300`;
+                                            }}
+                                        />
+                                    </DashboardStyles.PropertyImageContainer>
+                                    
+                                    <DashboardStyles.PropertyContent>
+                                        <DashboardStyles.PropertyTitle>{property.title}</DashboardStyles.PropertyTitle>
+                                        <DashboardStyles.PropertyLocation>
+                                        <FaMapMarkerAlt size={12} /> {property.location}
+                                        </DashboardStyles.PropertyLocation>
+                                        <DashboardStyles.PropertyPrice>
+                                            {property.showPrice ? formatPrice(property.price) : 'Price on Request'}
+                                        </DashboardStyles.PropertyPrice>
+                                        
+                                        <DashboardStyles.PropertySpecs>
+                                        <DashboardStyles.PropertySpec>
+                                            <FaRulerCombined size={14} /> {property.acres} Hectares
+                                        </DashboardStyles.PropertySpec>
+                                        <DashboardStyles.PropertySpec>
+                                            <FaWater size={14} /> {property.waterRights}
+                                        </DashboardStyles.PropertySpec>
+                                        </DashboardStyles.PropertySpecs>
+                                        
+                                        {/* Enhanced Quick Information Section */}
+                                        <div style={{ 
+                                            backgroundColor: '#f8f9fa', 
+                                            padding: '12px', 
+                                            borderRadius: '8px', 
+                                            margin: '12px 0',
+                                            border: '1px solid #e9ecef'
+                                        }}>
+                                            <div style={{ 
+                                                display: 'grid', 
+                                                gridTemplateColumns: '1fr 1fr', 
+                                                gap: '8px',
+                                                fontSize: '13px'
+                                            }}>
+                                                {property.type && (
+                                                    <DashboardStyles.PropertySpec>
+                                                        <FaBuilding size={14} /> <strong>{property.type}</strong>
+                                                    </DashboardStyles.PropertySpec>
+                                                )}
+                                                {property.topography && (
+                                                    <DashboardStyles.PropertySpec>
+                                                        <FaTractor size={14} /> <strong>{property.topography}</strong>
+                                                    </DashboardStyles.PropertySpec>
+                                                )}
+                                                {property.averageYield && (
+                                                    <DashboardStyles.PropertySpec style={{ gridColumn: '1 / -1' }}>
+                                                        <FaChartBar size={14} /> <strong>Avg Yield:</strong> {property.averageYield}
+                                                    </DashboardStyles.PropertySpec>
+                                                )}
+                                            </div>
+                                            
+                                            {property.amenities && property.amenities.length > 0 && (
+                                                <div style={{ 
+                                                    marginTop: '8px', 
+                                                    paddingTop: '8px', 
+                                                    borderTop: '1px solid #dee2e6',
+                                                    fontSize: '12px'
+                                                }}>
+                                                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>
+                                                        <FaWarehouse size={12} style={{ marginRight: '4px' }} /> Amenities:
+                                                    </div>
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        flexWrap: 'wrap', 
+                                                        gap: '4px',
+                                                        color: '#6c757d'
+                                                    }}>
+                                                        {property.amenities.slice(0, 3).map((amenity, idx) => (
+                                                            <span key={idx} style={{ 
+                                                                backgroundColor: '#e9ecef', 
+                                                                padding: '2px 6px', 
+                                                                borderRadius: '4px',
+                                                                fontSize: '11px'
+                                                            }}>
+                                                                {amenity}
+                                                            </span>
+                                                        ))}
+                                                        {property.amenities.length > 3 && (
+                                                            <span style={{ 
+                                                                backgroundColor: '#e9ecef', 
+                                                                padding: '2px 6px', 
+                                                                borderRadius: '4px',
+                                                                fontSize: '11px',
+                                                                color: '#6c757d'
+                                                            }}>
+                                                                +{property.amenities.length - 3} more
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </DashboardStyles.PropertyContent>
-                                </DashboardStyles.PropertyCard>
-                            ))
+                                        
+                                        <DashboardStyles.SuitableCrops>
+                                            <FaSeedling size={14} style={{ marginRight: '5px' }} /> <strong>Ideal for:</strong>&nbsp; {property.suitableCrops}
+                                        </DashboardStyles.SuitableCrops>
+                                        
+                                        {property.restrictionsText && (
+                                            <div style={{ 
+                                                marginTop: '8px',
+                                                padding: '8px',
+                                                backgroundColor: '#f8d7da',
+                                                border: '1px solid #f5c6cb',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                color: '#721c24'
+                                            }}>
+                                                <strong>Restrictions:</strong> {property.restrictionsText}
+                                            </div>
+                                        )}
+                                        
+                                        {property.remarks && (
+                                            <div style={{ 
+                                                marginTop: '8px',
+                                                padding: '8px',
+                                                backgroundColor: '#fff3cd',
+                                                border: '1px solid #ffeaa7',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                color: '#856404'
+                                            }}>
+                                                <strong>Remarks:</strong> {property.remarks}
+                                            </div>
+                                        )}
+                                        
+                                        <DashboardStyles.PropertyActions>
+                                        <DashboardStyles.ActionButton $small onClick={() => openPropertyModal(property)}>
+                                            View Details
+                                        </DashboardStyles.ActionButton>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    await removeFromRecentlyViewed(property.id);
+                                                    alert('Property removed from recently viewed');
+                                                } catch (error) {
+                                                    console.error('Error removing from recently viewed:', error);
+                                                    alert('Failed to remove property from recently viewed');
+                                                }
+                                            }}
+                                            style={{
+                                                background: '#95a5a6',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                            }}
+                                        >
+                                            <FaTimes size={12} />
+                                            Remove
+                                        </button>
+                                        </DashboardStyles.PropertyActions>
+                                        
+                                        {/* Seller Information */}
+                                        {property.seller && (
+                                            <div style={{ 
+                                                marginTop: '12px',
+                                                padding: '8px',
+                                                backgroundColor: '#f8f9fa',
+                                                borderRadius: '6px',
+                                                border: '1px solid #e9ecef',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px'
+                                            }}>
+                                                    <img
+                                                        src={property.seller?.avatar ? 
+                                                            (property.seller.avatar.startsWith('http') ? 
+                                                                property.seller.avatar : 
+                                                                `${api.defaults.baseURL}${property.seller.avatar}`
+                                                            ) : 
+                                                            `${api.defaults.baseURL}/api/placeholder/30/30`
+                                                        }
+                                                        alt={`${property.seller?.firstName || 'Seller'}`}
+                                                        style={{
+                                                            width: '30px',
+                                                            height: '30px',
+                                                            borderRadius: '50%',
+                                                            objectFit: 'cover'
+                                                        }}
+                                                        onError={(e) => {
+                                                            console.error('Error loading seller avatar:', e);
+                                                            e.target.src = `https://ui-avatars.com/api/?name=${property.seller?.firstName || 'Seller'}+${property.seller?.lastName || ''}&background=random&size=30`;
+                                                        }}
+                                                    />
+                                                    <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                                                        <div style={{ fontWeight: '500', color: '#495057' }}>
+                                                            {property.seller.firstName} {property.seller.lastName}
+                                                        </div>
+                                                        <div>Property Seller</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                    </DashboardStyles.PropertyContent>
+                                    </DashboardStyles.PropertyCard>
+                                ))}
+                            </div>
+                        ) : activeTab === 'recommended' ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                <div style={{ fontSize: '16px', color: '#666', marginBottom: '8px' }}>
+                                    <FaChartLine size={20} style={{ marginRight: '8px' }} />
+                                    Recommended Farms
+                                </div>
+                                <div style={{ fontSize: '14px', color: '#999' }}>
+                                    Personalized recommendations coming soon! Browse our listings to get started.
+                                </div>
+                            </div>
                         ) : (
                             <div style={{ textAlign: 'center', padding: '2rem' }}>
-                                No saved properties yet. Browse our listings to find your perfect agricultural property.
+                                {activeTab === 'saved' && 'No saved properties yet. Browse our listings to find your perfect agricultural property.'}
+                                {activeTab === 'recent' && 'No recently viewed properties yet. Start browsing our listings to see your viewing history.'}
                             </div>
                         )}
                         </DashboardStyles.SavedPropertiesSection>
@@ -939,15 +1557,101 @@ const BuyerDashboard = ({ navigateTo }) => {
                         
                         {loadingInsights ? (
                             <div style={{ textAlign: 'center', padding: '1rem' }}>Loading market insights...</div>
-                        ) : marketInsights.length > 0 ? (
-                            marketInsights.map(insight => (
-                                <DashboardStyles.InsightCard key={insight.id} $accentColor={insight.accentColor}>
-                                    <DashboardStyles.InsightTitle>{insight.title}</DashboardStyles.InsightTitle>
-                                    <DashboardStyles.InsightText>{insight.text}</DashboardStyles.InsightText>
-                                </DashboardStyles.InsightCard>
-                            ))
+                        ) : marketInsights?.totalListings > 0 ? (
+                            <>
+                                {/* Market Statistics */}
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                                    gap: '12px', 
+                                    marginBottom: '20px' 
+                                }}>
+                                    <div style={{
+                                        backgroundColor: '#f8f9fa',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        border: '1px solid #e9ecef'
+                                    }}>
+                                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#2C3E50' }}>
+                                            {marketInsights.totalListings}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#6c757d' }}>Total Listings</div>
+                                    </div>
+                                    <div style={{
+                                        backgroundColor: '#f8f9fa',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        border: '1px solid #e9ecef'
+                                    }}>
+                                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#27ae60' }}>
+                                            {marketInsights.activeListings}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#6c757d' }}>Active</div>
+                                    </div>
+                                    <div style={{
+                                        backgroundColor: '#f8f9fa',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        border: '1px solid #e9ecef'
+                                    }}>
+                                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#3498db' }}>
+                                            ₱{(marketInsights.averagePrice / 1000000).toFixed(1)}M
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#6c757d' }}>Avg Price</div>
+                                    </div>
+                                    <div style={{
+                                        backgroundColor: '#f8f9fa',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        border: '1px solid #e9ecef'
+                                    }}>
+                                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#e67e22' }}>
+                                            {marketInsights.averageAcres}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#6c757d' }}>Avg Hectares</div>
+                                    </div>
+                                </div>
+
+                                {/* Price Range */}
+                                <div style={{ 
+                                    backgroundColor: '#fff3cd', 
+                                    padding: '12px', 
+                                    borderRadius: '8px', 
+                                    marginBottom: '16px',
+                                    border: '1px solid #ffeaa7'
+                                }}>
+                                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#856404', marginBottom: '4px' }}>
+                                        Price Range
+                                    </div>
+                                    <div style={{ fontSize: '13px', color: '#856404' }}>
+                                        ₱{marketInsights.priceRange.min.toLocaleString()} - ₱{marketInsights.priceRange.max.toLocaleString()}
+                                    </div>
+                                </div>
+
+                                {/* Optimization Tips */}
+                                {marketInsights?.optimizationTips?.length > 0 && (
+                                    <div style={{ marginTop: '16px' }}>
+                                        <div style={{ fontSize: '16px', fontWeight: '600', color: '#2C3E50', marginBottom: '12px' }}>
+                                            Market Recommendations
+                                        </div>
+                                        {marketInsights.optimizationTips.map((tip, index) => (
+                                            <DashboardStyles.InsightCard key={index} $accentColor="#3498db">
+                                                <DashboardStyles.InsightTitle>{tip.title}</DashboardStyles.InsightTitle>
+                                                <DashboardStyles.InsightText>{tip.text}</DashboardStyles.InsightText>
+                                            </DashboardStyles.InsightCard>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         ) : (
-                            <div style={{ textAlign: 'center', padding: '1rem' }}>No market insights available</div>
+                            <DashboardStyles.InsightCard $accentColor="#3498db">
+                                <DashboardStyles.InsightTitle>Welcome to SmartLand</DashboardStyles.InsightTitle>
+                                <DashboardStyles.InsightText>Browse available properties to receive personalized market insights and recommendations for your agricultural investment.</DashboardStyles.InsightText>
+                            </DashboardStyles.InsightCard>
                         )}
                         </DashboardStyles.MarketInsightsSection>
                     </div>
@@ -1324,7 +2028,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                                                 color: '#2c3e50',
                                                 margin: '0 0 8px 0'
                                             }}>
-                                                ₱{selectedProperty.price.toLocaleString()}
+                                                {selectedProperty.showPrice ? `₱${selectedProperty.price.toLocaleString()}` : 'Price on Request'}
                                             </h3>
                                             <p style={{
                                                 fontSize: '16px',
@@ -1383,7 +2087,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                                                 fontWeight: '600',
                                                 color: '#2c3e50'
                                             }}>
-                                                ₱{Math.round(selectedProperty.price / selectedProperty.acres).toLocaleString()}
+                                                {selectedProperty.showPrice ? `₱${Math.round(selectedProperty.price / selectedProperty.acres).toLocaleString()}` : 'N/A'}
                                             </div>
                                         </div>
                                         <div style={{
@@ -1635,6 +2339,147 @@ const BuyerDashboard = ({ navigateTo }) => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Location Map */}
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <h4 style={{
+                                            fontSize: '18px',
+                                            fontWeight: '600',
+                                            color: '#2c3e50',
+                                            margin: '0 0 12px 0',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}>
+                                            <FaMapMarkerAlt style={{ marginRight: '8px', color: '#3498db' }} />
+                                            Location & Barangay
+                                        </h4>
+                                        
+                                        {/* Map Container */}
+                                        <div style={{
+                                            height: '300px',
+                                            borderRadius: '12px',
+                                            overflow: 'hidden',
+                                            border: '2px solid #e0e0e0',
+                                            marginBottom: '16px'
+                                        }}>
+                                            <MapContainer
+                                                center={selectedProperty.barangayData?.center || [15.4841, 120.9685]}
+                                                zoom={13}
+                                                style={{ height: '100%', width: '100%' }}
+                                                zoomControl={true}
+                                            >
+                                                <TileLayer
+                                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                />
+                                                
+                                                {/* Property Marker */}
+                                                {(selectedProperty.coordinates || selectedProperty.barangayData?.center) && (
+                                                    <Marker position={selectedProperty.coordinates || selectedProperty.barangayData.center}>
+                                                        <Popup>
+                                                            <div style={{ textAlign: 'center' }}>
+                                                                <strong>{selectedProperty.title}</strong><br />
+                                                                {selectedProperty.location}
+                                                                {selectedProperty.barangay && (
+                                                                    <>
+                                                                        <br />
+                                                                        <small>Barangay: {selectedProperty.barangay}</small>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </Popup>
+                                                    </Marker>
+                                                )}
+                                                
+                                                {/* Barangay Radius Circle */}
+                                                {selectedProperty.barangayData?.center && selectedProperty.barangayData?.radius && (
+                                                    <Circle
+                                                        center={selectedProperty.barangayData.center}
+                                                        radius={selectedProperty.barangayData.radius}
+                                                        pathOptions={{
+                                                            color: '#3498db',
+                                                            fillColor: '#3498db',
+                                                            fillOpacity: 0.2,
+                                                            weight: 2,
+                                                            dashArray: '5, 5'
+                                                        }}
+                                                    >
+                                                        <Popup>
+                                                            <div style={{ 
+                                                                color: '#333',
+                                                                padding: '8px',
+                                                                maxWidth: '250px'
+                                                            }}>
+                                                                <h3 style={{ 
+                                                                    margin: '0 0 8px 0',
+                                                                    fontSize: '1.1em',
+                                                                    color: '#2C3E50',
+                                                                    borderBottom: '1px solid #eee',
+                                                                    paddingBottom: '4px'
+                                                                }}>
+                                                                    {selectedProperty.barangay}
+                                                                </h3>
+                                                                
+                                                                <div style={{ 
+                                                                    display: 'grid',
+                                                                    gridTemplateColumns: 'auto 1fr',
+                                                                    gap: '4px 8px',
+                                                                    fontSize: '0.9em'
+                                                                }}>
+                                                                    <strong>Elevation:</strong>
+                                                                    <span>{selectedProperty.barangayData.elevation}m</span>
+                                                                    
+                                                                    <strong>Radius:</strong>
+                                                                    <span>{selectedProperty.barangayData.radius}m</span>
+                                                                    
+                                                                    {selectedProperty.barangayData.soilType && (
+                                                                        <>
+                                                                            <strong>Soil Type:</strong>
+                                                                            <span>{selectedProperty.barangayData.soilType}</span>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </Popup>
+                                                    </Circle>
+                                                )}
+                                            </MapContainer>
+                                        </div>
+                                        
+                                        {/* Barangay Information */}
+                                        {selectedProperty.barangay && (
+                                            <div style={{
+                                                padding: '16px',
+                                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                                borderRadius: '8px',
+                                                border: '1px solid rgba(52, 152, 219, 0.3)',
+                                                color: '#2c3e50'
+                                            }}>
+                                                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid rgba(52, 152, 219, 0.2)', paddingBottom: '8px' }}>
+                                                    <FaMapMarkerAlt style={{ marginRight: '8px', color: '#3498db' }} />
+                                                    Barangay: {selectedProperty.barangay}
+                                                </div>
+                                                {selectedProperty.barangayData && (
+                                                    <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                                                            <FaMountain style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />
+                                                            Elevation: {selectedProperty.barangayData.elevation}m
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                                                            <FaCircleNotch style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />
+                                                            Radius: {selectedProperty.barangayData.radius}m
+                                                        </div>
+                                                        {selectedProperty.barangayData.soilType && (
+                                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                <FaSeedling style={{ marginRight: '10px', color: '#3498db', flexShrink: 0 }} />
+                                                                Soil Type: {selectedProperty.barangayData.soilType}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Right Column - Seller Info & Actions */}
@@ -1660,7 +2505,13 @@ const BuyerDashboard = ({ navigateTo }) => {
                                             marginBottom: '16px'
                                         }}>
                                             <img
-                                                src={selectedProperty.seller?.avatar || '/api/placeholder/50/50'}
+                                                src={selectedProperty.seller?.avatar ? 
+                                                    (selectedProperty.seller.avatar.startsWith('http') ? 
+                                                        selectedProperty.seller.avatar : 
+                                                        `${api.defaults.baseURL}${selectedProperty.seller.avatar}`
+                                                    ) : 
+                                                    `${api.defaults.baseURL}/api/placeholder/50/50`
+                                                }
                                                 alt={selectedProperty.seller?.firstName || 'Seller'}
                                                 style={{
                                                     width: '50px',
@@ -1686,7 +2537,7 @@ const BuyerDashboard = ({ navigateTo }) => {
                                                     fontSize: '14px',
                                                     color: '#7f8c8d'
                                                 }}>
-                                                    Member since {new Date(selectedProperty.createdAt).getFullYear()}
+                                                    Property Seller
                                                 </div>
                                             </div>
                                         </div>
@@ -1797,24 +2648,35 @@ const BuyerDashboard = ({ navigateTo }) => {
                                         }}>
                                             <button
                                                 onClick={handleSaveProperty}
+                                                disabled={checkingFavorite[selectedProperty?.id]}
                                                 style={{
                                                     width: '100%',
-                                                    background: '#e74c3c',
+                                                    background: favoriteStatus[selectedProperty?.id] ? '#95a5a6' : '#e74c3c',
                                                     color: 'white',
                                                     border: 'none',
                                                     padding: '12px',
                                                     borderRadius: '8px',
-                                                    cursor: 'pointer',
+                                                    cursor: checkingFavorite[selectedProperty?.id] ? 'not-allowed' : 'pointer',
                                                     fontSize: '16px',
                                                     fontWeight: '500',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    gap: '8px'
+                                                    gap: '8px',
+                                                    opacity: checkingFavorite[selectedProperty?.id] ? 0.7 : 1
                                                 }}
                                             >
-                                                <FaHeart />
-                                                Save to Favorites
+                                                {checkingFavorite[selectedProperty?.id] ? (
+                                                    <>
+                                                        <div style={{ width: '16px', height: '16px', border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                                                        Checking...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaHeart />
+                                                        {favoriteStatus[selectedProperty?.id] ? 'Remove from Favorites' : 'Save to Favorites'}
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </div>
@@ -1890,18 +2752,24 @@ const BuyerDashboard = ({ navigateTo }) => {
                                 marginBottom: '16px'
                             }}>
                                 <img
-                                    src={selectedProperty.seller?.avatar || '/api/placeholder/50/50'}
+                                    src={selectedProperty.seller?.avatar ? 
+                                        (selectedProperty.seller.avatar.startsWith('http') ? 
+                                            selectedProperty.seller.avatar : 
+                                            `${api.defaults.baseURL}${selectedProperty.seller.avatar}`
+                                        ) : 
+                                        `${api.defaults.baseURL}/api/placeholder/50/50`
+                                    }
                                     alt={selectedProperty.seller?.firstName || 'Seller'}
                                     style={{
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '50px',
+                                        height: '50px',
                                         borderRadius: '50%',
                                         marginRight: '12px',
                                         objectFit: 'cover'
                                     }}
                                     onError={(e) => {
                                         console.error('Error loading seller avatar:', e);
-                                        e.target.src = `https://ui-avatars.com/api/?name=${selectedProperty.seller?.firstName || 'Seller'}+${selectedProperty.seller?.lastName || ''}&background=random&size=40`;
+                                        e.target.src = `https://ui-avatars.com/api/?name=${selectedProperty.seller?.firstName || 'Seller'}+${selectedProperty.seller?.lastName || ''}&background=random&size=50`;
                                     }}
                                 />
                                 <div>
